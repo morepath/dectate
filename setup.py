@@ -26,7 +26,8 @@ setup(name='confidant',
         ],
       keywords="configuration",
       install_requires=[
-        'setuptools',
+          'setuptools',
+          'venusian',
         ],
       extras_require = dict(
         test=['pytest >= 2.5.2',
