@@ -1,0 +1,6 @@
+CREDITS
+=======
+
+* Martijn Faassen (creator and main developer)
+
+* Special thanks to CONTACT software.
