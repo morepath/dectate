@@ -20,9 +20,7 @@ setup(name='confidant',
       classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
-        'Environment :: Web Environment',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
-        'Topic :: Internet :: WWW/HTTP :: WSGI',
         'Programming Language :: Python :: 2.7',
         'Development Status :: 4 - Beta'
         ],
