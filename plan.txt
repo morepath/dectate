@@ -1,0 +1,9 @@
+Extract existing configuration subsystem into this.
+
+Write a few tests.
+
+Refactor so apps store the directives, not the configuration object.
+
+Refactor so that registries are many and can be scoped to directives.
+
+
