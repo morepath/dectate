@@ -1,0 +1,81 @@
+Different types of actions need to group together so they
+conflict/override. Currently uses group_key method.
+
+An action has an identifier for conflicts and overrides. Prefixed by
+group key so we don't need to distinguish between actions in different groups.
+
+Extra discriminator list to make more conflicts happen. Do we want
+discriminators to clash even outside action groups?
+
+Generate sub-actions instead of performing things directly. This is
+done in prepare right now.
+
+Do checks on input parameters depending on what object is being
+decorated (class versus function). Done in prepare, such as for path
+directive.
+
+The path directive also does a clone, getting rid of the original
+action and overwriting it with a new model.
+
+There's a complex clone in ViewDirective
+
+The cloning process in the execution.. Why is this needed again? I
+think to support inheritance.
+
+Preparing the action. In some cases this is used to generate sub
+actions. In other cases this is
+
+Performing the action, which affects the state of the registry given
+action configuration and obj (typically a function)
+
+Dependencies between actions. or should that be action groups?
+
+Directives have a name
+
+Directives have documentation that shows up in the sphinx docs
+
+Directives are callable on App
+
+Subclasses of App can have new directives through the directive directive
+
+Take app as argument, and extracts registry from this
+(configurable). But then also some directive use app directly. Where?
+Identify use cases.
+
+We have some use cases where we'd like to execute some code after all
+directives of a particular kind are done executing. This way we could
+initialize the predicates for all external predicates functions, for
+instance.
+
+Prepare now only works one level deep: you can't implement a directive
+as multiple actions which then in turn are actually other actions.
+
+Sometimes during prepare it'd be useful to have access to the registry.
+
+Apps could have multiple independent registries (or at least
+registries APIs; many will build on the reg registry). Perhaps actions
+can somehow declare which registry APIs they concern themselves
+with. This way we could avoid mixing a lot of registry mixins into a
+larger registry.
+
+There's another use case to apply the action to the app, not to
+app.registry directly: the logging functionality needs this
+information. I've worked around it now with a hack that sets up the
+app as an attribute on the registry after the fact...
+
+Not use Venusian: a directive should register with the configuration
+system (or better: the App) immediately upon import as it's easier to
+explain.
+
+Support configuration isolation: re-run configuration multiple times.
+
+Determine that two toplevel directives are actually the same one by
+looking at line number information.
+
+Have line number information for error reporting.
+
+Support querying the registration database to see what directives
+have been applied. Should this be the registration data or should it
+be based around directives?
+
+
