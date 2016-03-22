@@ -199,15 +199,17 @@ class Action(object):
     is. Actions which depend on another will be executed after those
     actions are executed.
     """
+    configurations = {}
     depends = []
 
-    def __init__(self, configurable):
+    def __init__(self, configurable, directive):
         """Initialize action.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
         self.configurable = configurable
+        self.directive = directive
         self.order = None
 
     def group_key(self):
@@ -282,13 +284,8 @@ class Action(object):
         pass
 
 
-class Directive(Action):
-    """An :class:`Action` that can be used as a decorator.
-
-    Extends :class:`morepath.config.Action`.
-
-    Base class for concrete Morepath directives such as ``@App.path()``,
-    ``@App.view()``, etc.
+class Directive(object):
+    """Created by the decorator.
 
     Can be used as a Python decorator.
 
@@ -299,21 +296,24 @@ class Directive(Action):
     When used as a decorator this tracks where in the source code
     the directive was used for the purposes of error reporting.
     """
-
-    # set later when directive is used
-    logger = None
-    # set later when directive is used, raw args and kw
-    argument_info = None
-
-    def __init__(self, app, frame_info, directive_name, argument_info, logger):
+    def __init__(self, app, action_factory,
+                 frame_info, directive_name, argument_info, logger):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
-        super(Directive, self).__init__(app.registry)
         self.app = app
+        self.configurable = app.registry
+        self.action_factory = action_factory
         self.frame_info = frame_info
+        self.directive_name = directive_name
+        self.argument_info = argument_info
+        self.logger = logger
+
+    def action(self):
+        args, kw = self.argument_info
+        return self.action_factory(self.app.registry, self, *args, **kw)
 
     def codeinfo(self):
         """Info about where in the source code the directive was invoked.
@@ -342,7 +342,7 @@ class Directive(Action):
         elif isinstance(wrapped, classmethod):
             raise DirectiveError(
                 "Cannot use classmethod with testing_config.")
-        self.configurable.testing_config.action(self, wrapped)
+        self.configurable.testing_config.action(self.action(), wrapped)
 
     def venusian_callback(self, wrapped, scanner, name, obj):
         if self.attach_info.scope == 'class':

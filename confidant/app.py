@@ -62,7 +62,7 @@ class DirectiveDirective(object):
         self.cls = cls
         self.name = name
 
-    def __call__(self, directive):
+    def __call__(self, action_factory):
         directive_name = self.name
 
         def method(self, *args, **kw):
@@ -71,12 +71,8 @@ class DirectiveDirective(object):
             argument_info = args, kw
             logger = logging.getLogger('morepath.directive.%s' %
                                        directive_name)
-            return directive(self, frame_info,
-                             directive_name, argument_info, logger,
-                             *args, **kw)
-
-        # this is to help morepath.sphinxext to do the right thing
-        method.actual_directive = directive
-        update_wrapper(method, directive.__init__)
+            return Directive(self, action_factory,
+                             frame_info, directive_name, argument_info, logger)
+        update_wrapper(method, action_factory.__init__)
         setattr(self.cls, self.name, classmethod(method))
-        return directive
+        return action_factory
