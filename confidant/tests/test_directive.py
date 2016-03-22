@@ -21,8 +21,8 @@ def test_directive_main():
             'my': Registry
         }
 
-        def __init__(self, app, message):
-            super(MyDirective, self).__init__(app)
+        def __init__(self, app, frame_info, message):
+            super(MyDirective, self).__init__(app, frame_info)
             self.message = message
 
         def identifier(self, registry):
@@ -59,8 +59,8 @@ def test_directive_conflict():
             'my': Registry
         }
 
-        def __init__(self, app, message):
-            super(MyDirective, self).__init__(app)
+        def __init__(self, app, frame_info, message):
+            super(MyDirective, self).__init__(app, frame_info)
             self.message = message
 
         def identifier(self, registry):
@@ -96,8 +96,8 @@ def test_directive_inherit():
             'my': Registry
         }
 
-        def __init__(self, app, message):
-            super(MyDirective, self).__init__(app)
+        def __init__(self, app, frame_info, message):
+            super(MyDirective, self).__init__(app, frame_info)
             self.message = message
 
         def identifier(self, registry):
@@ -137,8 +137,8 @@ def test_directive_override():
             'my': Registry
         }
 
-        def __init__(self, app, message):
-            super(MyDirective, self).__init__(app)
+        def __init__(self, app, frame_info, message):
+            super(MyDirective, self).__init__(app, frame_info)
             self.message = message
 
         def identifier(self, registry):

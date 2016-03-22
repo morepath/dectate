@@ -3,7 +3,7 @@ from copy import copy
 from .error import (
     ConfigError, ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .framehack import caller_package
+from .framehack import caller_package, get_frame_info
 
 
 class Configurable(object):
@@ -305,21 +305,19 @@ class Directive(Action):
     # set later when directive is used, raw args and kw
     argument_info = None
 
-    def __init__(self, configurable):
+    def __init__(self, configurable, frame_info):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
         super(Directive, self).__init__(configurable)
-        self.attach_info = None
+        self.frame_info = frame_info
 
     def codeinfo(self):
         """Info about where in the source code the directive was invoked.
         """
-        if self.attach_info is None:
-            return None
-        return self.attach_info.codeinfo
+        return None
 
     def __enter__(self):
         return DirectiveAbbreviation(self)

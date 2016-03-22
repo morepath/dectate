@@ -1,8 +1,10 @@
 from functools import update_wrapper
 import logging
+import sys
 from .config import Configurable
 from .config import Directive as ConfigDirective
 from .compat import with_metaclass
+from .framehack import get_frame_info
 
 
 class Registry(Configurable):
@@ -65,7 +67,9 @@ class DirectiveDirective(object):
         directive_name = self.name
 
         def method(self, *args, **kw):
-            result = directive(self, *args, **kw)
+            frame = sys._getframe(1)
+            frame_info = get_frame_info(frame)
+            result = directive(self, frame_info, *args, **kw)
             result.directive_name = directive_name
             result.argument_info = args, kw
             result.logger = logging.getLogger('morepath.directive.%s' %
@@ -80,8 +84,8 @@ class DirectiveDirective(object):
 
 
 class Directive(ConfigDirective):
-    def __init__(self, app):
-        super(Directive, self).__init__(app.registry)
+    def __init__(self, app, frame_info):
+        super(Directive, self).__init__(app.registry, frame_info)
         self.app = app
         self.directive_name = None
         self.logger = None
