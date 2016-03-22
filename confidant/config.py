@@ -202,13 +202,8 @@ class Action(object):
     configurations = {}
     depends = []
 
-    def __init__(self, directive):
-        """Initialize action.
-
-        :param configurable: :class:`morepath.config.Configurable` object
-          for which this action was configured.
-        """
-        self.directive = directive
+    # the directive that was used gets stored on the instance
+    directive = None
 
     def group_key(self):
         """By default we group directives by their class.
@@ -312,7 +307,10 @@ class Directive(object):
         self.logger = logger
 
     def action(self):
-        return self.action_factory(self, *self.args, **self.kw)
+        result = self.action_factory(*self.args, **self.kw)
+        # store the directive used on the action, useful for error reporting
+        result.directive = self
+        return result
 
     def codeinfo(self):
         """Info about where in the source code the directive was invoked.

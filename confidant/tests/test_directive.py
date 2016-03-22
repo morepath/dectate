@@ -21,8 +21,7 @@ def test_directive_main():
             'my': Registry
         }
 
-        def __init__(self, directive, message):
-            super(MyDirective, self).__init__(directive)
+        def __init__(self, message):
             self.message = message
 
         def identifier(self, registry):
@@ -59,8 +58,7 @@ def test_directive_conflict():
             'my': Registry
         }
 
-        def __init__(self, directive, message):
-            super(MyDirective, self).__init__(directive)
+        def __init__(self, message):
             self.message = message
 
         def identifier(self, registry):
@@ -96,8 +94,7 @@ def test_directive_inherit():
             'my': Registry
         }
 
-        def __init__(self, directive, message):
-            super(MyDirective, self).__init__(directive)
+        def __init__(self, message):
             self.message = message
 
         def identifier(self, registry):
@@ -137,8 +134,7 @@ def test_directive_override():
             'my': Registry
         }
 
-        def __init__(self, directive, message):
-            super(MyDirective, self).__init__(directive)
+        def __init__(self, message):
             self.message = message
 
         def identifier(self, registry):
