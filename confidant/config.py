@@ -209,7 +209,6 @@ class Action(object):
           for which this action was configured.
         """
         self.directive = directive
-        self.order = None
 
     def group_key(self):
         """By default we group directives by their class.
