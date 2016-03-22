@@ -202,13 +202,12 @@ class Action(object):
     configurations = {}
     depends = []
 
-    def __init__(self, configurable, directive):
+    def __init__(self, directive):
         """Initialize action.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
-        self.configurable = configurable
         self.directive = directive
         self.order = None
 
@@ -314,8 +313,7 @@ class Directive(object):
         self.logger = logger
 
     def action(self):
-        return self.action_factory(self.app.registry, self,
-                                   *self.args, **self.kw)
+        return self.action_factory(self, *self.args, **self.kw)
 
     def codeinfo(self):
         """Info about where in the source code the directive was invoked.
@@ -540,7 +538,7 @@ class Config(object):
             configurable.clear()
 
         for action, obj in self.prepared():
-            action.configurable.action(action, obj)
+            action.directive.configurable.action(action, obj)
 
         for configurable in sort_configurables(self.configurables):
             configurable.execute()
