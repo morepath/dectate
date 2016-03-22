@@ -8,10 +8,19 @@ import pytest
 def test_directive_main():
     config = Config()
 
-    l = []
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
 
     @App.directive('foo')
     class MyDirective(Directive):
+        configurations = {
+            'my': Registry
+        }
+
         def __init__(self, app, message):
             super(MyDirective, self).__init__(app)
             self.message = message
@@ -19,8 +28,8 @@ def test_directive_main():
         def identifier(self, registry):
             return self.message
 
-        def perform(self, registry, obj):
-            l.append(self.message)
+        def perform(self, obj, my):
+            my.add(self.message, obj)
 
     class MyApp(App):
         testing_config = config
@@ -31,16 +40,25 @@ def test_directive_main():
 
     config.commit()
 
-    assert l == ['hello']
+    MyApp.registry.my.l == [('hello', f)]
 
 
 def test_directive_conflict():
     config = Config()
 
-    l = []
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
 
     @App.directive('foo')
     class MyDirective(Directive):
+        configurations = {
+            'my': Registry
+        }
+
         def __init__(self, app, message):
             super(MyDirective, self).__init__(app)
             self.message = message
@@ -48,8 +66,8 @@ def test_directive_conflict():
         def identifier(self, registry):
             return self.message
 
-        def perform(self, registry, obj):
-            l.append(self.message)
+        def perform(self, obj, my):
+            my.add(self.message, obj)
 
     class MyApp(App):
         testing_config = config
@@ -66,11 +84,18 @@ def test_directive_conflict():
         config.commit()
 
 
-def test_directive_override():
+def test_directive_inherit():
     config = Config()
+
+    class Registry(object):
+        pass
 
     @App.directive('foo')
     class MyDirective(Directive):
+        configurations = {
+            'my': Registry
+        }
+
         def __init__(self, app, message):
             super(MyDirective, self).__init__(app)
             self.message = message
@@ -78,9 +103,50 @@ def test_directive_override():
         def identifier(self, registry):
             return self.message
 
-        def perform(self, registry, obj):
-            registry.message = self.message
-            registry.obj = obj
+        def perform(self, obj, my):
+            my.message = self.message
+            my.obj = obj
+
+    class MyApp(App):
+        testing_config = config
+
+    class SubApp(MyApp):
+        testing_config = config
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    config.commit()
+
+    assert MyApp.registry.my.message == 'hello'
+    assert MyApp.registry.my.obj is f
+    assert SubApp.registry.my.message == 'hello'
+    assert SubApp.registry.my.obj is f
+
+
+def test_directive_override():
+    config = Config()
+
+    class Registry(object):
+        pass
+
+    @App.directive('foo')
+    class MyDirective(Directive):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, app, message):
+            super(MyDirective, self).__init__(app)
+            self.message = message
+
+        def identifier(self, registry):
+            return self.message
+
+        def perform(self, obj, my):
+            my.message = self.message
+            my.obj = obj
 
     class MyApp(App):
         testing_config = config
@@ -98,7 +164,7 @@ def test_directive_override():
 
     config.commit()
 
-    assert MyApp.registry.message == 'hello'
-    assert MyApp.registry.obj is f
-    assert SubApp.registry.message == 'hello'
-    assert SubApp.registry.obj is f2
+    assert MyApp.registry.my.message == 'hello'
+    assert MyApp.registry.my.obj is f
+    assert SubApp.registry.my.message == 'hello'
+    assert SubApp.registry.my.obj is f2

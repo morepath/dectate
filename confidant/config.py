@@ -170,10 +170,17 @@ class Actions(object):
         """
         values = list(self._action_map.values())
         values.sort(key=lambda value: value[0].order or 0)
+        kw = {}
         for action, obj in values:
+            for name, factory in action.configurations.items():
+                configuration = getattr(configurable, name, None)
+                if configuration is None:
+                    configuration = factory()
+                    setattr(configurable, name, configuration)
+                kw[name] = configuration
             try:
                 action.log(configurable, obj)
-                action.perform(configurable, obj)
+                action.perform(obj, **kw)
             except DirectiveError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
 
