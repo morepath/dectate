@@ -2,7 +2,6 @@ from functools import update_wrapper
 import logging
 from .config import Configurable
 from .config import Directive as ConfigDirective
-import venusian
 from .compat import with_metaclass
 
 
@@ -20,18 +19,11 @@ class Registry(Configurable):
         return []
 
 
-def callback(scanner, name, obj):
-    obj.registry.app = obj
-    scanner.config.configurable(obj.registry)
-
-
 class AppMeta(type):
     def __new__(cls, name, bases, d):
         testing_config = d.get('testing_config')
         d['registry'] = Registry(name, bases, testing_config)
-        result = super(AppMeta, cls).__new__(cls, name, bases, d)
-        venusian.attach(result, callback)
-        return result
+        return super(AppMeta, cls).__new__(cls, name, bases, d)
 
 
 class App(with_metaclass(AppMeta)):

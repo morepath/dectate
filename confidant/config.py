@@ -1,6 +1,5 @@
 import inspect
 from copy import copy
-import venusian
 from .error import (
     ConfigError, ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
@@ -364,12 +363,7 @@ class Directive(Action):
     def __call__(self, wrapped):
         """Call with function to decorate.
         """
-        if self.configurable.testing_config:
-            self.immediate(wrapped)
-        else:
-            def callback(scanner, name, obj):
-                return self.venusian_callback(wrapped, scanner, name, obj)
-            self.attach_info = venusian.attach(wrapped, callback)
+        self.immediate(wrapped)
         return wrapped
 
     def log(self, configurable, obj):
