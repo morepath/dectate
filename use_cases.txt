@@ -78,4 +78,9 @@ Support querying the registration database to see what directives
 have been applied. Should this be the registration data or should it
 be based around directives?
 
+Support logging.
+
+Support dependencies between directives.
+
+Analysis:
 
