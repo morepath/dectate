@@ -297,7 +297,7 @@ class Directive(object):
           for which this action was configured.
         """
         self.app = app
-        self.configurable = app.registry
+        self.configurable = app.configurations
         self.action_factory = action_factory
         self.args = args
         self.kw = kw
@@ -465,7 +465,7 @@ class Config(object):
         This is normally not invoked directly, instead is called
         indirectly by :meth:`scan`.
 
-        A :class:`App` object's registry attribute is a configurable.
+        A :class:`App` object's configurations attribute is a configurable.
 
         :param: The :class:`morepath.config.Configurable` to register.
         """

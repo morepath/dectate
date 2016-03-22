@@ -39,7 +39,7 @@ def test_directive_main():
 
     config.commit()
 
-    MyApp.registry.my.l == [('hello', f)]
+    MyApp.configurations.my.l == [('hello', f)]
 
 
 def test_directive_conflict():
@@ -116,10 +116,10 @@ def test_directive_inherit():
 
     config.commit()
 
-    assert MyApp.registry.my.message == 'hello'
-    assert MyApp.registry.my.obj is f
-    assert SubApp.registry.my.message == 'hello'
-    assert SubApp.registry.my.obj is f
+    assert MyApp.configurations.my.message == 'hello'
+    assert MyApp.configurations.my.obj is f
+    assert SubApp.configurations.my.message == 'hello'
+    assert SubApp.configurations.my.obj is f
 
 
 def test_directive_override():
@@ -160,7 +160,7 @@ def test_directive_override():
 
     config.commit()
 
-    assert MyApp.registry.my.message == 'hello'
-    assert MyApp.registry.my.obj is f
-    assert SubApp.registry.my.message == 'hello'
-    assert SubApp.registry.my.obj is f2
+    assert MyApp.configurations.my.message == 'hello'
+    assert MyApp.configurations.my.obj is f
+    assert SubApp.configurations.my.message == 'hello'
+    assert SubApp.configurations.my.obj is f2

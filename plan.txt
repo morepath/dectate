@@ -4,6 +4,13 @@ Write a few tests.
 
 Refactor so apps store the directives, not the configuration object.
 
-Refactor so that registries are many and can be scoped to directives.
+Refactor so that registries are many and can be scoped to directives. *
 
+
+The apps need to store the actions, not the configuration object.
+
+This allows us to commit for a given number of apps. We also can
+automatically commit for all apps.
+
+Committing for an app should automatically also commit for its base app.
 

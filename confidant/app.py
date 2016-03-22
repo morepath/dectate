@@ -13,7 +13,8 @@ class Registry(Configurable):
 
     def __init__(self, name, bases, testing_config):
         self.name = name
-        bases = [base.registry for base in bases if hasattr(base, 'registry')]
+        bases = [base.configurations for base in bases
+                 if hasattr(base, 'configurations')]
         Configurable.__init__(self, bases, testing_config)
 
     def actions(self):
@@ -23,7 +24,7 @@ class Registry(Configurable):
 class AppMeta(type):
     def __new__(cls, name, bases, d):
         testing_config = d.get('testing_config')
-        d['registry'] = Registry(name, bases, testing_config)
+        d['configurations'] = Registry(name, bases, testing_config)
         return super(AppMeta, cls).__new__(cls, name, bases, d)
 
 
