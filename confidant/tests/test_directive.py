@@ -1,5 +1,5 @@
-from confidant.app import App, Directive
-from confidant.config import Config
+from confidant.app import App
+from confidant.config import Config, Directive
 from confidant.error import ConflictError
 
 import pytest
@@ -21,8 +21,12 @@ def test_directive_main():
             'my': Registry
         }
 
-        def __init__(self, app, frame_info, message):
-            super(MyDirective, self).__init__(app, frame_info)
+        def __init__(self, app, frame_info,
+                     directive_name, argument_info, logger,
+                     message):
+            super(MyDirective, self).__init__(app, frame_info,
+                                              directive_name, argument_info,
+                                              logger)
             self.message = message
 
         def identifier(self, registry):
@@ -59,8 +63,12 @@ def test_directive_conflict():
             'my': Registry
         }
 
-        def __init__(self, app, frame_info, message):
-            super(MyDirective, self).__init__(app, frame_info)
+        def __init__(self, app, frame_info,
+                     directive_name, argument_info, logger,
+                     message):
+            super(MyDirective, self).__init__(app, frame_info,
+                                              directive_name, argument_info,
+                                              logger)
             self.message = message
 
         def identifier(self, registry):
@@ -96,8 +104,12 @@ def test_directive_inherit():
             'my': Registry
         }
 
-        def __init__(self, app, frame_info, message):
-            super(MyDirective, self).__init__(app, frame_info)
+        def __init__(self, app, frame_info,
+                     directive_name, argument_info, logger,
+                     message):
+            super(MyDirective, self).__init__(app, frame_info,
+                                              directive_name, argument_info,
+                                              logger)
             self.message = message
 
         def identifier(self, registry):
@@ -137,8 +149,12 @@ def test_directive_override():
             'my': Registry
         }
 
-        def __init__(self, app, frame_info, message):
-            super(MyDirective, self).__init__(app, frame_info)
+        def __init__(self, app, frame_info,
+                     directive_name, argument_info, logger,
+                     message):
+            super(MyDirective, self).__init__(app, frame_info,
+                                              directive_name, argument_info,
+                                              logger)
             self.message = message
 
         def identifier(self, registry):

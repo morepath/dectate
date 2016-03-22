@@ -1,8 +1,7 @@
 from functools import update_wrapper
 import logging
 import sys
-from .config import Configurable
-from .config import Directive as ConfigDirective
+from .config import Configurable, Directive
 from .compat import with_metaclass
 from .framehack import get_frame_info
 
@@ -69,23 +68,15 @@ class DirectiveDirective(object):
         def method(self, *args, **kw):
             frame = sys._getframe(1)
             frame_info = get_frame_info(frame)
-            result = directive(self, frame_info, *args, **kw)
-            result.directive_name = directive_name
-            result.argument_info = args, kw
-            result.logger = logging.getLogger('morepath.directive.%s' %
-                                              directive_name)
-            return result
+            argument_info = args, kw
+            logger = logging.getLogger('morepath.directive.%s' %
+                                       directive_name)
+            return directive(self, frame_info,
+                             directive_name, argument_info, logger,
+                             *args, **kw)
 
         # this is to help morepath.sphinxext to do the right thing
         method.actual_directive = directive
         update_wrapper(method, directive.__init__)
         setattr(self.cls, self.name, classmethod(method))
         return directive
-
-
-class Directive(ConfigDirective):
-    def __init__(self, app, frame_info):
-        super(Directive, self).__init__(app.registry, frame_info)
-        self.app = app
-        self.directive_name = None
-        self.logger = None

@@ -305,13 +305,14 @@ class Directive(Action):
     # set later when directive is used, raw args and kw
     argument_info = None
 
-    def __init__(self, configurable, frame_info):
+    def __init__(self, app, frame_info, directive_name, argument_info, logger):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
-        super(Directive, self).__init__(configurable)
+        super(Directive, self).__init__(app.registry)
+        self.app = app
         self.frame_info = frame_info
 
     def codeinfo(self):
