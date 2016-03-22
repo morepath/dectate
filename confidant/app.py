@@ -68,7 +68,6 @@ class DirectiveDirective(object):
         def method(self, *args, **kw):
             frame = sys._getframe(1)
             frame_info = get_frame_info(frame)
-            argument_info = args, kw
             logger = logging.getLogger('morepath.directive.%s' %
                                        directive_name)
             return Directive(self, action_factory, args, kw,
