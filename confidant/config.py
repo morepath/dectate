@@ -5,6 +5,8 @@ from .error import (
 from .toposort import topological_sort
 from .framehack import caller_package
 
+order_count = 0
+
 
 class Configurable(object):
     """Object to which configuration actions apply.
@@ -31,6 +33,8 @@ class Configurable(object):
         """
         self.extends = extends or []
         self._testing_config = testing_config
+        # actions immediately registered with configurable
+        self._actions = []
         self.clear()
         if self._testing_config:
             self._testing_config.configurable(self)
@@ -102,6 +106,15 @@ class Configurable(object):
                 continue
             actions.prepare(self)
             actions.perform(self)
+
+    def register_action(self, action, obj):
+        global order_count
+        action.order = order_count
+        order_count += 1
+        self._actions.append((action, obj))
+
+    def get_registered_actions(self):
+        return self._actions
 
     def action(self, action, obj):
         """Register an action with configurable.
@@ -339,8 +352,7 @@ class Directive(object):
         elif isinstance(wrapped, classmethod):
             raise DirectiveError(
                 "Cannot use classmethod with testing_config.")
-        self.configurable.testing_config.action(
-            self.configurable, self.action(), wrapped)
+        self.configurable.register_action(self.action(), wrapped)
 
     def venusian_callback(self, wrapped, scanner, name, obj):
         if self.attach_info.scope == 'class':
@@ -473,21 +485,6 @@ class Config(object):
         for action, obj in configurable.actions():
             self.action(action, obj)
 
-    def action(self, configurable, action, obj):
-        """Register an action and obj with this config.
-
-        This is normally not invoked directly, instead is called
-        indirectly by :meth:`scan`.
-
-        A Morepath directive decorator is an action, and obj is the
-        function that was decorated.
-
-        :param: The :class:`Action` to register.
-        :obj: The object to perform action on.
-        """
-        action.order = self.count
-        self.count += 1
-        self.actions.append((configurable, action, obj))
 
     def prepared(self):
         """Get prepared actions before they are performed.
@@ -503,9 +500,10 @@ class Config(object):
         :returns: An iterable of prepared configurable, action, obj combinations.
         """
         try:
-            for configurable, action, obj in self.actions:
-                for prepared, prepared_obj in action.prepare(obj):
-                    yield (configurable, prepared, prepared_obj)
+            for configurable in self.configurables:
+                for action, obj in configurable.get_registered_actions():
+                    for prepared, prepared_obj in action.prepare(obj):
+                        yield (configurable, prepared, prepared_obj)
         except ConfigError as e:
             raise DirectiveReportError(u"{}".format(e), action)
 
