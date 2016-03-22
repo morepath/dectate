@@ -71,8 +71,8 @@ class DirectiveDirective(object):
             argument_info = args, kw
             logger = logging.getLogger('morepath.directive.%s' %
                                        directive_name)
-            return Directive(self, action_factory,
-                             frame_info, directive_name, argument_info, logger)
+            return Directive(self, action_factory, args, kw,
+                             frame_info, directive_name, logger)
         update_wrapper(method, action_factory.__init__)
         setattr(self.cls, self.name, classmethod(method))
         return action_factory

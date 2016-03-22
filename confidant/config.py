@@ -296,8 +296,8 @@ class Directive(object):
     When used as a decorator this tracks where in the source code
     the directive was used for the purposes of error reporting.
     """
-    def __init__(self, app, action_factory,
-                 frame_info, directive_name, argument_info, logger):
+    def __init__(self, app, action_factory, args, kw,
+                 frame_info, directive_name, logger):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
@@ -306,14 +306,16 @@ class Directive(object):
         self.app = app
         self.configurable = app.registry
         self.action_factory = action_factory
+        self.args = args
+        self.kw = kw
         self.frame_info = frame_info
         self.directive_name = directive_name
-        self.argument_info = argument_info
+        self.argument_info = (args, kw)
         self.logger = logger
 
     def action(self):
-        args, kw = self.argument_info
-        return self.action_factory(self.app.registry, self, *args, **kw)
+        return self.action_factory(self.app.registry, self,
+                                   *self.args, **self.kw)
 
     def codeinfo(self):
         """Info about where in the source code the directive was invoked.
