@@ -3,7 +3,7 @@ from copy import copy
 from .error import (
     ConfigError, ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .framehack import caller_package, get_frame_info
+from .framehack import caller_package
 
 
 class Configurable(object):
