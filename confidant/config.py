@@ -339,7 +339,8 @@ class Directive(object):
         elif isinstance(wrapped, classmethod):
             raise DirectiveError(
                 "Cannot use classmethod with testing_config.")
-        self.configurable.testing_config.action(self.action(), wrapped)
+        self.configurable.testing_config.action(
+            self.configurable, self.action(), wrapped)
 
     def venusian_callback(self, wrapped, scanner, name, obj):
         if self.attach_info.scope == 'class':
@@ -472,7 +473,7 @@ class Config(object):
         for action, obj in configurable.actions():
             self.action(action, obj)
 
-    def action(self, action, obj):
+    def action(self, configurable, action, obj):
         """Register an action and obj with this config.
 
         This is normally not invoked directly, instead is called
@@ -486,7 +487,7 @@ class Config(object):
         """
         action.order = self.count
         self.count += 1
-        self.actions.append((action, obj))
+        self.actions.append((configurable, action, obj))
 
     def prepared(self):
         """Get prepared actions before they are performed.
@@ -499,12 +500,12 @@ class Config(object):
         This calls :meth:`Action.prepare` on all registered configuration
         actions.
 
-        :returns: An iterable of prepared action, obj combinations.
+        :returns: An iterable of prepared configurable, action, obj combinations.
         """
         try:
-            for action, obj in self.actions:
+            for configurable, action, obj in self.actions:
                 for prepared, prepared_obj in action.prepare(obj):
-                    yield (prepared, prepared_obj)
+                    yield (configurable, prepared, prepared_obj)
         except ConfigError as e:
             raise DirectiveReportError(u"{}".format(e), action)
 
@@ -534,8 +535,8 @@ class Config(object):
         for configurable in sort_configurables(self.configurables):
             configurable.clear()
 
-        for action, obj in self.prepared():
-            action.directive.configurable.action(action, obj)
+        for configurable, action, obj in self.prepared():
+            configurable.action(action, obj)
 
         for configurable in sort_configurables(self.configurables):
             configurable.execute()
