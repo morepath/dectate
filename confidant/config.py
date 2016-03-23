@@ -244,15 +244,6 @@ class Action(object):
             setattr(action, key, value)
         return action
 
-    def prepare(self, obj):
-        """Prepare action for configuration.
-
-        :param obj: The object that the action should be performed on.
-
-        Returns an iterable of prepared action, obj tuples.
-        """
-        return [(self, obj)]
-
     def perform(self, obj, **kw):
         """Register whatever is being configured with configurable.
 
