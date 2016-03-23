@@ -19,81 +19,66 @@
 * Ensure that morepath directives get registered before we start using them
   in imports.
 
-* Abbreviated directives should have correct frame info for error reporting.
+* Abbreviated directives should have correct frame info for error
+  reporting. (done)
 
-Do checks on input parameters depending on what object is being
-decorated (class versus function). Done in prepare, such as for path
-directive.
+* Do checks on input parameters depending on what object is being
+  decorated (class versus function). Done in prepare, such as for path
+  directive. Should now move it into perform and raise errors if
+  things are wrong. Check on error reporting.
 
-The path directive also does a clone, getting rid of the original
-action and overwriting it with a new model.
+* Dependencies between actions. (done)
 
-There's a complex clone in ViewDirective
+* Directives have a name. is it used in logging?
 
-The cloning process in the execution.. Why is this needed again? I
-think to support inheritance.
+* Directives have documentation that shows up in the sphinx docs
 
-Preparing the action. In some cases this is used to generate sub
-actions. In other cases this is
+* Directive logging.
 
-Performing the action, which affects the state of the registry given
-action configuration and obj (typically a function)
+* Subclasses of App can have new directives through the directive
+  directive (works)
 
-Dependencies between actions. or should that be action groups?
+* We have some use cases where we'd like to execute some code after
+  all directives of a particular kind are done executing. This way we
+  could initialize the predicates for all external predicates
+  functions, for instance.
 
-Directives have a name
+* Prepare now only works one level deep: you can't implement a
+  directive as multiple actions which then in turn are actually other
+  actions. This has been fixed with Composite actions (done)
 
-Directives have documentation that shows up in the sphinx docs
+* Sometimes during prepare it'd be useful to have access to the registry.
 
-Directives are callable on App
+* Apps could have multiple independent registries (or at least
+  registries APIs; many will build on the reg registry). Perhaps
+  actions can somehow declare which registry APIs they concern
+  themselves with. This way we could avoid mixing a lot of registry
+  mixins into a larger registry. (this now works)
 
-Subclasses of App can have new directives through the directive directive
+* if multiple directives declare different classes for the configuration
+  registry that should be an error.
 
-Take app as argument, and extracts registry from this
-(configurable). But then also some directive use app directly. Where?
-Identify use cases.
+* There's another use case to apply the action to the app, not to
+  app.registry directly: the logging functionality needs this
+  information. I've worked around it now with a hack that sets up the
+  app as an attribute on the registry after the fact...
 
-We have some use cases where we'd like to execute some code after all
-directives of a particular kind are done executing. This way we could
-initialize the predicates for all external predicates functions, for
-instance.
+* Not use Venusian: a directive should register with the configuration
+  system (or better: the App) immediately upon import as it's easier to
+  explain. (done)
 
-Prepare now only works one level deep: you can't implement a directive
-as multiple actions which then in turn are actually other actions.
+* Support configuration isolation: re-run configuration multiple times.
 
-Sometimes during prepare it'd be useful to have access to the registry.
+* Determine that two toplevel directives are actually the same one by
+  looking at line number information.
 
-Apps could have multiple independent registries (or at least
-registries APIs; many will build on the reg registry). Perhaps actions
-can somehow declare which registry APIs they concern themselves
-with. This way we could avoid mixing a lot of registry mixins into a
-larger registry.
+* Have line number information for error reporting. (done)
 
-There's another use case to apply the action to the app, not to
-app.registry directly: the logging functionality needs this
-information. I've worked around it now with a hack that sets up the
-app as an attribute on the registry after the fact...
+* Support querying the registration database to see what directives
+  have been applied. Should this be the registration data or should it
+  be based around directives?
 
-Not use Venusian: a directive should register with the configuration
-system (or better: the App) immediately upon import as it's easier to
-explain.
-
-Support configuration isolation: re-run configuration multiple times.
-
-Determine that two toplevel directives are actually the same one by
-looking at line number information.
-
-Have line number information for error reporting.
-
-Support querying the registration database to see what directives
-have been applied. Should this be the registration data or should it
-be based around directives?
-
-Support logging.
-
-Support dependencies between directives.
+* Support logging.
 
 * Refuse to support classmethod & staticmethod?
-
-Analysis:
 
