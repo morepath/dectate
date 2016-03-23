@@ -31,22 +31,13 @@ class Configurable(object):
           the use of directive decorators in tests where scanning is
           not an option. Optional, default no testing config.
         """
-        self.extends = extends or []
-        self._testing_config = testing_config
+        self.extends = extends
+        self.testing_config = testing_config
+        if testing_config:
+            testing_config.configurable(self)
         # actions immediately registered with configurable
         self._actions = []
         self.clear()
-        if self._testing_config:
-            self._testing_config.configurable(self)
-
-    @property
-    def testing_config(self):
-        return self._testing_config
-
-    @testing_config.setter
-    def testing_config(self, config):
-        self._testing_config = config
-        config.configurable(self)
 
     def actions(self):
         """Actions the configurable wants to register as it is scanned.
