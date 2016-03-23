@@ -1,7 +1,7 @@
 import inspect
 from copy import copy
 from .error import (
-    ConfigError, ConflictError, DirectiveError, DirectiveReportError)
+    ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
 from .framehack import caller_package
 
@@ -11,18 +11,20 @@ order_count = 0
 class Configurable(object):
     """Object to which configuration actions apply.
 
-    Actions can be added to a configurable.
+    This object can be tucked away inside an App class.
 
-    Once all actions are added, the configurable is executed.
-    This checks for any conflicts between configurations and
-    the configurable is expanded with any configurations from its
-    extends list. Then the configurable is performed, meaning all
-    its actions are performed (to it).
+    Actions are registered per configurable during the import phase. The
+    minimal activity happens during this phase.
+
+    During commit phase the configurable is executed. This expands any
+    composite actions, groups actions into action groups and sorts
+    them by depends so that they are executed in the correct order,
+    and then executes each action group, which performs them.
     """
     def __init__(self, extends, testing_config):
         """
         :param extends:
-          the configurables that this configurable extends. Optional.
+          the configurables that this configurable extends.
         :type extends: list of configurables.
         :param testing_config:
           We can pass a config object used during testing. This causes
@@ -37,16 +39,6 @@ class Configurable(object):
             testing_config.configurable(self)
         # actions immediately registered with configurable
         self._actions = []
-
-    def actions(self):
-        """Actions the configurable wants to register as it is scanned.
-
-        A configurable may want to register some actions as it is registered
-        with the config system.
-
-        Should return a sequence of action, obj tuples.
-        """
-        return []
 
     def register_action(self, action, obj):
         global order_count
@@ -453,8 +445,6 @@ class Config(object):
         :param: The :class:`morepath.config.Configurable` to register.
         """
         self.configurables.append(configurable)
-        for action, obj in configurable.actions():
-            self.action(action, obj)
 
     def commit(self):
         """Commit all configuration.
