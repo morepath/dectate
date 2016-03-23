@@ -82,3 +82,8 @@
 
 * Refuse to support classmethod & staticmethod?
 
+* The config object should get the configurables explicitly. Or apps?
+  And then allow a commit.
+
+* there's also an implicit list of configurables kept globally that can
+  be reset.
