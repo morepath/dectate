@@ -140,9 +140,7 @@ class Actions(object):
         self._action_map = to_combine
 
     def execute(self, configurable):
-        """Perform actions in this configurable.
-
-        Prepare must be called before calling this.
+        """Perform actions.
         """
         self.prepare(configurable)
 
@@ -197,12 +195,12 @@ class Action(object):
         """
         return self.__class__
 
-    def codeinfo(self):
+    def frame_info(self):
         """Info about where in the source code the action was invoked.
-
-        By default there is no code info.
         """
-        return None
+        if self.directive is None:
+            return None
+        return self.directive.frame_info
 
     def get_configurations(self, configurable):
         result = {}
