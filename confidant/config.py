@@ -19,7 +19,7 @@ class Configurable(object):
     extends list. Then the configurable is performed, meaning all
     its actions are performed (to it).
     """
-    def __init__(self, extends=None, testing_config=None):
+    def __init__(self, extends, testing_config):
         """
         :param extends:
           the configurables that this configurable extends. Optional.
