@@ -5,7 +5,7 @@ from confidant.error import ConflictError
 import pytest
 
 
-def test_directive_main():
+def test_simple():
     config = Config()
 
     class Registry(object):
@@ -39,10 +39,10 @@ def test_directive_main():
 
     config.commit()
 
-    MyApp.configurations.my.l == [('hello', f)]
+    assert MyApp.configurations.my.l == [('hello', f)]
 
 
-def test_directive_conflict():
+def test_conflict_same_directive():
     config = Config()
 
     class Registry(object):
@@ -82,7 +82,7 @@ def test_directive_conflict():
         config.commit()
 
 
-def test_directive_inherit():
+def test_app_inherit():
     config = Config()
 
     class Registry(object):
@@ -122,7 +122,7 @@ def test_directive_inherit():
     assert SubApp.configurations.my.obj is f
 
 
-def test_directive_override():
+def test_app_override():
     config = Config()
 
     class Registry(object):
@@ -166,7 +166,7 @@ def test_directive_override():
     assert SubApp.configurations.my.obj is f2
 
 
-def test_directive_different_group():
+def test_different_group_no_conflict():
     config = Config()
 
     class Registry(object):
@@ -219,11 +219,11 @@ def test_directive_different_group():
 
     config.commit()
 
-    MyApp.configurations.foo.l == [('hello', f)]
-    MyApp.configurations.bar.l == [('hello', g)]
+    assert MyApp.configurations.foo.l == [('hello', f)]
+    assert MyApp.configurations.bar.l == [('hello', g)]
 
 
-def test_directive_same_group():
+def test_same_group_conflict():
     config = Config()
 
     class Registry(object):
@@ -280,3 +280,62 @@ def test_directive_same_group():
 
     with pytest.raises(ConflictError):
         config.commit()
+
+
+def test_depends():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    @App.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    @App.directive('bar')
+    class BarDirective(Action):
+        depends = [FooDirective]
+
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.bar('a')
+    def g():
+        pass
+
+    @MyApp.foo('b')
+    def f():
+        pass
+
+    config.commit()
+
+    # since bar depends on foo, it should be executed last
+    assert MyApp.configurations.my.l == [('b', f), ('a', g)]
