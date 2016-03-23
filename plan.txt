@@ -43,5 +43,7 @@ There is a notion of configurable that keeps information
 about processed actions.
 
 
-Refactor prepare into Configurable?
+We still get a base App without testing_config in use. Make what
+apps we commit explicit. And maintain a global list of apps we've
+seen for automation.
 

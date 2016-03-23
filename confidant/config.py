@@ -436,8 +436,6 @@ class Config(object):
     """
     def __init__(self):
         self.configurables = []
-        self.actions = []
-        self.count = 0
 
     def scan(self, package=None, ignore=None, recursive=True,
              onerror=None):
