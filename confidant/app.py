@@ -16,7 +16,7 @@ class AppMeta(type):
 
 
 class App(with_metaclass(AppMeta)):
-    """A Morepath-based application object.
+    """A configurable application object.
     """
     testing_config = None
 
