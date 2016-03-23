@@ -678,3 +678,53 @@ def test_with_statement_kw():
         (Dummy, 'a', f),
         (Dummy, 'b', g),
     ]
+
+
+def test_with_statement_args():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, model, name, obj):
+            self.l.append((model, name, obj))
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, model, name):
+            self.model = model
+            self.name = name
+
+        def identifier(self, my):
+            return (self.model, self.name)
+
+        def perform(self, obj, my):
+            my.add(self.model, self.name, obj)
+
+    class Dummy(object):
+        pass
+
+    with MyApp.foo(Dummy) as foo:
+
+        @foo('a')
+        def f():
+            pass
+
+        @foo('b')
+        def g():
+            pass
+
+    config.commit()
+
+    assert MyApp.configurations.my.l == [
+        (Dummy, 'a', f),
+        (Dummy, 'b', g),
+    ]
