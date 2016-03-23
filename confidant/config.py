@@ -37,7 +37,6 @@ class Configurable(object):
             testing_config.configurable(self)
         # actions immediately registered with configurable
         self._actions = []
-        self.clear()
 
     def actions(self):
         """Actions the configurable wants to register as it is scanned.
@@ -58,47 +57,34 @@ class Configurable(object):
     def get_registered_actions(self):
         return self._actions
 
-    def clear(self):
-        """Clear any previously registered actions.
+    def group_actions(self):
+        self._class_to_actions = d = {}
 
-        This is normally not invoked directly, instead is called
-        indirectly by :meth:`Config.commit`.
-        """
-        self._class_to_actions = {}
+        # get the actions our actions extend
+        for configurable in self.extends:
+            for action_class in configurable.action_classes():
+                if action_class not in d:
+                    d[action_class] = Actions(
+                        self.action_extends(action_class))
 
-    def prepare(self):
-        result = {}
+        # now add the actions for this configurable
         for action, obj in self.get_registered_actions():
             try:
                 for prepared, prepared_obj in action.prepare(obj):
-                    result.setdefault(prepared.group_key(), []).append(
-                        (prepared, prepared_obj))
+                    action_class = prepared.group_key()
+                    actions = d.get(action_class)
+                    if actions is None:
+                        d[action_class] = actions = Actions(
+                            self.action_extends(action_class))
+                    actions.add(prepared, prepared_obj)
             except ConfigError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
-        # make sure we don't forget about action classes in extends
-        for configurable in self.extends:
-            for action_class in configurable.action_classes():
-                if action_class not in result:
-                    result[action_class] = []
-        return result
-
-    def group_actions(self):
-        """Group actions into :class:`Actions` by class.
-        """
-        d = self.prepare()
-        # grouped actions by class (in fact deepest base class before
-        # Directive)
-        # do the final grouping into Actions objects
-        self._class_to_actions = {}
-        for action_class, actions in d.items():
-            self._class_to_actions[action_class] = Actions(
-                actions, self.action_extends(action_class))
 
     def action_extends(self, action_class):
         """Get actions for action class in extends.
         """
         return [
-            configurable._class_to_actions.get(action_class, Actions([], []))
+            configurable._class_to_actions.get(action_class, Actions([]))
             for configurable in self.extends]
 
     def action_classes(self):
@@ -109,21 +95,22 @@ class Configurable(object):
     def execute(self):
         """Execute actions for configurable.
         """
-        self.clear()
         self.group_actions()
         for action_class in self.action_classes():
             actions = self._class_to_actions.get(action_class)
             if actions is None:
                 continue
-            actions.prepare(self)
-            actions.perform(self)
+            actions.execute(self)
 
 
 class Actions(object):
-    def __init__(self, actions, extends):
-        self._actions = actions
+    def __init__(self, extends):
+        self._actions = []
         self._action_map = {}
         self.extends = extends
+
+    def add(self, action, obj):
+        self._actions.append((action, obj))
 
     def prepare(self, configurable):
         """Prepare.
@@ -166,11 +153,13 @@ class Actions(object):
         to_combine.update(self._action_map)
         self._action_map = to_combine
 
-    def perform(self, configurable):
+    def execute(self, configurable):
         """Perform actions in this configurable.
 
         Prepare must be called before calling this.
         """
+        self.prepare(configurable)
+
         values = list(self._action_map.values())
         values.sort(key=lambda value: value[0].order or 0)
         for action, obj in values:
