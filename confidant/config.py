@@ -54,9 +54,6 @@ class Configurable(object):
         order_count += 1
         self._actions.append((action, obj))
 
-    def get_registered_actions(self):
-        return self._actions
-
     def group_actions(self):
         self._class_to_actions = d = {}
 
@@ -68,25 +65,13 @@ class Configurable(object):
                         self.action_extends(action_class))
 
         # now add the actions for this configurable
-        for registered_action, registered_obj in self.get_registered_actions():
-            try:
-                if isinstance(registered_action, Composite):
-                    actions = registered_action.actions(registered_obj)
-                    for action, obj in actions:
-                        global order_count
-                        action.order = order_count
-                        order_count += 1
-                else:
-                    actions = [(registered_action, registered_obj)]
-                for action, obj in actions:
-                    action_class = action.group_key()
-                    actions = d.get(action_class)
-                    if actions is None:
-                        d[action_class] = actions = Actions(
-                            self.action_extends(action_class))
-                    actions.add(action, obj)
-            except ConfigError as e:
-                raise DirectiveReportError(u"{}".format(e), action)
+        for action, obj in expand_actions(self._actions):
+            action_class = action.group_key()
+            actions = d.get(action_class)
+            if actions is None:
+                d[action_class] = actions = Actions(
+                    self.action_extends(action_class))
+            actions.add(action, obj)
 
     def action_extends(self, action_class):
         """Get actions for action class in extends.
@@ -515,3 +500,16 @@ def sort_action_classes(action_classes):
     """Sort action classes topologically by depends.
     """
     return topological_sort(action_classes, lambda c: c.depends)
+
+
+def expand_actions(actions):
+    for action, obj in actions:
+        if isinstance(action, Composite):
+            for sub_action, sub_obj in expand_actions(action.actions(obj)):
+                yield sub_action, sub_obj
+        else:
+            if not hasattr(action, 'order'):
+                global order_count
+                action.order = order_count
+                order_count += 1
+            yield action, obj
