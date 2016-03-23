@@ -628,3 +628,53 @@ def test_nested_composite():
         ('a_0', f), ('a_1', f),
         ('b_0', f), ('b_1', f),
         ('c_0', f), ('c_1', f)]
+
+
+def test_with_statement_kw():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, model, name, obj):
+            self.l.append((model, name, obj))
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, model, name):
+            self.model = model
+            self.name = name
+
+        def identifier(self, my):
+            return (self.model, self.name)
+
+        def perform(self, obj, my):
+            my.add(self.model, self.name, obj)
+
+    class Dummy(object):
+        pass
+
+    with MyApp.foo(model=Dummy) as foo:
+
+        @foo(name='a')
+        def f():
+            pass
+
+        @foo(name='b')
+        def g():
+            pass
+
+    config.commit()
+
+    assert MyApp.configurations.my.l == [
+        (Dummy, 'a', f),
+        (Dummy, 'b', g),
+    ]

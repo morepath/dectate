@@ -1,9 +1,10 @@
+import sys
 import inspect
-from copy import copy
 from .error import (
     ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .framehack import caller_package
+from .framehack import caller_package, get_frame_info
+
 
 order_count = 0
 
@@ -233,18 +234,6 @@ class Action(object):
         """
         return []
 
-    def clone(self, **kw):
-        """Make a clone of this action.
-
-        Keyword parameters can be used to override attributes in clone.
-
-        Used during preparation to create new fully prepared actions.
-        """
-        action = copy(self)
-        for key, value in kw.items():
-            setattr(action, key, value)
-        return action
-
     def perform(self, obj, **kw):
         """Register whatever is being configured with configurable.
 
@@ -304,6 +293,18 @@ class Directive(object):
         """
         return None
 
+    def clone(self, frame_info, **kw):
+        combined_kw = self.kw.copy()
+        combined_kw.update(kw)
+        return Directive(
+            app=self.app,
+            action_factory=self.action_factory,
+            args=self.args,
+            kw=combined_kw,
+            frame_info=frame_info,
+            directive_name=self.directive_name,
+            logger=self.logger)
+
     def __enter__(self):
         return DirectiveAbbreviation(self)
 
@@ -358,7 +359,9 @@ class DirectiveAbbreviation(object):
         self.directive = directive
 
     def __call__(self, **kw):
-        return self.directive.clone(**kw)
+        frame = sys._getframe(1)
+        frame_info = get_frame_info(frame)
+        return self.directive.clone(frame_info, **kw)
 
 
 class Config(object):
