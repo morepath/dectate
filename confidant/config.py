@@ -75,6 +75,11 @@ class Configurable(object):
                         (prepared, prepared_obj))
             except ConfigError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
+        # make sure we don't forget about action classes in extends
+        for configurable in self.extends:
+            for action_class in configurable.action_classes():
+                if action_class not in result:
+                    result[action_class] = []
         return result
 
     def group_actions(self):
@@ -83,11 +88,6 @@ class Configurable(object):
         d = self.prepare()
         # grouped actions by class (in fact deepest base class before
         # Directive)
-        # make sure we don't forget about action classes in extends
-        for configurable in self.extends:
-            for action_class in configurable.action_classes():
-                if action_class not in d:
-                    d[action_class] = []
         # do the final grouping into Actions objects
         self._class_to_actions = {}
         for action_class, actions in d.items():
