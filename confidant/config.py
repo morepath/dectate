@@ -99,6 +99,8 @@ class Configurable(object):
     def execute(self):
         """Execute actions for configurable.
         """
+        self.clear()
+        self.prepare()
         self.group_actions()
         for action_class in self.action_classes():
             actions = self._class_to_actions.get(action_class)
@@ -504,16 +506,7 @@ class Config(object):
         multiple times as it automatically clears the
         configuration of its configurables first.
         """
-        sorted_configurables = sort_configurables(self.configurables)
-        # clear all previous configuration; commit can only be run
-        # once during runtime so it's handy to clear this out for tests
-        for configurable in sorted_configurables:
-            configurable.clear()
-
-        for configurable in sorted_configurables:
-            configurable.prepare()
-
-        for configurable in sorted_configurables:
+        for configurable in sort_configurables(self.configurables):
             configurable.execute()
 
 
