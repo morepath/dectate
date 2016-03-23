@@ -25,3 +25,23 @@ contains the actual configured registries.
 The *config* will contain the apps to commit.
 
 
+all configurables are executed.
+
+the commit first in the prepare phase adds actions the configurable,
+grouping them.
+
+
+the configurable execute does:
+
+groups actions, which results in Actions objects.
+
+then for each action class it will prepare the actions object and perform
+it.
+
+
+There is a notion of configurable that keeps information
+about processed actions.
+
+
+Refactor prepare into Configurable?
+

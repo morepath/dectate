@@ -116,6 +116,14 @@ class Configurable(object):
     def get_registered_actions(self):
         return self._actions
 
+    def prepare(self):
+        for action, obj in self.get_registered_actions():
+            try:
+                for prepared, prepared_obj in action.prepare(obj):
+                    self.action(prepared, prepared_obj)
+            except ConfigError as e:
+                raise DirectiveReportError(u"{}".format(e), action)
+
     def action(self, action, obj):
         """Register an action with configurable.
 
@@ -485,28 +493,6 @@ class Config(object):
         for action, obj in configurable.actions():
             self.action(action, obj)
 
-
-    def prepared(self):
-        """Get prepared actions before they are performed.
-
-        The preparation phase happens as the first stage of a commit.
-        This allows configuration actions to complete their
-        configuration, do error checking, or transform themselves into
-        different configuration actions.
-
-        This calls :meth:`Action.prepare` on all registered configuration
-        actions.
-
-        :returns: An iterable of prepared configurable, action, obj combinations.
-        """
-        try:
-            for configurable in self.configurables:
-                for action, obj in configurable.get_registered_actions():
-                    for prepared, prepared_obj in action.prepare(obj):
-                        yield (configurable, prepared, prepared_obj)
-        except ConfigError as e:
-            raise DirectiveReportError(u"{}".format(e), action)
-
     def commit(self):
         """Commit all configuration.
 
@@ -528,15 +514,16 @@ class Config(object):
         multiple times as it automatically clears the
         configuration of its configurables first.
         """
+        sorted_configurables = sort_configurables(self.configurables)
         # clear all previous configuration; commit can only be run
         # once during runtime so it's handy to clear this out for tests
-        for configurable in sort_configurables(self.configurables):
+        for configurable in sorted_configurables:
             configurable.clear()
 
-        for configurable, action, obj in self.prepared():
-            configurable.action(action, obj)
+        for configurable in sorted_configurables:
+            configurable.prepare()
 
-        for configurable in sort_configurables(self.configurables):
+        for configurable in sorted_configurables:
             configurable.execute()
 
 
