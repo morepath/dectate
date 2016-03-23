@@ -48,14 +48,6 @@ class Configurable(object):
         self._testing_config = config
         config.configurable(self)
 
-    def clear(self):
-        """Clear any previously registered actions.
-
-        This is normally not invoked directly, instead is called
-        indirectly by :meth:`Config.commit`.
-        """
-        self._class_to_actions = {}
-
     def actions(self):
         """Actions the configurable wants to register as it is scanned.
 
@@ -65,6 +57,34 @@ class Configurable(object):
         Should return a sequence of action, obj tuples.
         """
         return []
+
+    def register_action(self, action, obj):
+        global order_count
+        action.order = order_count
+        order_count += 1
+        self._actions.append((action, obj))
+
+    def get_registered_actions(self):
+        return self._actions
+
+    def clear(self):
+        """Clear any previously registered actions.
+
+        This is normally not invoked directly, instead is called
+        indirectly by :meth:`Config.commit`.
+        """
+        self._class_to_actions = {}
+
+    def prepare(self):
+        result = {}
+        for action, obj in self.get_registered_actions():
+            try:
+                for prepared, prepared_obj in action.prepare(obj):
+                    result.setdefault(prepared.group_key(), []).append(
+                        (prepared, prepared_obj))
+            except ConfigError as e:
+                raise DirectiveReportError(u"{}".format(e), action)
+        return result
 
     def group_actions(self):
         """Group actions into :class:`Actions` by class.
@@ -106,26 +126,6 @@ class Configurable(object):
                 continue
             actions.prepare(self)
             actions.perform(self)
-
-    def register_action(self, action, obj):
-        global order_count
-        action.order = order_count
-        order_count += 1
-        self._actions.append((action, obj))
-
-    def get_registered_actions(self):
-        return self._actions
-
-    def prepare(self):
-        result = {}
-        for action, obj in self.get_registered_actions():
-            try:
-                for prepared, prepared_obj in action.prepare(obj):
-                    result.setdefault(prepared.group_key(), []).append(
-                        (prepared, prepared_obj))
-            except ConfigError as e:
-                raise DirectiveReportError(u"{}".format(e), action)
-        return result
 
 
 class Actions(object):
