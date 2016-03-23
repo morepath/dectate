@@ -311,37 +311,8 @@ class Directive(object):
         if tb is not None:
             return False
 
-    def immediate(self, wrapped):
-        # If we are in testing mode, we immediately add the action.
-        # Note that this broken for staticmethod and classmethod, unlike
-        # the Venusian way, but we can fail hard when we see it.
-        # It's broken for methods as well, but we cannot detect it
-        # without Venusian, so unfortunately we're going to have to
-        # let that pass.
-        # XXX could we use something like Venusian's f_locals hack
-        # to determine the class scope here and do the right thing?
-        if isinstance(wrapped, staticmethod):
-            raise DirectiveError(
-                "Cannot use staticmethod with testing_config.")
-        elif isinstance(wrapped, classmethod):
-            raise DirectiveError(
-                "Cannot use classmethod with testing_config.")
-        self.configurable.register_action(self.action(), wrapped)
-
-    def venusian_callback(self, wrapped, scanner, name, obj):
-        if self.attach_info.scope == 'class':
-            if isinstance(wrapped, staticmethod):
-                func = wrapped.__get__(obj)
-            elif isinstance(wrapped, classmethod):
-                func = wrapped.__get__(obj, obj)
-            else:
-                raise DirectiveError(
-                    "Cannot use directive on normal method %s of "
-                    "class %s. Use staticmethod or classmethod first."
-                    % (wrapped, obj))
-        else:
-            func = wrapped
-        scanner.config.action(self, func)
+    def immediate(self, obj):
+        self.configurable.register_action(self.action(), obj)
 
     def __call__(self, wrapped):
         """Call with function to decorate.

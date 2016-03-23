@@ -87,5 +87,7 @@ Support logging.
 
 Support dependencies between directives.
 
+* Refuse to support classmethod & staticmethod?
+
 Analysis:
 
