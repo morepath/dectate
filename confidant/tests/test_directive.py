@@ -24,7 +24,7 @@ def test_directive_main():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, my):
             return self.message
 
         def perform(self, obj, my):
@@ -61,7 +61,7 @@ def test_directive_conflict():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, my):
             return self.message
 
         def perform(self, obj, my):
@@ -97,7 +97,7 @@ def test_directive_inherit():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, my):
             return self.message
 
         def perform(self, obj, my):
@@ -137,7 +137,7 @@ def test_directive_override():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, my):
             return self.message
 
         def perform(self, obj, my):
@@ -185,7 +185,7 @@ def test_directive_different_group():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, foo):
             return self.message
 
         def perform(self, obj, foo):
@@ -200,7 +200,7 @@ def test_directive_different_group():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, bar):
             return self.message
 
         def perform(self, obj, bar):
@@ -242,7 +242,7 @@ def test_directive_same_group():
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, registry):
+        def identifier(self, foo):
             return self.message
 
         def perform(self, obj, foo):
@@ -261,7 +261,7 @@ def test_directive_same_group():
         def group_key(self):
             return FooDirective
 
-        def identifier(self, registry):
+        def identifier(self, bar):
             return self.message
 
         def perform(self, obj, bar):

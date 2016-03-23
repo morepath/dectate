@@ -147,9 +147,10 @@ class Actions(object):
         self._action_map = action_map = {}
 
         for action, obj in self._actions:
-            id = action.identifier(configurable)
+            configurations = action.get_configurations(configurable)
+            id = action.identifier(**configurations)
             discs = [id]
-            discs.extend(action.discriminators(configurable))
+            discs.extend(action.discriminators(**configurations))
             for disc in discs:
                 other_action = discriminators.get(disc)
                 if other_action is not None:
@@ -238,7 +239,7 @@ class Action(object):
             result[name] = configuration
         return result
 
-    def identifier(self, configurable):
+    def identifier(self, **kw):
         """Returns an immutable that uniquely identifies this config.
 
         :param **kw: a dictionary of configuration objects as specified
@@ -248,7 +249,7 @@ class Action(object):
         """
         raise NotImplementedError()  # pragma: nocoverage
 
-    def discriminators(self, configurable):
+    def discriminators(self, **kw):
         """Returns a list of immutables to detect conflicts.
 
         :param **kw: a dictionary of configuration objects as specified
