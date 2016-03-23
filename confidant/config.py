@@ -23,7 +23,7 @@ class Configurable(object):
         """
         :param extends:
           the configurables that this configurable extends. Optional.
-        :type extends: list of configurables, single configurable.
+        :type extends: list of configurables.
         :param testing_config:
           We can pass a config object used during testing. This causes
           the actions to be issued against the configurable directly
