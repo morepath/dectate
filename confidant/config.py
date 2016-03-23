@@ -68,23 +68,23 @@ class Configurable(object):
                         self.action_extends(action_class))
 
         # now add the actions for this configurable
-        for action, obj in self.get_registered_actions():
+        for registered_action, registered_obj in self.get_registered_actions():
             try:
-                if isinstance(action, Composite):
-                    actions = action.actions(obj)
-                    for prepared, obj in actions:
+                if isinstance(registered_action, Composite):
+                    actions = registered_action.actions(registered_obj)
+                    for action, obj in actions:
                         global order_count
-                        prepared.order = order_count
+                        action.order = order_count
                         order_count += 1
                 else:
-                    actions = [(action, obj)]
-                for prepared, prepared_obj in actions:
-                    action_class = prepared.group_key()
+                    actions = [(registered_action, registered_obj)]
+                for action, obj in actions:
+                    action_class = action.group_key()
                     actions = d.get(action_class)
                     if actions is None:
                         d[action_class] = actions = Actions(
                             self.action_extends(action_class))
-                    actions.add(prepared, prepared_obj)
+                    actions.add(action, obj)
             except ConfigError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
 
