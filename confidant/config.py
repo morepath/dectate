@@ -159,12 +159,21 @@ class Actions(object):
 class Action(object):
     """A configuration action.
 
-    A configuration action is performed on an object. Actions can
-    conflict with each other based on their identifier and
+    A configuration action is performed on an object and one or more
+    configurations.
+
+    Actions can conflict with each other based on their identifier and
     discriminators. Actions can override each other based on their
     identifier.
 
     Can be subclassed to implement concrete configuration actions.
+
+    Actions classes also have a ``configurations`` attribute which is
+    a dictionary mapping configuration name to configuration
+    factory. When the directive is executed and no configuration with
+    such a name yet exists, that configuration is created as an
+    attribute of the Configurable. The configuration objects are passed
+    into ``perform`` as keyword parameters.
 
     Action classes can have a ``depends`` attribute, which is a list
     of other action classes that need to be executed before this one
