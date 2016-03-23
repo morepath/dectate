@@ -1,11 +1,12 @@
-Different types of actions need to group together so they
-conflict/override. Currently uses group_key method.
 
-An action has an identifier for conflicts and overrides. Prefixed by
-group key so we don't need to distinguish between actions in different groups.
+* Different types of actions need to group together so they
+  conflict/override. Currently uses group_key method. (Stick to this)
 
-Extra discriminator list to make more conflicts happen. Do we want
-discriminators to clash even outside action groups?
+* An action has an identifier for conflicts and overrides. Prefixed by
+  group key so we don't need to distinguish between actions in
+  different groups. (works)
+
+* Extra discriminator list to make more conflicts happen. (done)
 
 Generate sub-actions instead of performing things directly. This is
 done in prepare right now.
