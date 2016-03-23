@@ -15,7 +15,10 @@ def test_simple():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class MyDirective(Action):
         configurations = {
             'my': Registry
@@ -29,9 +32,6 @@ def test_simple():
 
         def perform(self, obj, my):
             my.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -52,7 +52,10 @@ def test_conflict_same_directive():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class MyDirective(Action):
         configurations = {
             'my': Registry
@@ -66,9 +69,6 @@ def test_conflict_same_directive():
 
         def perform(self, obj, my):
             my.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -88,7 +88,13 @@ def test_app_inherit():
     class Registry(object):
         pass
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    class SubApp(MyApp):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class MyDirective(Action):
         configurations = {
             'my': Registry
@@ -103,12 +109,6 @@ def test_app_inherit():
         def perform(self, obj, my):
             my.message = self.message
             my.obj = obj
-
-    class MyApp(App):
-        testing_config = config
-
-    class SubApp(MyApp):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -128,7 +128,13 @@ def test_app_override():
     class Registry(object):
         pass
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    class SubApp(MyApp):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class MyDirective(Action):
         configurations = {
             'my': Registry
@@ -143,12 +149,6 @@ def test_app_override():
         def perform(self, obj, my):
             my.message = self.message
             my.obj = obj
-
-    class MyApp(App):
-        testing_config = config
-
-    class SubApp(MyApp):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -176,7 +176,10 @@ def test_different_group_no_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'foo': Registry
@@ -191,7 +194,7 @@ def test_different_group_no_conflict():
         def perform(self, obj, foo):
             foo.add(self.message, obj)
 
-    @App.directive('bar')
+    @MyApp.directive('bar')
     class BarDirective(Action):
         configurations = {
             'bar': Registry
@@ -205,9 +208,6 @@ def test_different_group_no_conflict():
 
         def perform(self, obj, bar):
             bar.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -233,7 +233,10 @@ def test_same_group_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'foo': Registry
@@ -248,7 +251,7 @@ def test_same_group_conflict():
         def perform(self, obj, foo):
             foo.add(self.message, obj)
 
-    @App.directive('bar')
+    @MyApp.directive('bar')
     class BarDirective(Action):
         configurations = {
             'bar': Registry
@@ -266,9 +269,6 @@ def test_same_group_conflict():
 
         def perform(self, obj, bar):
             bar.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('hello')
     def f():
@@ -336,7 +336,10 @@ def test_discriminator_same_group_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'my': Registry
@@ -355,13 +358,10 @@ def test_discriminator_same_group_conflict():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    @App.directive('bar')
+    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         def group_key(self):
             return FooDirective
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -385,7 +385,10 @@ def test_discriminator_no_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'my': Registry
@@ -403,9 +406,6 @@ def test_discriminator_no_conflict():
 
         def perform(self, obj, my):
             my.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -428,7 +428,10 @@ def test_discriminator_different_group_no_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'my': Registry
@@ -447,13 +450,10 @@ def test_discriminator_different_group_no_conflict():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    @App.directive('bar')
+    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         # will have its own group key so in a different group
         pass
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -476,7 +476,10 @@ def test_depends():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'my': Registry
@@ -491,7 +494,7 @@ def test_depends():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    @App.directive('bar')
+    @MyApp.directive('bar')
     class BarDirective(Action):
         depends = [FooDirective]
 
@@ -507,9 +510,6 @@ def test_depends():
 
         def perform(self, obj, my):
             my.add(self.message, obj)
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.bar('a')
     def g():
@@ -535,7 +535,10 @@ def test_composite():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('sub')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('sub')
     class SubDirective(Action):
         configurations = {
             'my': Registry
@@ -550,16 +553,13 @@ def test_composite():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    @App.directive('composite')
+    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
 
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in self.messages]
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
@@ -581,7 +581,10 @@ def test_nested_composite():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('sub')
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('sub')
     class SubDirective(Action):
         configurations = {
             'my': Registry
@@ -596,7 +599,7 @@ def test_nested_composite():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    @App.directive('subcomposite')
+    @MyApp.directive('subcomposite')
     class SubCompositeDirective(Composite):
         def __init__(self, message):
             self.message = message
@@ -605,7 +608,7 @@ def test_nested_composite():
             yield SubDirective(self.message + '_0'), obj
             yield SubDirective(self.message + '_1'), obj
 
-    @App.directive('composite')
+    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
@@ -613,9 +616,6 @@ def test_nested_composite():
         def actions(self, obj):
             return [(SubCompositeDirective(message), obj)
                     for message in self.messages]
-
-    class MyApp(App):
-        testing_config = config
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
