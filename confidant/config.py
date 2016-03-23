@@ -117,24 +117,14 @@ class Configurable(object):
         return self._actions
 
     def prepare(self):
+        self._grouped_actions = d = {}
         for action, obj in self.get_registered_actions():
             try:
                 for prepared, prepared_obj in action.prepare(obj):
-                    self.action(prepared, prepared_obj)
+                    d.setdefault(prepared.group_key(), []).append(
+                        (prepared, prepared_obj))
             except ConfigError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
-
-    def action(self, action, obj):
-        """Register an action with configurable.
-
-        This is normally not invoked directly, instead is called
-        indirectly by :meth:`Config.commit`.
-
-        :param action: The action to register with the configurable.
-        :param obj: The object that this action is performed on.
-        """
-        self._grouped_actions.setdefault(
-            action.group_key(), []).append((action, obj))
 
 
 class Actions(object):
