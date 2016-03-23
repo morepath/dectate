@@ -1,5 +1,5 @@
 from confidant.app import App
-from confidant.config import Config, Action
+from confidant.config import Config, Action, Composite
 from confidant.error import ConflictError
 
 import pytest
@@ -523,3 +523,49 @@ def test_depends():
 
     # since bar depends on foo, it should be executed last
     assert MyApp.configurations.my.l == [('b', f), ('a', g)]
+
+
+def test_composite():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    @App.directive('sub')
+    class SubDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    @App.directive('composite')
+    class CompositeDirective(Composite):
+        def __init__(self, messages):
+            self.messages = messages
+
+        def actions(self, obj):
+            return [(SubDirective(message), obj) for message in self.messages]
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.composite(['a', 'b', 'c'])
+    def f():
+        pass
+
+    config.commit()
+
+    # since bar depends on foo, it should be executed last
+    assert MyApp.configurations.my.l == [('a', f), ('b', f), ('c', f)]

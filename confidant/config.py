@@ -70,7 +70,15 @@ class Configurable(object):
         # now add the actions for this configurable
         for action, obj in self.get_registered_actions():
             try:
-                for prepared, prepared_obj in action.prepare(obj):
+                if isinstance(action, Composite):
+                    actions = action.actions(obj)
+                    for prepared, obj in actions:
+                        global order_count
+                        prepared.order = order_count
+                        order_count += 1
+                else:
+                    actions = [(action, obj)]
+                for prepared, prepared_obj in actions:
                     action_class = prepared.group_key()
                     actions = d.get(action_class)
                     if actions is None:
@@ -272,6 +280,11 @@ class Action(object):
     # XXX for now don't log plain non-directive actions
     def log(self, configurable, obj):
         pass
+
+
+class Composite(object):
+    def actions(self, obj):
+        return []
 
 
 class Directive(object):
