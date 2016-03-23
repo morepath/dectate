@@ -17,9 +17,6 @@ class Registry(Configurable):
                  if hasattr(base, 'configurations')]
         Configurable.__init__(self, bases, testing_config)
 
-    def actions(self):
-        return []
-
 
 class AppMeta(type):
     def __new__(cls, name, bases, d):
