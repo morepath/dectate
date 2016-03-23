@@ -181,14 +181,8 @@ class Actions(object):
         """
         values = list(self._action_map.values())
         values.sort(key=lambda value: value[0].order or 0)
-        kw = {}
         for action, obj in values:
-            for name, factory in action.configurations.items():
-                configuration = getattr(configurable, name, None)
-                if configuration is None:
-                    configuration = factory()
-                    setattr(configurable, name, configuration)
-                kw[name] = configuration
+            kw = action.get_configurations(configurable)
             try:
                 action.log(configurable, obj)
                 action.perform(obj, **kw)
@@ -234,11 +228,21 @@ class Action(object):
         """
         return None
 
+    def get_configurations(self, configurable):
+        result = {}
+        for name, factory in self.configurations.items():
+            configuration = getattr(configurable, name, None)
+            if configuration is None:
+                configuration = factory()
+                setattr(configurable, name, configuration)
+            result[name] = configuration
+        return result
+
     def identifier(self, configurable):
         """Returns an immutable that uniquely identifies this config.
 
-        :param configurable: :class:`morepath.config.Configurable` object
-          for which this action is being executed.
+        :param **kw: a dictionary of configuration objects as specified
+          by the configurations class attribute.
 
         Used for overrides and conflict detection.
         """
@@ -247,8 +251,8 @@ class Action(object):
     def discriminators(self, configurable):
         """Returns a list of immutables to detect conflicts.
 
-        :param configurable: :class:`morepath.config.Configurable` object
-          for which this action is being executed.
+        :param **kw: a dictionary of configuration objects as specified
+          by the configurations class attribute.
 
         Used for additional configuration conflict detection.
         """
@@ -275,12 +279,12 @@ class Action(object):
         """
         return [(self, obj)]
 
-    def perform(self, configurable, obj):
+    def perform(self, obj, **kw):
         """Register whatever is being configured with configurable.
 
-        :param configurable: the :class:`morepath.config.Configurable`
-          being configured.
         :param obj: the object that the action should be performed on.
+        :param **kw: a dictionary of configuration objects as specified
+          by the configurations class attribute.
         """
         raise NotImplementedError()
 
