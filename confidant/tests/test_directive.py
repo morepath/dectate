@@ -282,6 +282,93 @@ def test_same_group_conflict():
         config.commit()
 
 
+def test_discriminator_conflict():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    @App.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message, others):
+            self.message = message
+            self.others = others
+
+        def identifier(self, my):
+            return self.message
+
+        def discriminators(self, my):
+            return self.others
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.foo('f', ['a'])
+    def f():
+        pass
+
+    @MyApp.foo('g', ['a', 'b'])
+    def g():
+        pass
+
+    with pytest.raises(ConflictError):
+        config.commit()
+
+
+def test_discriminator_no_conflict():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    @App.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message, others):
+            self.message = message
+            self.others = others
+
+        def identifier(self, my):
+            return self.message
+
+        def discriminators(self, my):
+            return self.others
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.foo('f', ['a'])
+    def f():
+        pass
+
+    @MyApp.foo('g', ['b'])
+    def g():
+        pass
+
+    config.commit()
+
+
 def test_depends():
     config = Config()
 
