@@ -14,3 +14,14 @@ automatically commit for all apps.
 
 Committing for an app should automatically also commit for its base app.
 
+Need to separate configuration machinery from Configurable.
+
+Should Configurable be called Configurations? Probably not; we just
+create an instance we call Configurations.
+
+Configurations contains info on bases, actions, and sub-objects that
+contains the actual configured registries.
+
+The *config* will contain the apps to commit.
+
+
