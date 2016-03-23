@@ -54,7 +54,6 @@ class Configurable(object):
         This is normally not invoked directly, instead is called
         indirectly by :meth:`Config.commit`.
         """
-        self._grouped_actions = {}
         self._class_to_actions = {}
 
     def actions(self):
@@ -70,9 +69,9 @@ class Configurable(object):
     def group_actions(self):
         """Group actions into :class:`Actions` by class.
         """
+        d = self.prepare()
         # grouped actions by class (in fact deepest base class before
         # Directive)
-        d = self._grouped_actions
         # make sure we don't forget about action classes in extends
         for configurable in self.extends:
             for action_class in configurable.action_classes():
@@ -100,7 +99,6 @@ class Configurable(object):
         """Execute actions for configurable.
         """
         self.clear()
-        self.prepare()
         self.group_actions()
         for action_class in self.action_classes():
             actions = self._class_to_actions.get(action_class)
@@ -119,14 +117,15 @@ class Configurable(object):
         return self._actions
 
     def prepare(self):
-        self._grouped_actions = d = {}
+        result = {}
         for action, obj in self.get_registered_actions():
             try:
                 for prepared, prepared_obj in action.prepare(obj):
-                    d.setdefault(prepared.group_key(), []).append(
+                    result.setdefault(prepared.group_key(), []).append(
                         (prepared, prepared_obj))
             except ConfigError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
+        return result
 
 
 class Actions(object):
