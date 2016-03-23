@@ -1,17 +1,18 @@
 
 * Different types of actions need to group together so they
-  conflict/override. Currently uses group_key method. (Stick to this)
+  conflict/override. Currently uses group_key method. (Stick to this,
+  as class is needed to sort actions by dependency)
 
 * An action has an identifier for conflicts and overrides. Prefixed by
   group key so we don't need to distinguish between actions in
   different groups. (works)
 
-* Extra discriminator list to make more conflicts happen. (done)
+* Extra discriminator list to make more conflicts happen. (works)
 
 * Generate sub-actions instead of performing things directly. This is
-  done in prepare right now.
+  done in prepare right now. (works)
 
-* Directive abbreviations.
+* Directive abbreviations. (works)
 
 * Deal properly with an action or composite that has no __init__. Error.
 
