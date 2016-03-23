@@ -311,13 +311,10 @@ class Directive(object):
         if tb is not None:
             return False
 
-    def immediate(self, obj):
-        self.configurable.register_action(self.action(), obj)
-
     def __call__(self, wrapped):
         """Call with function to decorate.
         """
-        self.immediate(wrapped)
+        self.configurable.register_action(self.action(), wrapped)
         return wrapped
 
     def log(self, configurable, obj):
