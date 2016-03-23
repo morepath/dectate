@@ -286,11 +286,6 @@ class Directive(object):
         result.directive = self
         return result
 
-    def codeinfo(self):
-        """Info about where in the source code the directive was invoked.
-        """
-        return None
-
     def __enter__(self):
         return DirectiveAbbreviation(self)
 
