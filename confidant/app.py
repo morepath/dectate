@@ -6,22 +6,12 @@ from .compat import with_metaclass
 from .framehack import get_frame_info
 
 
-class Registry(Configurable):
-    """A registry holding an application's configuration.
-    """
-    app = None  # app this registry belongs to. set later during scanning
-
-    def __init__(self, name, bases, testing_config):
-        self.name = name
-        bases = [base.configurations for base in bases
-                 if hasattr(base, 'configurations')]
-        Configurable.__init__(self, bases, testing_config)
-
-
 class AppMeta(type):
     def __new__(cls, name, bases, d):
         testing_config = d.get('testing_config')
-        d['configurations'] = Registry(name, bases, testing_config)
+        extends = [base.configurations for base in bases
+                   if hasattr(base, 'configurations')]
+        d['configurations'] = Configurable(extends, testing_config)
         return super(AppMeta, cls).__new__(cls, name, bases, d)
 
 
