@@ -261,7 +261,7 @@ def test_same_group_conflict():
             self.message = message
 
         # should now conflict
-        def group_key(self):
+        def group_class(self):
             return FooDirective
 
         def identifier(self, bar):
@@ -360,7 +360,7 @@ def test_discriminator_same_group_conflict():
 
     @MyApp.directive('bar')
     class BarDirective(FooDirective):
-        def group_key(self):
+        def group_class(self):
             return FooDirective
 
     @MyApp.foo('f', ['a'])
@@ -815,7 +815,7 @@ def test_before_group():
         def __init__(self, name):
             self.name = name
 
-        def group_key(self):
+        def group_class(self):
             return FooDirective
 
         def identifier(self):
@@ -827,7 +827,7 @@ def test_before_group():
         @staticmethod
         def before():
             # doesn't do anything, but should use the one indicated
-            # by group_key
+            # by group_class
             pass
 
     @MyApp.bar(name='bye')

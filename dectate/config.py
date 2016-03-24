@@ -59,7 +59,7 @@ class Configurable(object):
 
         # now add the actions for this configurable
         for action, obj in expand_actions(self._actions):
-            action_class = action.group_key()
+            action_class = action.group_class()
             actions = d.get(action_class)
             if actions is None:
                 d[action_class] = actions = Actions(
@@ -149,7 +149,7 @@ class Actions(object):
 
         if values:
             first_action, obj = values[0]
-            group_class = first_action.group_key()
+            group_class = first_action.group_class()
             kw = group_class.get_configurations(configurable)
             group_class.before(**kw)
 
@@ -192,13 +192,17 @@ class Action(object):
     # the directive that was used gets stored on the instance
     directive = None
 
-    def group_key(self):
+    def group_class(self):
         """By default we group directives by their class.
 
         Override this to group a directive with another directive,
         by returning that Directive class. It will create conflicts
         between those directives. Typically you'd do this when you are
         already subclassing from that directive too.
+
+        The group class is also used to run to run any `before` and `after`
+        methods that need to happen before or after all actions in a group
+        run.
         """
         return self.__class__
 
