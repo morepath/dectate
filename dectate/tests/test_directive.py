@@ -729,7 +729,7 @@ def test_with_statement_args():
             pass
 
     commit([MyApp])
- 
+
     assert MyApp.config.my.l == [
         (Dummy, 'a', f),
         (Dummy, 'b', g),
@@ -773,7 +773,7 @@ def test_before():
         pass
 
     commit([MyApp])
- 
+
     assert MyApp.config.my.before
     assert MyApp.config.my.l == [
         ('hello', f),
@@ -841,7 +841,7 @@ def test_before_group():
         pass
 
     commit([MyApp])
- 
+
     assert MyApp.config.my.before
     assert MyApp.config.my.l == [
         ('hello', g),

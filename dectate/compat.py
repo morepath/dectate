@@ -8,6 +8,7 @@ if PY3:  # pragma: no cover
 else:
     text_type = unicode
 
+
 # the with_meta in python-future doesn't work as it has an inconsistent
 # stack frame. the with_meta in newer versions of six has the same issue.
 # an older version does the job for us, so copy it in here
