@@ -31,8 +31,13 @@ class Configurable(object):
         """
         self.extends = extends
         self.config = config
-        # directives immediately registered with configurable
+        # all action classes known
+        self._action_classes = set()
+        # directives used with configurable
         self._directives = []
+
+    def register_action_class(self, action_factory):
+        self._action_classes.add(action_factory)
 
     def register_directive(self, directive, obj):
         self._directives.append((directive, obj))
@@ -72,9 +77,22 @@ class Configurable(object):
         """
         return sort_action_classes(self._class_to_actions.keys())
 
+    def setup_config(self):
+        # add any action classes defined by base classes
+        s = self._action_classes
+        for configurable in self.extends:
+            for action_class in configurable._action_classes:
+                if action_class not in s:
+                    s.add(action_class)
+        true_action_classes = [action_class for action_class in s
+                               if issubclass(action_class, Action)]
+        for action_class in true_action_classes:
+            action_class.setup_config(self)
+
     def execute(self):
         """Execute actions for configurable.
         """
+        self.setup_config()
         self.group_actions()
         for action_class in self.action_classes():
             actions = self._class_to_actions.get(action_class)
@@ -221,15 +239,20 @@ class Action(object):
         self.directive.log(configurable, obj)
 
     @classmethod
+    def setup_config(cls, configurable):
+        config = configurable.config
+        for name, factory in cls.config.items():
+            c = getattr(config, name, None)
+            if c is None:
+                c = factory()
+                setattr(config, name, c)
+
+    @classmethod
     def get_configurations(cls, configurable):
         result = {}
         config = configurable.config
         for name, factory in cls.config.items():
-            configuration = getattr(config, name, None)
-            if configuration is None:
-                configuration = factory()
-                setattr(config, name, configuration)
-            result[name] = configuration
+            result[name] = getattr(config, name)
         return result
 
     def identifier(self, **kw):

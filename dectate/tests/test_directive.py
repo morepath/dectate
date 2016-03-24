@@ -854,3 +854,27 @@ def test_action_init_only_during_commit():
     commit([MyApp])
 
     assert init_called == ["there"]
+
+
+def test_registry_should_exist_even_without_directive_use():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    commit([MyApp])
+
+    assert MyApp.config.my == []

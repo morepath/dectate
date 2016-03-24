@@ -74,4 +74,5 @@ class DirectiveDirective(object):
                              code_info, directive_name, logger)
         update_wrapper(method, action_factory.__init__)
         setattr(self.cls, self.name, classmethod(method))
+        self.cls.dectate.register_action_class(action_factory)
         return action_factory

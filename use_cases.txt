@@ -102,9 +102,8 @@
 
 * config.py's understanding of '.config/.dectate' is not ideal.
 
-* Support logging.
-
-* Refuse to support classmethod & staticmethod?
+* Refuse to support classmethod & staticmethod? Or refuse to support
+  methods?
 
 * the implicit list of global configurables can be reset for testing
   purposes.
@@ -117,3 +116,13 @@
   `after`. Or should we simply set up *all* registries, including
   those for directives we never encountered? Should we also do before/after
   for those registries without content?
+
+* should also do the above for action classes defined by base classes
+  and not used.
+
+* rethink the way action groups work; right now they're by action
+  class, but the implementation gets confusing as we have the true
+  action class used to do the config setup and also the action group
+  class used for before/after. Either use the action group class for
+  everything, including config setup, or use another mechanism for
+  grouping.
