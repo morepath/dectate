@@ -25,7 +25,7 @@
 * Do checks on input parameters depending on what object is being
   decorated (class versus function). Done in prepare, such as for path
   directive. Should now move it into perform and raise errors if
-  things are wrong. Check on error reporting.
+  things are wrong. Check on error reporting. (done)
 
 * Dependencies between actions. (done)
 

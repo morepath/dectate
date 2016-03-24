@@ -728,3 +728,49 @@ def test_with_statement_args():
         (Dummy, 'a', f),
         (Dummy, 'b', g),
     ]
+
+
+def test_before():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.before = False
+
+        def add(self, name, obj):
+            assert self.before
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def before(my):
+            my.before = True
+
+    @MyApp.foo(name='hello')
+    def f():
+        pass
+
+    config.commit()
+
+    assert MyApp.configurations.my.before
+    assert MyApp.configurations.my.l == [
+        ('hello', f),
+    ]

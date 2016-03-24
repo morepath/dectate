@@ -146,6 +146,12 @@ class Actions(object):
 
         values = list(self._action_map.values())
         values.sort(key=lambda value: value[0].order or 0)
+
+        if values:
+            first_action, obj = values[0]
+            kw = first_action.get_configurations(configurable)
+            first_action.before(**kw)
+
         for action, obj in values:
             kw = action.get_configurations(configurable)
             try:
@@ -240,6 +246,10 @@ class Action(object):
           by the configurations class attribute.
         """
         raise NotImplementedError()
+
+    @staticmethod
+    def before(**kw):
+        pass
 
     # XXX for now don't log plain non-directive actions
     def log(self, configurable, obj):
