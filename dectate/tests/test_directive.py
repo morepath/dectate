@@ -249,7 +249,8 @@ def test_same_group_conflict():
             self.message = message
 
         # should now conflict
-        def group_class(self):
+        @classmethod
+        def group_class(cls):
             return FooDirective
 
         def identifier(self, bar):
@@ -330,7 +331,8 @@ def test_discriminator_same_group_conflict():
 
     @MyApp.directive('bar')
     class BarDirective(FooDirective):
-        def group_class(self):
+        @classmethod
+        def group_class(cls):
             return FooDirective
 
     @MyApp.foo('f', ['a'])
@@ -683,6 +685,45 @@ def test_before():
     ]
 
 
+
+def test_before_without_use():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.before = False
+
+        def add(self, name, obj):
+            assert self.before
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def before(my):
+            my.before = True
+
+    commit([MyApp])
+
+    assert MyApp.config.my.before
+    assert MyApp.config.my.l == []
+
+
 def test_before_group():
     class Registry(object):
         def __init__(self):
@@ -720,7 +761,8 @@ def test_before_group():
         def __init__(self, name):
             self.name = name
 
-        def group_class(self):
+        @classmethod
+        def group_class(cls):
             return FooDirective
 
         def identifier(self):
@@ -733,7 +775,7 @@ def test_before_group():
         def before():
             # doesn't do anything, but should use the one indicated
             # by group_class
-            pass
+            assert False
 
     @MyApp.bar(name='bye')
     def f():
@@ -749,6 +791,65 @@ def test_before_group():
     assert MyApp.config.my.l == [
         ('hello', g),
     ]
+
+
+def test_before_group_without_use():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.before = False
+
+        def add(self, name, obj):
+            assert self.before
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def before(my):
+            my.before = True
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        def __init__(self, name):
+            self.name = name
+
+        @classmethod
+        def group_class(cls):
+            return FooDirective
+
+        def identifier(self):
+            return self.name
+
+        def perform(self, obj):
+            pass
+
+        @staticmethod
+        def before():
+            # doesn't do anything, but should use the one indicated
+            # by group_class
+            assert False
+
+    commit([MyApp])
+
+    assert MyApp.config.my.before
+    assert MyApp.config.my.l == []
 
 
 def test_after():
@@ -793,6 +894,44 @@ def test_after():
     assert MyApp.config.my.l == [
         ('hello', f),
     ]
+
+
+def test_after_without_use():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.after = False
+
+        def add(self, name, obj):
+            assert not self.after
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def after(my):
+            my.after = True
+
+    commit([MyApp])
+
+    assert MyApp.config.my.after
+    assert MyApp.config.my.l == []
 
 
 def test_action_loop_should_conflict():

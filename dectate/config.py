@@ -50,6 +50,7 @@ class Configurable(object):
             for action_class in configurable.action_classes():
                 if action_class not in d:
                     d[action_class] = Actions(
+                        action_class,
                         self.action_extends(action_class))
 
         # turn directives into actions
@@ -62,14 +63,26 @@ class Configurable(object):
             actions = d.get(action_class)
             if actions is None:
                 d[action_class] = actions = Actions(
+                    action_class,
                     self.action_extends(action_class))
             actions.add(action, obj)
+
+        # add any actions for action classes we know about but don't
+        # actually have any directive usage for
+        for action_class in self._action_classes:
+            if not issubclass(action_class, Action):
+                continue
+            action_class = action_class.group_class()
+            if action_class in d:
+                continue
+            d[action_class] = Actions(action_class, [])
 
     def action_extends(self, action_class):
         """Get actions for action class in extends.
         """
         return [
-            configurable._class_to_actions.get(action_class, Actions([]))
+            configurable._class_to_actions.get(action_class,
+                                               Actions(action_class, []))
             for configurable in self.extends]
 
     def action_classes(self):
@@ -95,14 +108,12 @@ class Configurable(object):
         self.setup_config()
         self.group_actions()
         for action_class in self.action_classes():
-            actions = self._class_to_actions.get(action_class)
-            if actions is None:
-                continue
-            actions.execute(self)
+            self._class_to_actions[action_class].execute(self)
 
 
 class Actions(object):
-    def __init__(self, extends):
+    def __init__(self, action_class, extends):
+        self.action_class = action_class
         self._actions = []
         self._action_map = {}
         self.extends = extends
@@ -159,15 +170,10 @@ class Actions(object):
         actions = list(self._action_map.values())
         actions.sort(key=lambda value: value[0].order or 0)
 
-        if not actions:
-            return
-
-        some_action, obj = actions[0]
-        group_class = some_action.group_class()
-        kw = group_class.get_configurations(configurable)
+        kw = self.action_class.get_configurations(configurable)
 
         # run the group class before operation
-        group_class.before(**kw)
+        self.action_class.before(**kw)
 
         # perform the actual actions
         for action, obj in actions:
@@ -179,7 +185,7 @@ class Actions(object):
                 raise DirectiveReportError(u"{}".format(e), action)
 
         # run the group class after operation
-        group_class.after(**kw)
+        self.action_class.after(**kw)
 
 
 class Action(object):
@@ -212,7 +218,8 @@ class Action(object):
     # the directive that was used gets stored on the instance
     directive = None
 
-    def group_class(self):
+    @classmethod
+    def group_class(cls):
         """By default we group directives by their class.
 
         Override this to group a directive with another directive,
@@ -224,7 +231,7 @@ class Action(object):
         methods that need to happen before or after all actions in a group
         run.
         """
-        return self.__class__
+        return cls
 
     def code_info(self):
         """Info about where in the source code the action was invoked.
