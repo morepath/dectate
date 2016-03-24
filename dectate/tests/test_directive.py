@@ -878,3 +878,31 @@ def test_registry_should_exist_even_without_directive_use():
     commit([MyApp])
 
     assert MyApp.config.my == []
+
+
+def test_registry_should_exist_even_without_directive_use_subclass():
+    class MyApp(App):
+        pass
+
+    class SubApp(MyApp):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    commit([MyApp, SubApp])
+
+    assert MyApp.config.my == []
+    assert SubApp.config.my == []
