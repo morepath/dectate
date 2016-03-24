@@ -8,10 +8,9 @@ from .framehack import get_frame_info
 
 class AppMeta(type):
     def __new__(cls, name, bases, d):
-        testing_config = d.get('testing_config')
         extends = [base.configurations for base in bases
                    if hasattr(base, 'configurations')]
-        d['configurations'] = Configurable(extends, testing_config)
+        d['configurations'] = Configurable(extends)
         return super(AppMeta, cls).__new__(cls, name, bases, d)
 
 

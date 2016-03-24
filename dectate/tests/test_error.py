@@ -8,10 +8,8 @@ import pytest
 
 
 def test_directive_error():
-    config = Config()
-
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -28,6 +26,7 @@ def test_directive_error():
     def f():
         pass
 
+    config = Config([MyApp])
     with pytest.raises(DirectiveReportError) as e:
         config.commit()
 
@@ -38,10 +37,8 @@ def test_directive_error():
 
 
 def test_conflict_error():
-    config = Config()
-
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -62,6 +59,8 @@ def test_conflict_error():
     def g():
         pass
 
+    config = Config([MyApp])
+
     with pytest.raises(ConflictError) as e:
         config.commit()
 
@@ -73,10 +72,8 @@ def test_conflict_error():
 
 
 def test_with_statement_error():
-    config = Config()
-
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -102,6 +99,7 @@ def test_with_statement_error():
         def g():
             pass
 
+    config = Config([MyApp])
     with pytest.raises(DirectiveReportError) as e:
         config.commit()
 

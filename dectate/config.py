@@ -3,7 +3,7 @@ import inspect
 from .error import (
     ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .framehack import caller_package, get_frame_info
+from .framehack import get_frame_info
 
 
 order_count = 0
@@ -22,7 +22,7 @@ class Configurable(object):
     them by depends so that they are executed in the correct order,
     and then executes each action group, which performs them.
     """
-    def __init__(self, extends, testing_config):
+    def __init__(self, extends):
         """
         :param extends:
           the configurables that this configurable extends.
@@ -35,9 +35,6 @@ class Configurable(object):
           not an option. Optional, default no testing config.
         """
         self.extends = extends
-        self.testing_config = testing_config
-        if testing_config:
-            testing_config.configurable(self)
         # actions immediately registered with configurable
         self._actions = []
 
@@ -405,47 +402,14 @@ class Config(object):
     :func:`autosetup` which help automatically load configuration from
     dependencies.
     """
-    def __init__(self):
-        self.configurables = []
-
-    def scan(self, package=None, ignore=None, recursive=True,
-             onerror=None):
-        """Scan package for configuration actions (decorators).
-
-        Register any found configuration actions with this
-        object. This also includes finding any
-        :class:`morepath.config.Configurable` objects.
-
-        If given a package, it scans any modules and sub-packages as
-        well recursively, unless `recursive` is `False`.
-
-        :param package: The Python module or package to scan. Optional; if left
-          empty case the calling package is scanned.
-        :param ignore: A Venusian_ style ignore to ignore some modules during
-          scanning. Optional. Defaults to ``['.test', '.tests']``.
-        :param recursive: Scan packages recursively. By default this is
-          ``True``. If set to ``False``, only the ``__init__.py`` of a package
-          is scanned.
-        :param onerror: onerror argument passed to Venusian's scan.
-        """
-        if package is None:
-            package = caller_package()
-        if ignore is None:
-            ignore = ['.test', '.tests']
-        scanner = venusian.Scanner(config=self)
-        scanner.scan(package, ignore=ignore, recursive=recursive)
-
-    def configurable(self, configurable):
-        """Register a configurable with this config.
-
-        This is normally not invoked directly, instead is called
-        indirectly by :meth:`scan`.
-
-        A :class:`App` object's configurations attribute is a configurable.
-
-        :param: The :class:`morepath.config.Configurable` to register.
-        """
-        self.configurables.append(configurable)
+    def __init__(self, configurables):
+        configurables_from_apps = []
+        for c in configurables:
+            if hasattr(c, 'configurations'):
+                configurables_from_apps.append(c.configurations)
+            else:
+                configurables.append(c)
+        self.configurables = configurables_from_apps
 
     def commit(self):
         """Commit all configuration.

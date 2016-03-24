@@ -6,8 +6,6 @@ import pytest
 
 
 def test_simple():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -16,7 +14,7 @@ def test_simple():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
@@ -37,14 +35,13 @@ def test_simple():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.l == [('hello', f)]
 
 
 def test_conflict_same_directive():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -53,7 +50,7 @@ def test_conflict_same_directive():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
@@ -78,21 +75,21 @@ def test_conflict_same_directive():
     def f2():
         pass
 
+    config = Config([MyApp])
+
     with pytest.raises(ConflictError):
         config.commit()
 
 
 def test_app_inherit():
-    config = Config()
-
     class Registry(object):
         pass
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     class SubApp(MyApp):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
@@ -114,6 +111,7 @@ def test_app_inherit():
     def f():
         pass
 
+    config = Config([MyApp, SubApp])
     config.commit()
 
     assert MyApp.configurations.my.message == 'hello'
@@ -123,16 +121,14 @@ def test_app_inherit():
 
 
 def test_app_override():
-    config = Config()
-
     class Registry(object):
         pass
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     class SubApp(MyApp):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
@@ -158,6 +154,7 @@ def test_app_override():
     def f2():
         pass
 
+    config = Config([MyApp, SubApp])
     config.commit()
 
     assert MyApp.configurations.my.message == 'hello'
@@ -167,7 +164,6 @@ def test_app_override():
 
 
 def test_different_group_no_conflict():
-    config = Config()
 
     class Registry(object):
         def __init__(self):
@@ -177,7 +173,7 @@ def test_different_group_no_conflict():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -217,6 +213,7 @@ def test_different_group_no_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.foo.l == [('hello', f)]
@@ -224,8 +221,6 @@ def test_different_group_no_conflict():
 
 
 def test_same_group_conflict():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -234,7 +229,7 @@ def test_same_group_conflict():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -278,13 +273,12 @@ def test_same_group_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
     with pytest.raises(ConflictError):
         config.commit()
 
 
 def test_discriminator_conflict():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -292,7 +286,10 @@ def test_discriminator_conflict():
         def add(self, message, obj):
             self.l.append((message, obj))
 
-    @App.directive('foo')
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
     class FooDirective(Action):
         configurations = {
             'my': Registry
@@ -311,9 +308,6 @@ def test_discriminator_conflict():
         def perform(self, obj, my):
             my.add(self.message, obj)
 
-    class MyApp(App):
-        testing_config = config
-
     @MyApp.foo('f', ['a'])
     def f():
         pass
@@ -322,13 +316,12 @@ def test_discriminator_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
     with pytest.raises(ConflictError):
         config.commit()
 
 
 def test_discriminator_same_group_conflict():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -337,7 +330,7 @@ def test_discriminator_same_group_conflict():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -371,13 +364,13 @@ def test_discriminator_same_group_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
+
     with pytest.raises(ConflictError):
         config.commit()
 
 
 def test_discriminator_no_conflict():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -386,7 +379,7 @@ def test_discriminator_no_conflict():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -415,12 +408,11 @@ def test_discriminator_no_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
 
 def test_discriminator_different_group_no_conflict():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -429,7 +421,7 @@ def test_discriminator_different_group_no_conflict():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -463,12 +455,11 @@ def test_discriminator_different_group_no_conflict():
     def g():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
 
 def test_depends():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -477,7 +468,7 @@ def test_depends():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -519,6 +510,7 @@ def test_depends():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     # since bar depends on foo, it should be executed last
@@ -526,8 +518,6 @@ def test_depends():
 
 
 def test_composite():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -536,7 +526,7 @@ def test_composite():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('sub')
     class SubDirective(Action):
@@ -565,6 +555,7 @@ def test_composite():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     # since bar depends on foo, it should be executed last
@@ -572,8 +563,6 @@ def test_composite():
 
 
 def test_nested_composite():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -582,7 +571,7 @@ def test_nested_composite():
             self.l.append((message, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('sub')
     class SubDirective(Action):
@@ -621,6 +610,7 @@ def test_nested_composite():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     # since bar depends on foo, it should be executed last
@@ -631,8 +621,6 @@ def test_nested_composite():
 
 
 def test_with_statement_kw():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -641,7 +629,7 @@ def test_with_statement_kw():
             self.l.append((model, name, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -672,6 +660,7 @@ def test_with_statement_kw():
         def g():
             pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.l == [
@@ -681,8 +670,6 @@ def test_with_statement_kw():
 
 
 def test_with_statement_args():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -691,7 +678,7 @@ def test_with_statement_args():
             self.l.append((model, name, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -722,6 +709,7 @@ def test_with_statement_args():
         def g():
             pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.l == [
@@ -731,8 +719,6 @@ def test_with_statement_args():
 
 
 def test_before():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -743,7 +729,7 @@ def test_before():
             self.l.append((name, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -768,6 +754,7 @@ def test_before():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.before
@@ -777,8 +764,6 @@ def test_before():
 
 
 def test_before_group():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -789,7 +774,7 @@ def test_before_group():
             self.l.append((name, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -838,6 +823,7 @@ def test_before_group():
     def g():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.before
@@ -847,8 +833,6 @@ def test_before_group():
 
 
 def test_after():
-    config = Config()
-
     class Registry(object):
         def __init__(self):
             self.l = []
@@ -859,7 +843,7 @@ def test_after():
             self.l.append((name, obj))
 
     class MyApp(App):
-        testing_config = config
+        pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
@@ -884,6 +868,7 @@ def test_after():
     def f():
         pass
 
+    config = Config([MyApp])
     config.commit()
 
     assert MyApp.configurations.my.after
