@@ -408,7 +408,7 @@ class Config(object):
             if hasattr(c, 'configurations'):
                 configurables_from_apps.append(c.configurations)
             else:
-                configurables.append(c)
+                configurables_from_apps.append(c)
         self.configurables = configurables_from_apps
 
     def commit(self):
