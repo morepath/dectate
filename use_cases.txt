@@ -115,10 +115,10 @@
   types of action. Unless we make `config` behave like `before` and
   `after`. Or should we simply set up *all* registries, including
   those for directives we never encountered? Should we also do before/after
-  for those registries without content?
+  for those registries without content? (done)
 
 * should also do the above for action classes defined by base classes
-  and not used.
+  and not used. (done)
 
 * rethink the way action groups work; right now they're by action
   class, but the implementation gets confusing as we have the true
@@ -126,3 +126,10 @@
   class used for before/after. Either use the action group class for
   everything, including config setup, or use another mechanism for
   grouping.
+
+* group_class used to fill in action classes for those (done)
+
+* refactor so that action groups are set up *before* the rest of the
+  commit, so we don't have to create action groups just in time while
+  going through actions.
+

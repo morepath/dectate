@@ -43,7 +43,7 @@ class Configurable(object):
         self._directives.append((directive, obj))
 
     def group_actions(self):
-        self._class_to_actions = d = {}
+        self._action_groups = d = {}
 
         # get the actions our actions extend
         for configurable in self.extends:
@@ -81,14 +81,14 @@ class Configurable(object):
         """Get actions for action class in extends.
         """
         return [
-            configurable._class_to_actions.get(action_class,
-                                               Actions(action_class, []))
+            configurable._action_groups.get(action_class,
+                                            Actions(action_class, []))
             for configurable in self.extends]
 
     def action_classes(self):
         """Get action classes sorted in dependency order.
         """
-        return sort_action_classes(self._class_to_actions.keys())
+        return sort_action_classes(self._action_groups.keys())
 
     def setup_config(self):
         # add any action classes defined by base classes
@@ -108,7 +108,7 @@ class Configurable(object):
         self.setup_config()
         self.group_actions()
         for action_class in self.action_classes():
-            self._class_to_actions[action_class].execute(self)
+            self._action_groups[action_class].execute(self)
 
 
 class Actions(object):
