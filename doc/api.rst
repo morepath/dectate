@@ -1,0 +1,4 @@
+API
+===
+
+.. py:module:: dectate
