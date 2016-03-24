@@ -149,8 +149,9 @@ class Actions(object):
 
         if values:
             first_action, obj = values[0]
-            kw = first_action.get_configurations(configurable)
-            first_action.before(**kw)
+            group_class = first_action.group_key()
+            kw = group_class.get_configurations(configurable)
+            group_class.before(**kw)
 
         for action, obj in values:
             kw = action.get_configurations(configurable)
@@ -208,9 +209,10 @@ class Action(object):
             return None
         return self.directive.frame_info
 
-    def get_configurations(self, configurable):
+    @classmethod
+    def get_configurations(cls, configurable):
         result = {}
-        for name, factory in self.configurations.items():
+        for name, factory in cls.configurations.items():
             configuration = getattr(configurable, name, None)
             if configuration is None:
                 configuration = factory()

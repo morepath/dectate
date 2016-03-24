@@ -774,3 +774,73 @@ def test_before():
     assert MyApp.configurations.my.l == [
         ('hello', f),
     ]
+
+
+def test_before_group():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.before = False
+
+        def add(self, name, obj):
+            assert self.before
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def before(my):
+            my.before = True
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        def __init__(self, name):
+            self.name = name
+
+        def group_key(self):
+            return FooDirective
+
+        def identifier(self):
+            return self.name
+
+        def perform(self, obj):
+            pass
+
+        @staticmethod
+        def before():
+            # doesn't do anything, but should use the one indicated
+            # by group_key
+            pass
+
+    @MyApp.bar(name='bye')
+    def f():
+        pass
+
+    @MyApp.foo(name='hello')
+    def g():
+        pass
+
+    config.commit()
+
+    assert MyApp.configurations.my.before
+    assert MyApp.configurations.my.l == [
+        ('hello', g),
+    ]
