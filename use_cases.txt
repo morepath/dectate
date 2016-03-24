@@ -1,23 +1,19 @@
 
 * Different types of actions need to group together so they
-  conflict/override. Currently uses group_key method. (Stick to this,
-  as class is needed to sort actions by dependency)
+  conflict/override. Currently uses group_key method, renamed to
+  group_class for clarity. (Stick to this, as class is needed to sort
+  actions by dependency) (done)
 
 * An action has an identifier for conflicts and overrides. Prefixed by
   group key so we don't need to distinguish between actions in
-  different groups. (works)
+  different groups.(done)
 
-* Extra discriminator list to make more conflicts happen. (works)
+* Extra discriminator list to make more conflicts happen. (done)
 
 * Generate sub-actions instead of performing things directly. This is
-  done in prepare right now. (works)
+  done in prepare right now. (done)
 
-* Directive abbreviations. (works)
-
-* Deal properly with an action or composite that has no __init__. Error.
-
-* Ensure that morepath directives get registered before we start using them
-  in imports.
+* Directive abbreviations. (done)
 
 * Abbreviated directives should have correct frame info for error
   reporting. (done)
@@ -29,23 +25,36 @@
 
 * Dependencies between actions. (done)
 
+* Subclasses of App can have new directives through the directive
+  directive (done)
+
+* Prepare now only works one level deep: you can't implement a
+  directive as multiple actions which then in turn are actually other
+  actions. This has been fixed with Composite actions (done)
+
+* Not use Venusian: a directive should register with the configuration
+  system (or better: the App) immediately upon import as it's easier to
+  explain. (done)
+
+* Have line number information for error reporting. (done)
+
+* Deal properly with an action or composite that has no __init__. Error.
+
+* Ensure that morepath directives get registered before we start using them
+  in imports.
+
 * Directives have a name. is it used in logging?
 
 * Directives have documentation that shows up in the sphinx docs
 
 * Directive logging.
 
-* Subclasses of App can have new directives through the directive
-  directive (works)
+* Implement scanning using recursive import.
 
 * We have some use cases where we'd like to execute some code after
   all directives of a particular kind are done executing. This way we
   could initialize the predicates for all external predicates
   functions, for instance.
-
-* Prepare now only works one level deep: you can't implement a
-  directive as multiple actions which then in turn are actually other
-  actions. This has been fixed with Composite actions (done)
 
 * Sometimes during prepare it'd be useful to have access to the registry.
 
@@ -63,16 +72,10 @@
   information. I've worked around it now with a hack that sets up the
   app as an attribute on the registry after the fact...
 
-* Not use Venusian: a directive should register with the configuration
-  system (or better: the App) immediately upon import as it's easier to
-  explain. (done)
-
 * Support configuration isolation: re-run configuration multiple times.
 
 * Determine that two toplevel directives are actually the same one by
   looking at line number information.
-
-* Have line number information for error reporting. (done)
 
 * Support querying the registration database to see what directives
   have been applied. Should this be the registration data or should it
@@ -91,17 +94,3 @@
 * rename to something else as Confidant as now on PyPI.
 
 * separate "configurations" object from configurable.
-
-confide
-
-decadent
-
-decalogue decalog; but log is not used.
-
-gure
-
-decafig
-
-confey
-
-dectate
