@@ -36,7 +36,23 @@
   system (or better: the App) immediately upon import as it's easier to
   explain. (done)
 
+* We have some use cases where we'd like to execute some code after
+  all directives of a particular kind are done executing. This way we
+  could initialize the predicates for all external predicates
+  functions, for instance. (done)
+
 * Have line number information for error reporting. (done)
+
+* Apps could have multiple independent registries (or at least
+  registries APIs; many will build on the reg registry). Perhaps
+  actions can somehow declare which registry APIs they concern
+  themselves with. This way we could avoid mixing a lot of registry
+  mixins into a larger registry. (done)
+
+* The config object should get the configurables explicitly. Or apps?
+  And then allow a commit. (done)
+
+* rename to something else as Confidant as now on PyPI. Now dectate. (done)
 
 * Deal properly with an action or composite that has no __init__. Error.
 
@@ -51,18 +67,7 @@
 
 * Implement scanning using recursive import.
 
-* We have some use cases where we'd like to execute some code after
-  all directives of a particular kind are done executing. This way we
-  could initialize the predicates for all external predicates
-  functions, for instance.
-
 * Sometimes during prepare it'd be useful to have access to the registry.
-
-* Apps could have multiple independent registries (or at least
-  registries APIs; many will build on the reg registry). Perhaps
-  actions can somehow declare which registry APIs they concern
-  themselves with. This way we could avoid mixing a lot of registry
-  mixins into a larger registry. (this now works)
 
 * if multiple directives declare different classes for the configuration
   registry that should be an error.
@@ -85,12 +90,7 @@
 
 * Refuse to support classmethod & staticmethod?
 
-* The config object should get the configurables explicitly. Or apps?
-  And then allow a commit.
-
 * there's also an implicit list of configurables kept globally that can
   be reset.
-
-* rename to something else as Confidant as now on PyPI.
 
 * separate "configurations" object from configurable.
