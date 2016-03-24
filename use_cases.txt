@@ -66,6 +66,9 @@
 * The normal conflict detection will report correctly that there's
   a conflict if a module is imported twice. (done)
 
+* should we store the *directives* on the configurable instead of the
+  actions to prevent any user code execution that can do too much? (done)
+
 * but if a module is imported twice and a variable is increased upon
   import that causes a non-conflict, a ConflictError won't be raised...
   How contrived is that scenario? Could happen if you generate information
@@ -108,8 +111,7 @@
 
 * Configure logger by directive directive?
 
-* is it possible to set up the registries before the action group
-  is executed?
-
-* should we store the *directives* on the configurable instead of the
-  actions to prevent any user code execution that can do too much?
+* is it possible to set up the registries before the action group is
+  executed? Maybe not, as action group could still contain multiple
+  types of action. Unless we make `config` behave like `before` and
+  `after`.
