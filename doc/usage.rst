@@ -88,8 +88,12 @@ Let's use it now:
   def f():
       pass # do something interesting
 
+  @MyApp.register('b')
+  def g():
+      pass # something else interesting
+
 We have registered the function ``f`` on ``MyApp``. The ``name``
-argument is ``'a'``.
+argument is ``'a'``. We've registered ``g`` under ``'b'``.
 
 We can now commit the configuration for ``MyApp``:
 
@@ -102,7 +106,7 @@ We can now take a look at the configuration:
 .. doctest::
 
   >>> MyApp.config.registry
-  {'a': <function f at ...>}
+  {'a': <function f at ...>, 'b': <function g at ...>}
 
 What is going on here?
 
@@ -130,12 +134,12 @@ What is going on here?
   In this case we store ``obj`` under the key ``self.name`` in the
   ``registry`` dict.
 
-Once we created the directive, we used it using ``@MyApp.register`` to
-register the function ``f``.
+Once we have declared the directive for our framework we can tell
+programmers to use it.
 
-Directives have absolutely no effect until we *commit* them, which we
-did with ``dectate.commit``. This performs the actions and we can then
-find the result ``MyApp.config``.
+Directives have absolutely no effect until *commit* is called, which
+we did with ``dectate.commit``. This performs the actions and we can
+then find the result ``MyApp.config``.
 
 The results are in ``MyApp.config.registry`` as we set this up with
 ``config`` in our ``RegisterAction``.
