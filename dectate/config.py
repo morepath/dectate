@@ -147,12 +147,17 @@ class Actions(object):
         values = list(self._action_map.values())
         values.sort(key=lambda value: value[0].order or 0)
 
-        if values:
-            first_action, obj = values[0]
-            group_class = first_action.group_class()
-            kw = group_class.get_configurations(configurable)
-            group_class.before(**kw)
+        if not values:
+            return
 
+        some_action, obj = values[0]
+        group_class = some_action.group_class()
+        kw = group_class.get_configurations(configurable)
+
+        # run the group class before operation
+        group_class.before(**kw)
+
+        # perform the actual actions
         for action, obj in values:
             kw = action.get_configurations(configurable)
             try:
@@ -160,6 +165,9 @@ class Actions(object):
                 action.perform(obj, **kw)
             except DirectiveError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
+
+        # run the group class after operation
+        group_class.after(**kw)
 
 
 class Action(object):
@@ -255,6 +263,10 @@ class Action(object):
 
     @staticmethod
     def before(**kw):
+        pass
+
+    @staticmethod
+    def after(**kw):
         pass
 
     # XXX for now don't log plain non-directive actions

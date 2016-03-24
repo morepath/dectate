@@ -844,3 +844,49 @@ def test_before_group():
     assert MyApp.configurations.my.l == [
         ('hello', g),
     ]
+
+
+def test_after():
+    config = Config()
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+            self.after = False
+
+        def add(self, name, obj):
+            assert not self.after
+            self.l.append((name, obj))
+
+    class MyApp(App):
+        testing_config = config
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.add(self.name, obj)
+
+        @staticmethod
+        def after(my):
+            my.after = True
+
+    @MyApp.foo(name='hello')
+    def f():
+        pass
+
+    config.commit()
+
+    assert MyApp.configurations.my.after
+    assert MyApp.configurations.my.l == [
+        ('hello', f),
+    ]
