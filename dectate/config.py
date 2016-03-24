@@ -22,6 +22,8 @@ class Configurable(object):
     them by depends so that they are executed in the correct order,
     and then executes each action group, which performs them.
     """
+    app_class = None
+
     def __init__(self, extends, config):
         """
         :param extends:
@@ -213,6 +215,11 @@ class Action(object):
             return None
         return self.directive.frame_info
 
+    def log(self, configurable, obj):
+        if self.directive is None:
+            return
+        self.directive.log(configurable, obj)
+
     @classmethod
     def get_configurations(cls, configurable):
         result = {}
@@ -262,10 +269,6 @@ class Action(object):
     def after(**kw):
         pass
 
-    # XXX for now don't log plain non-directive actions
-    def log(self, configurable, obj):
-        pass
-
 
 class Composite(object):
     def actions(self, obj):
@@ -284,15 +287,15 @@ class Directive(object):
     When used as a decorator this tracks where in the source code
     the directive was used for the purposes of error reporting.
     """
-    def __init__(self, app, action_factory, args, kw,
+    def __init__(self, app_class, action_factory, args, kw,
                  frame_info, directive_name, logger):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
           for which this action was configured.
         """
-        self.app = app
-        self.configurable = app.dectate
+        self.app_class = app_class
+        self.configurable = app_class.dectate
         self.action_factory = action_factory
         self.args = args
         self.kw = kw
@@ -324,34 +327,30 @@ class Directive(object):
         if self.logger is None:
             return
 
-        if configurable.app is not None:
-            target_dotted_name = configurable.app.dotted_name()
-            is_same = configurable.app is self.app
-        else:
-            target_dotted_name = repr(configurable)
-            is_same = False
+        target_dotted_name = configurable.app_class.dotted_name()
+        is_same = self.app_class is configurable.app_class
 
         if inspect.isfunction(obj):
             func_dotted_name = '%s.%s' % (obj.__module__, obj.__name__)
         else:
             func_dotted_name = repr(obj)
 
-        if self.argument_info is not None:
-            args, kw = self.argument_info
-            arguments = ', '.join([repr(arg) for arg in args])
+        args, kw = self.argument_info
+        arguments = ', '.join([repr(arg) for arg in args])
+
+        if kw:
             if arguments:
                 arguments += ', '
-            arguments += ', '.join(['%s=%r' % (key, value) for key, value in
-                                    sorted(kw.items())])
-        else:
-            assert False  # pragma: nocoverage
+            arguments += ', '.join(
+                ['%s=%r' % (key, value) for key, value in
+                 sorted(kw.items())])
 
         message = '@%s.%s(%s) on %s' % (
             target_dotted_name, self.directive_name, arguments,
             func_dotted_name)
 
         if not is_same:
-            message += ' (from %s)' % self.app.dotted_name()
+            message += ' (from %s)' % self.app_class.dotted_name()
 
         self.logger.debug(message)
 
@@ -369,7 +368,7 @@ class DirectiveAbbreviation(object):
         combined_kw = directive.kw.copy()
         combined_kw.update(kw)
         return Directive(
-            app=directive.app,
+            app_class=directive.app_class,
             action_factory=directive.action_factory,
             args=combined_args,
             kw=combined_kw,

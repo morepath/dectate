@@ -19,7 +19,9 @@ class AppMeta(type):
         d['config'] = config = Config()
         d['dectate'] = configurable = Configurable(extends, config)
         global_configurables.append(configurable)
-        return super(AppMeta, cls).__new__(cls, name, bases, d)
+        result = super(AppMeta, cls).__new__(cls, name, bases, d)
+        configurable.app_class = result
+        return result
 
 
 def autocommit():
@@ -67,7 +69,7 @@ class DirectiveDirective(object):
         def method(self, *args, **kw):
             frame = sys._getframe(1)
             frame_info = get_frame_info(frame)
-            logger = logging.getLogger('morepath.directive.%s' %
+            logger = logging.getLogger('dectate.directive.%s' %
                                        directive_name)
             return Directive(self, action_factory, args, kw,
                              frame_info, directive_name, logger)

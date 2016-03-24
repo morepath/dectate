@@ -1,6 +1,6 @@
 from dectate.app import App, autocommit
 from dectate.config import commit, Action, Composite
-from dectate.error import ConflictError
+from dectate.error import ConflictError, ConfigError
 
 import pytest
 
