@@ -129,3 +129,13 @@ What is going on here?
   information on ``self`` to configure the configuration objects.
   In this case we store ``obj`` under the key ``self.name`` in the
   ``registry`` dict.
+
+Once we created the directive, we used it using ``@MyApp.register`` to
+register the function ``f``.
+
+Directives have absolutely no effect until we *commit* them, which we
+did with ``dectate.commit``. This performs the actions and we can then
+find the result ``MyApp.config``.
+
+The results are in ``MyApp.config.registry`` as we set this up with
+``config`` in our ``RegisterAction``.
