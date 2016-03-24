@@ -5,13 +5,13 @@ long_description = (
     + '\n' +
     open('CHANGES.txt').read())
 
-setup(name='confidant',
+setup(name='dectate',
       version='0.1.dev0',
       description="A configuration engine for Python frameworks",
       long_description=long_description,
       author="Martijn Faassen",
       author_email="faassen@startifact.com",
-      url='http://confidant.readthedocs.org',
+      url='http://dectate.readthedocs.org',
       license="BSD",
       packages=find_packages(),
       include_package_data=True,

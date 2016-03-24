@@ -1,6 +1,6 @@
-from confidant.app import App
-from confidant.config import Config, Action, Composite
-from confidant.error import ConflictError
+from dectate.app import App
+from dectate.config import Config, Action, Composite
+from dectate.error import ConflictError
 
 import pytest
 

@@ -88,7 +88,7 @@
 * there's also an implicit list of configurables kept globally that can
   be reset.
 
-* rename to something else as Confidantnow on PyPI.
+* rename to something else as Confidant as now on PyPI.
 
 * separate "configurations" object from configurable.
 

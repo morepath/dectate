@@ -1,7 +1,7 @@
-confidant: a configuration engine for Python frameworks
+Dectate: a configuration engine for Python frameworks
 =======================================================
 
-Confidant is a powerful configuration engine for Python frameworks.
+Dectate is a powerful configuration engine for Python frameworks.
 
 It is used by Morepath_.
 

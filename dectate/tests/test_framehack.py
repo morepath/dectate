@@ -1,5 +1,5 @@
 import sys
-from confidant.framehack import get_frame_info
+from dectate.framehack import get_frame_info
 
 
 def foo():

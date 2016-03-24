@@ -1,8 +1,8 @@
-from confidant.app import App
-from confidant.config import Config, Action
+from dectate.app import App
+from dectate.config import Config, Action
 
-from confidant.error import ConflictError, DirectiveError, DirectiveReportError
-from confidant.compat import text_type
+from dectate.error import ConflictError, DirectiveError, DirectiveReportError
+from dectate.compat import text_type
 
 import pytest
 
