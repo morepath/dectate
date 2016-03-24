@@ -54,6 +54,13 @@
 
 * rename to something else as Confidant as now on PyPI. Now dectate. (done)
 
+* Sometimes during prepare it'd be useful to have access to the registry. But
+  since prepare is gone, not relevant anymore. (done)
+
+* separate "configurations" object from configurable. (done)
+
+* there's also an implicit list of configurables kept globally (done)
+
 * Deal properly with an action or composite that has no __init__. Error.
 
 * Ensure that morepath directives get registered before we start using them
@@ -66,8 +73,6 @@
 * Directive logging.
 
 * Implement scanning using recursive import.
-
-* Sometimes during prepare it'd be useful to have access to the registry.
 
 * if multiple directives declare different classes for the configuration
   registry that should be an error.
@@ -86,13 +91,11 @@
   have been applied. Should this be the registration data or should it
   be based around directives?
 
-* config.py's understanding of '.configurations' is not ideal.
+* config.py's understanding of '.config/.dectate' is not ideal.
 
 * Support logging.
 
 * Refuse to support classmethod & staticmethod?
 
-* there's also an implicit list of configurables kept globally that can
-  be reset.
-
-* separate "configurations" object from configurable.
+* the implicit list of global configurables can be reset for testing
+  purposes.
