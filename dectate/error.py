@@ -7,10 +7,10 @@ class ConfigError(Exception):
 
 
 def conflict_keyfunc(action):
-    frame_info = action.frame_info()
-    if frame_info is None:
+    code_info = action.code_info()
+    if code_info is None:
         return 0
-    return (frame_info.path, frame_info.lineno)
+    return (code_info.path, code_info.lineno)
 
 
 class ConflictError(ConfigError):
@@ -22,12 +22,12 @@ class ConflictError(ConfigError):
         result = [
             'Conflict between:']
         for action in actions:
-            frame_info = action.frame_info()
-            if frame_info is None:
+            code_info = action.code_info()
+            if code_info is None:
                 continue
-            result.append('  File "%s", line %s' % (frame_info.path,
-                                                    frame_info.lineno))
-            result.append('    %s' % frame_info.sourceline)
+            result.append('  File "%s", line %s' % (code_info.path,
+                                                    code_info.lineno))
+            result.append('    %s' % code_info.sourceline)
         msg = '\n'.join(result)
         super(ConflictError, self).__init__(msg)
 
@@ -36,12 +36,12 @@ class DirectiveReportError(ConfigError):
     """Raised when there's a problem with a directive.
     """
     def __init__(self, message, action):
-        frame_info = action.frame_info()
+        code_info = action.code_info()
         result = [message]
-        if frame_info is not None:
-            result.append('  File "%s", line %s' % (frame_info.path,
-                                                    frame_info.lineno))
-            result.append('    %s' % frame_info.sourceline)
+        if code_info is not None:
+            result.append('  File "%s", line %s' % (code_info.path,
+                                                    code_info.lineno))
+            result.append('    %s' % code_info.sourceline)
         msg = '\n'.join(result)
         super(DirectiveReportError, self).__init__(msg)
 

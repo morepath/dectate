@@ -1,9 +1,8 @@
 from functools import update_wrapper
 import logging
 import sys
-from .config import Configurable, Directive, commit
+from .config import Configurable, Directive, commit, get_code_info
 from .compat import with_metaclass
-from .framehack import get_frame_info
 
 global_configurables = []
 
@@ -68,11 +67,11 @@ class DirectiveDirective(object):
 
         def method(self, *args, **kw):
             frame = sys._getframe(1)
-            frame_info = get_frame_info(frame)
+            code_info = get_code_info(frame)
             logger = logging.getLogger('dectate.directive.%s' %
                                        directive_name)
             return Directive(self, action_factory, args, kw,
-                             frame_info, directive_name, logger)
+                             code_info, directive_name, logger)
         update_wrapper(method, action_factory.__init__)
         setattr(self.cls, self.name, classmethod(method))
         return action_factory

@@ -3,7 +3,6 @@ import inspect
 from .error import (
     ConflictError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .framehack import get_frame_info
 
 
 order_count = 0
@@ -138,13 +137,13 @@ class Actions(object):
         """
         self.prepare(configurable)
 
-        values = list(self._action_map.values())
-        values.sort(key=lambda value: value[0].order or 0)
+        actions = list(self._action_map.values())
+        actions.sort(key=lambda value: value[0].order or 0)
 
-        if not values:
+        if not actions:
             return
 
-        some_action, obj = values[0]
+        some_action, obj = actions[0]
         group_class = some_action.group_class()
         kw = group_class.get_configurations(configurable)
 
@@ -152,7 +151,7 @@ class Actions(object):
         group_class.before(**kw)
 
         # perform the actual actions
-        for action, obj in values:
+        for action, obj in actions:
             kw = action.get_configurations(configurable)
             try:
                 action.log(configurable, obj)
@@ -208,12 +207,12 @@ class Action(object):
         """
         return self.__class__
 
-    def frame_info(self):
+    def code_info(self):
         """Info about where in the source code the action was invoked.
         """
         if self.directive is None:
             return None
-        return self.directive.frame_info
+        return self.directive.code_info
 
     def log(self, configurable, obj):
         if self.directive is None:
@@ -288,7 +287,7 @@ class Directive(object):
     the directive was used for the purposes of error reporting.
     """
     def __init__(self, app_class, action_factory, args, kw,
-                 frame_info, directive_name, logger):
+                 code_info, directive_name, logger):
         """Initialize Directive.
 
         :param configurable: :class:`morepath.config.Configurable` object
@@ -299,7 +298,7 @@ class Directive(object):
         self.action_factory = action_factory
         self.args = args
         self.kw = kw
-        self.frame_info = frame_info
+        self.code_info = code_info
         self.directive_name = directive_name
         self.argument_info = (args, kw)
         self.logger = logger
@@ -361,7 +360,7 @@ class DirectiveAbbreviation(object):
 
     def __call__(self, *args, **kw):
         frame = sys._getframe(1)
-        frame_info = get_frame_info(frame)
+        code_info = get_code_info(frame)
         directive = self.directive
 
         combined_args = directive.args + args
@@ -372,7 +371,7 @@ class DirectiveAbbreviation(object):
             action_factory=directive.action_factory,
             args=combined_args,
             kw=combined_kw,
-            frame_info=frame_info,
+            code_info=code_info,
             directive_name=directive.directive_name,
             logger=directive.logger)
 
@@ -412,3 +411,29 @@ def expand_actions(actions):
                 action.order = order_count
                 order_count += 1
             yield action, obj
+
+
+class CodeInfo(object):
+    """FrameInfo object.
+    """
+    def __init__(self, path, lineno, sourceline):
+        self.path = path
+        self.lineno = lineno
+        self.sourceline = sourceline
+
+
+def get_code_info(frame):
+    """Return code information about a frame.
+    """
+    frameinfo = inspect.getframeinfo(frame)
+
+    try:
+        sourceline = frameinfo.code_context[0].strip()
+    except:  # pragma NO COVER
+        # dont understand circumstance here, 3rdparty code without comment
+        sourceline = frameinfo.code_context
+
+    return CodeInfo(
+        path=frameinfo.filename,
+        lineno=frameinfo.lineno,
+        sourceline=sourceline)

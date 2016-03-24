@@ -1,6 +1,6 @@
 from dectate.app import App, autocommit
 from dectate.config import commit, Action, Composite
-from dectate.error import ConflictError, ConfigError
+from dectate.error import ConflictError
 
 import pytest
 
@@ -890,3 +890,38 @@ def test_after():
     assert MyApp.config.my.l == [
         ('hello', f),
     ]
+
+
+def test_action_loop_should_conflict():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    for i in range(2):
+        @MyApp.foo('hello')
+        def f():
+            pass
+
+    with pytest.raises(ConflictError):
+        commit([MyApp])

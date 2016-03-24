@@ -63,6 +63,14 @@
 
 * Directive logging. (done)
 
+* The normal conflict detection will report correctly that there's
+  a conflict if a module is imported twice. (done)
+
+* but if a module is imported twice and a variable is increased upon
+  import that causes a non-conflict, a ConflictError won't be raised...
+  How contrived is that scenario? Could happen if you generate information
+  dynamically.
+
 * Deal properly with an action or composite that has no __init__. Error.
 
 * Ensure that morepath directives get registered before we start using them
