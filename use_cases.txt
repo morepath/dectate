@@ -87,3 +87,21 @@
 
 * there's also an implicit list of configurables kept globally that can
   be reset.
+
+* rename to something else as Confidantnow on PyPI.
+
+* separate "configurations" object from configurable.
+
+confide
+
+decadent
+
+decalogue decalog; but log is not used.
+
+gure
+
+decafig
+
+confey
+
+dectate
