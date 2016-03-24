@@ -1,25 +1,29 @@
 from functools import update_wrapper
 import logging
 import sys
-from .config import Configurable, Directive, Config
+from .config import Configurable, Directive, commit
 from .compat import with_metaclass
 from .framehack import get_frame_info
 
 global_configurables = []
 
 
+class Config(object):
+    pass
+
+
 class AppMeta(type):
     def __new__(cls, name, bases, d):
-        extends = [base.configurations for base in bases
-                   if hasattr(base, 'configurations')]
-        d['configurations'] = configurable = Configurable(extends)
+        extends = [base.dectate for base in bases
+                   if hasattr(base, 'dectate')]
+        d['config'] = config = Config()
+        d['dectate'] = configurable = Configurable(extends, config)
         global_configurables.append(configurable)
         return super(AppMeta, cls).__new__(cls, name, bases, d)
 
 
 def autocommit():
-    config = Config(global_configurables)
-    config.commit()
+    commit(global_configurables)
 
 
 class App(with_metaclass(AppMeta)):

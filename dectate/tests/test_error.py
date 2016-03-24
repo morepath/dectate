@@ -1,5 +1,5 @@
 from dectate.app import App
-from dectate.config import Config, Action
+from dectate.config import commit, Action
 
 from dectate.error import ConflictError, DirectiveError, DirectiveReportError
 from dectate.compat import text_type
@@ -26,9 +26,8 @@ def test_directive_error():
     def f():
         pass
 
-    config = Config([MyApp])
     with pytest.raises(DirectiveReportError) as e:
-        config.commit()
+        commit([MyApp])
 
     value = text_type(e.value)
     assert value.startswith("A real problem")
@@ -59,10 +58,8 @@ def test_conflict_error():
     def g():
         pass
 
-    config = Config([MyApp])
-
     with pytest.raises(ConflictError) as e:
-        config.commit()
+        commit([MyApp])
 
     value = text_type(e.value)
     assert value.startswith("Conflict between:")
@@ -99,9 +96,8 @@ def test_with_statement_error():
         def g():
             pass
 
-    config = Config([MyApp])
     with pytest.raises(DirectiveReportError) as e:
-        config.commit()
+        commit([MyApp])
 
     value = text_type(e.value)
 

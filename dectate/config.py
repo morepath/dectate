@@ -22,19 +22,14 @@ class Configurable(object):
     them by depends so that they are executed in the correct order,
     and then executes each action group, which performs them.
     """
-    def __init__(self, extends):
+    def __init__(self, extends, config):
         """
         :param extends:
           the configurables that this configurable extends.
         :type extends: list of configurables.
-        :param testing_config:
-          We can pass a config object used during testing. This causes
-          the actions to be issued against the configurable directly
-          instead of waiting for Venusian scanning. This allows
-          the use of directive decorators in tests where scanning is
-          not an option. Optional, default no testing config.
         """
         self.extends = extends
+        self.config = config
         # actions immediately registered with configurable
         self._actions = []
 
@@ -179,7 +174,7 @@ class Action(object):
 
     Can be subclassed to implement concrete configuration actions.
 
-    Actions classes also have a ``configurations`` attribute which is
+    Actions classes also have a ``config`` attribute which is
     a dictionary mapping configuration name to configuration
     factory. When the directive is executed and no configuration with
     such a name yet exists, that configuration is created as an
@@ -191,7 +186,7 @@ class Action(object):
     is. Actions which depend on another will be executed after those
     actions are executed.
     """
-    configurations = {}
+    config = {}
     depends = []
 
     # the directive that was used gets stored on the instance
@@ -221,11 +216,12 @@ class Action(object):
     @classmethod
     def get_configurations(cls, configurable):
         result = {}
-        for name, factory in cls.configurations.items():
-            configuration = getattr(configurable, name, None)
+        config = configurable.config
+        for name, factory in cls.config.items():
+            configuration = getattr(config, name, None)
             if configuration is None:
                 configuration = factory()
-                setattr(configurable, name, configuration)
+                setattr(config, name, configuration)
             result[name] = configuration
         return result
 
@@ -243,7 +239,7 @@ class Action(object):
         """Returns a list of immutables to detect conflicts.
 
         :param **kw: a dictionary of configuration objects as specified
-          by the configurations class attribute.
+          by the config class attribute.
 
         Used for additional configuration conflict detection.
         """
@@ -296,7 +292,7 @@ class Directive(object):
           for which this action was configured.
         """
         self.app = app
-        self.configurable = app.configurations
+        self.configurable = app.dectate
         self.action_factory = action_factory
         self.args = args
         self.kw = kw
@@ -382,58 +378,16 @@ class DirectiveAbbreviation(object):
             logger=directive.logger)
 
 
-class Config(object):
-    """Contains and executes configuration actions.
+def commit(configurables):
+    configurables_from_apps = []
+    for c in configurables:
+        if isinstance(c, Configurable):
+            configurables_from_apps.append(c)
+        else:
+            configurables_from_apps.append(c.dectate)
 
-    Morepath configuration actions consist of decorator calls on
-    :class:`App` instances, i.e. ``@App.view()`` and
-    ``@App.path()``. The Config object can scan these configuration
-    actions in a package. Once all required configuration is scanned,
-    the configuration can be committed. The configuration is then
-    processed, associated with :class:`morepath.config.Configurable`
-    objects (i.e. :class:`App` objects), conflicts are detected,
-    overrides applied, and the configuration becomes final.
-
-    Once the configuration is committed all configured Morepath
-    :class:`App` objects are ready to be served using WSGI.
-
-    See :func:`setup`, which creates an instance with standard
-    Morepath framework configuration. See also :func:`autoconfig` and
-    :func:`autosetup` which help automatically load configuration from
-    dependencies.
-    """
-    def __init__(self, configurables):
-        configurables_from_apps = []
-        for c in configurables:
-            if hasattr(c, 'configurations'):
-                configurables_from_apps.append(c.configurations)
-            else:
-                configurables_from_apps.append(c)
-        self.configurables = configurables_from_apps
-
-    def commit(self):
-        """Commit all configuration.
-
-        * Clears any previous configuration from all registered
-          :class:`morepath.config.Configurable` objects.
-        * Prepares actions using :meth:`prepared`.
-        * Actions are grouped by type of action (action class).
-        * The action groups are executed in order of ``depends``
-          between their action classes.
-        * Per action group, configuration conflicts are detected.
-        * Per action group, extending configuration is merged.
-        * Finally all configuration actions are performed, completing
-          the configuration process.
-
-        This method should be called only once during the lifetime of
-        a process, before the configuration is first used. After this
-        the configuration is considered to be fixed and cannot be
-        further modified. In tests this method can be executed
-        multiple times as it automatically clears the
-        configuration of its configurables first.
-        """
-        for configurable in sort_configurables(self.configurables):
-            configurable.execute()
+    for configurable in sort_configurables(configurables_from_apps):
+        configurable.execute()
 
 
 def sort_configurables(configurables):
