@@ -131,5 +131,9 @@
 
 * refactor so that action groups are set up *before* the rest of the
   commit, so we don't have to create action groups just in time while
-  going through actions.
+  going through actions. Base it off the action groups we have
+  registered. an action group has a before, after and a config.
+  there's a shortcut way to register an action without an action
+  group, but an action with both an action group *and* shortcut
+  methods is an error.
 
