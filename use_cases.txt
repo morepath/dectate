@@ -61,16 +61,14 @@
 
 * there's also an implicit list of configurables kept globally (done)
 
+* Directive logging. (done)
+
 * Deal properly with an action or composite that has no __init__. Error.
 
 * Ensure that morepath directives get registered before we start using them
   in imports.
 
-* Directives have a name. is it used in logging?
-
 * Directives have documentation that shows up in the sphinx docs
-
-* Directive logging.
 
 * Implement scanning using recursive import.
 
@@ -99,3 +97,5 @@
 
 * the implicit list of global configurables can be reset for testing
   purposes.
+
+* Configure logger by directive directive?
