@@ -1,17 +1,25 @@
 from functools import update_wrapper
 import logging
 import sys
-from .config import Configurable, Directive
+from .config import Configurable, Directive, Config
 from .compat import with_metaclass
 from .framehack import get_frame_info
+
+global_configurables = []
 
 
 class AppMeta(type):
     def __new__(cls, name, bases, d):
         extends = [base.configurations for base in bases
                    if hasattr(base, 'configurations')]
-        d['configurations'] = Configurable(extends)
+        d['configurations'] = configurable = Configurable(extends)
+        global_configurables.append(configurable)
         return super(AppMeta, cls).__new__(cls, name, bases, d)
+
+
+def autocommit():
+    config = Config(global_configurables)
+    config.commit()
 
 
 class App(with_metaclass(AppMeta)):

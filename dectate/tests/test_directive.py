@@ -1,4 +1,4 @@
-from dectate.app import App
+from dectate.app import App, autocommit
 from dectate.config import Config, Action, Composite
 from dectate.error import ConflictError
 
@@ -37,6 +37,41 @@ def test_simple():
 
     config = Config([MyApp])
     config.commit()
+
+    assert MyApp.configurations.my.l == [('hello', f)]
+
+
+def test_autocommit():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        configurations = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    autocommit()
 
     assert MyApp.configurations.my.l == [('hello', f)]
 
