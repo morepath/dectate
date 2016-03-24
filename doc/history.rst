@@ -19,7 +19,7 @@ off as the Martian_ library.
 
 .. _Martian: https://pypi.python.org/pypi/martian
 
-Chris McDonough was then inspired by Martian to create Venusian__, a
+Chris McDonough was then inspired by Martian to create Venusian_, a
 deferred decorator execution system. It is like Martian in that it
 imports Python modules recursively in order to find configuration.
 

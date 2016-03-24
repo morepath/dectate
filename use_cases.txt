@@ -107,3 +107,9 @@
   purposes.
 
 * Configure logger by directive directive?
+
+* is it possible to set up the registries before the action group
+  is executed?
+
+* should we store the *directives* on the configurable instead of the
+  actions to prevent any user code execution that can do too much?
