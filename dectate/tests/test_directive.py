@@ -6,20 +6,13 @@ import pytest
 
 
 def test_simple():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -29,7 +22,7 @@ def test_simple():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -37,24 +30,17 @@ def test_simple():
 
     commit([MyApp])
 
-    assert MyApp.config.my.l == [('hello', f)]
+    assert MyApp.config.my == [('hello', f)]
 
 
 def test_autocommit():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -64,7 +50,7 @@ def test_autocommit():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -72,24 +58,17 @@ def test_autocommit():
 
     autocommit()
 
-    assert MyApp.config.my.l == [('hello', f)]
+    assert MyApp.config.my == [('hello', f)]
 
 
 def test_conflict_same_directive():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -99,7 +78,7 @@ def test_conflict_same_directive():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -194,21 +173,13 @@ def test_app_override():
 
 
 def test_different_group_no_conflict():
-
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'foo': Registry
+            'foo': list
         }
 
         def __init__(self, message):
@@ -218,12 +189,12 @@ def test_different_group_no_conflict():
             return self.message
 
         def perform(self, obj, foo):
-            foo.add(self.message, obj)
+            foo.append((self.message, obj))
 
     @MyApp.directive('bar')
     class BarDirective(Action):
         config = {
-            'bar': Registry
+            'bar': list
         }
 
         def __init__(self, message):
@@ -233,7 +204,7 @@ def test_different_group_no_conflict():
             return self.message
 
         def perform(self, obj, bar):
-            bar.add(self.message, obj)
+            bar.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -245,25 +216,18 @@ def test_different_group_no_conflict():
 
     commit([MyApp])
 
-    assert MyApp.config.foo.l == [('hello', f)]
-    assert MyApp.config.bar.l == [('hello', g)]
+    assert MyApp.config.foo == [('hello', f)]
+    assert MyApp.config.bar == [('hello', g)]
 
 
 def test_same_group_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'foo': Registry
+            'foo': list
         }
 
         def __init__(self, message):
@@ -273,12 +237,12 @@ def test_same_group_conflict():
             return self.message
 
         def perform(self, obj, foo):
-            foo.add(self.message, obj)
+            foo.append((self.message, obj))
 
     @MyApp.directive('bar')
     class BarDirective(Action):
         config = {
-            'bar': Registry
+            'bar': list
         }
 
         def __init__(self, message):
@@ -292,7 +256,7 @@ def test_same_group_conflict():
             return self.message
 
         def perform(self, obj, bar):
-            bar.add(self.message, obj)
+            bar.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -307,20 +271,13 @@ def test_same_group_conflict():
 
 
 def test_discriminator_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message, others):
@@ -334,7 +291,7 @@ def test_discriminator_conflict():
             return self.others
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -349,20 +306,13 @@ def test_discriminator_conflict():
 
 
 def test_discriminator_same_group_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message, others):
@@ -376,7 +326,7 @@ def test_discriminator_same_group_conflict():
             return self.others
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.directive('bar')
     class BarDirective(FooDirective):
@@ -396,20 +346,13 @@ def test_discriminator_same_group_conflict():
 
 
 def test_discriminator_no_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message, others):
@@ -423,7 +366,7 @@ def test_discriminator_no_conflict():
             return self.others
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -435,22 +378,16 @@ def test_discriminator_no_conflict():
 
     commit([MyApp])
 
+    assert MyApp.config.my == [('f', f), ('g', g)]
 
 def test_discriminator_different_group_no_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message, others):
@@ -464,12 +401,12 @@ def test_discriminator_different_group_no_conflict():
             return self.others
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.directive('bar')
     class BarDirective(FooDirective):
         # will have its own group key so in a different group
-        pass
+        depends = [FooDirective]
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -481,22 +418,16 @@ def test_discriminator_different_group_no_conflict():
 
     commit([MyApp])
 
+    assert MyApp.config.my == [('f', f), ('g', g)]
 
 def test_depends():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -506,14 +437,14 @@ def test_depends():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.directive('bar')
     class BarDirective(Action):
         depends = [FooDirective]
 
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -523,7 +454,7 @@ def test_depends():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.bar('a')
     def g():
@@ -536,24 +467,17 @@ def test_depends():
     commit([MyApp])
 
     # since bar depends on foo, it should be executed last
-    assert MyApp.config.my.l == [('b', f), ('a', g)]
+    assert MyApp.config.my == [('b', f), ('a', g)]
 
 
 def test_composite():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -563,7 +487,7 @@ def test_composite():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.directive('composite')
     class CompositeDirective(Composite):
@@ -580,24 +504,17 @@ def test_composite():
     commit([MyApp])
 
     # since bar depends on foo, it should be executed last
-    assert MyApp.config.my.l == [('a', f), ('b', f), ('c', f)]
+    assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
 
 
 def test_nested_composite():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -607,7 +524,7 @@ def test_nested_composite():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.directive('subcomposite')
     class SubCompositeDirective(Composite):
@@ -634,27 +551,20 @@ def test_nested_composite():
     commit([MyApp])
 
     # since bar depends on foo, it should be executed last
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my == [
         ('a_0', f), ('a_1', f),
         ('b_0', f), ('b_1', f),
         ('c_0', f), ('c_1', f)]
 
 
 def test_with_statement_kw():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, model, name, obj):
-            self.l.append((model, name, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, model, name):
@@ -665,7 +575,7 @@ def test_with_statement_kw():
             return (self.model, self.name)
 
         def perform(self, obj, my):
-            my.add(self.model, self.name, obj)
+            my.append((self.model, self.name, obj))
 
     class Dummy(object):
         pass
@@ -682,27 +592,20 @@ def test_with_statement_kw():
 
     commit([MyApp])
 
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my == [
         (Dummy, 'a', f),
         (Dummy, 'b', g),
     ]
 
 
 def test_with_statement_args():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, model, name, obj):
-            self.l.append((model, name, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, model, name):
@@ -713,7 +616,7 @@ def test_with_statement_args():
             return (self.model, self.name)
 
         def perform(self, obj, my):
-            my.add(self.model, self.name, obj)
+            my.append((self.model, self.name, obj))
 
     class Dummy(object):
         pass
@@ -730,7 +633,7 @@ def test_with_statement_args():
 
     commit([MyApp])
 
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my == [
         (Dummy, 'a', f),
         (Dummy, 'b', g),
     ]
@@ -893,20 +796,13 @@ def test_after():
 
 
 def test_action_loop_should_conflict():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -916,7 +812,7 @@ def test_action_loop_should_conflict():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     for i in range(2):
         @MyApp.foo('hello')
@@ -928,13 +824,6 @@ def test_action_loop_should_conflict():
 
 
 def test_action_init_only_during_commit():
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
@@ -943,7 +832,7 @@ def test_action_init_only_during_commit():
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -954,7 +843,7 @@ def test_action_init_only_during_commit():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
