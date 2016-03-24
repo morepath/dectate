@@ -31,14 +31,11 @@ class Configurable(object):
         """
         self.extends = extends
         self.config = config
-        # actions immediately registered with configurable
-        self._actions = []
+        # directives immediately registered with configurable
+        self._directives = []
 
-    def register_action(self, action, obj):
-        global order_count
-        action.order = order_count
-        order_count += 1
-        self._actions.append((action, obj))
+    def register_directive(self, directive, obj):
+        self._directives.append((directive, obj))
 
     def group_actions(self):
         self._class_to_actions = d = {}
@@ -50,8 +47,12 @@ class Configurable(object):
                     d[action_class] = Actions(
                         self.action_extends(action_class))
 
+        # turn directives into actions
+        actions = [(directive.action(), obj)
+                   for (directive, obj) in self._directives]
+
         # now add the actions for this configurable
-        for action, obj in expand_actions(self._actions):
+        for action, obj in expand_actions(actions):
             action_class = action.group_class()
             actions = d.get(action_class)
             if actions is None:
@@ -319,7 +320,7 @@ class Directive(object):
     def __call__(self, wrapped):
         """Call with function to decorate.
         """
-        self.configurable.register_action(self.action(), wrapped)
+        self.configurable.register_directive(self, wrapped)
         return wrapped
 
     def log(self, configurable, obj):

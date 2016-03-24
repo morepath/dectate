@@ -925,3 +925,43 @@ def test_action_loop_should_conflict():
 
     with pytest.raises(ConflictError):
         commit([MyApp])
+
+
+def test_action_init_only_during_commit():
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    class MyApp(App):
+        pass
+
+    init_called = []
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            init_called.append("there")
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    assert init_called == []
+
+    commit([MyApp])
+
+    assert init_called == ["there"]
