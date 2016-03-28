@@ -736,6 +736,82 @@ And ``SubAction`` is performed three times as a result:
   >>> CompositeApp.config.my
   [('a', <function f at ...>), ('b', <function f at ...>), ('c', <function f at ...>)]
 
+``with`` statement
+------------------
+
+Sometimes you want to issue a lot of similar actions at once. You can
+use the ``with`` statement to do so with less repetition:
+
+.. testcode::
+
+  class WithApp(dectate.App):
+      pass
+
+  @WithApp.directive('foo')
+  class SubAction(dectate.Action):
+      config = {
+          'my': list
+      }
+
+      def __init__(self, a, b):
+          self.a = a
+          self.b = b
+
+      def identifier(self, my):
+          return (self.a, self.b)
+
+      def perform(self, obj, my):
+          my.append((self.a, self.b, obj))
+
+Instead of this:
+
+.. testcode::
+
+  class VerboseWithApp(WithApp):
+      pass
+
+  @VerboseWithApp.foo('a', 'x')
+  def f():
+     pass
+
+  @VerboseWithApp.foo('a', 'y')
+  def g():
+     pass
+
+  @VerboseWithApp.foo('a', 'z')
+  def h():
+     pass
+
+You can instead write:
+
+.. testcode::
+
+  class SuccinctWithApp(WithApp):
+      pass
+
+  with SuccinctWithApp.foo('a') as foo:
+      @foo('x')
+      def f():
+          pass
+
+      @foo('y')
+      def g():
+          pass
+
+      @foo('z')
+      def h():
+          pass
+
+And this has the same configuration effect:
+
+.. doctest::
+
+  >>> dectate.commit([VerboseWithApp, SuccinctWithApp])
+  >>> VerboseWithApp.config.my
+  [('a', 'x', <function f at ...>), ('a', 'y', <function g at ...>), ('a', 'z', <function h at ...>)]
+  >>> SuccinctWithApp.config.my
+  [('a', 'x', <function f at ...>), ('a', 'y', <function g at ...>), ('a', 'z', <function h at ...>)]
+
 logging
 -------
 
