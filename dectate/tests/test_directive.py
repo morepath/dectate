@@ -1085,3 +1085,69 @@ def test_registry_should_exist_even_without_directive_use_subclass():
 
     assert MyApp.config.my == []
     assert SubApp.config.my == []
+
+
+def test_rerun_commit():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    # and again
+    commit([MyApp])
+
+    assert MyApp.config.my == [('hello', f)]
+
+
+def test_rerun_commit_add_directive():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    @MyApp.foo('bye')
+    def g():
+        pass
+
+    # and again
+    commit([MyApp])
+
+    assert MyApp.config.my == [('hello', f), ('bye', g)]

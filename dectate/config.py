@@ -225,10 +225,7 @@ class Action(object):
     def setup_config(cls, configurable):
         config = configurable.config
         for name, factory in cls.config.items():
-            c = getattr(config, name, None)
-            if c is None:
-                c = factory()
-                setattr(config, name, c)
+            setattr(config, name, factory())
 
     @classmethod
     def get_config_kw(cls, configurable):
