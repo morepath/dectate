@@ -89,7 +89,7 @@ class Configurable(object):
         # now we create ActionGroup objects for each action class group
         self._action_groups = d = {}
         for action_class in sort_action_classes(action_classes):
-            action_class._setup_config(self)
+            setup_config(action_class, self)
             d[action_class] = ActionGroup(action_class,
                                           self.action_extends(action_class))
 
@@ -100,9 +100,15 @@ class Configurable(object):
         actions = [(directive.action(), obj)
                    for (directive, obj) in self._directives]
 
+        # create any Composite config
+        for action, obj in actions:
+            if not isinstance(action, Composite):
+                continue
+            setup_config(action, self)
+
         # add the actions for this configurable to the action group
         d = self._action_groups
-        for action, obj in expand_actions(actions):
+        for action, obj in expand_actions(self, actions):
             action_class = action.group_class
             if action_class is None:
                 action_class = action.__class__
@@ -294,15 +300,6 @@ class Action(object):
         self.directive.log(configurable, obj)
 
     @classmethod
-    def _setup_config(cls, configurable):
-        """Set up the config objects on the ``config`` attribute of this
-        configurable.
-        """
-        config = configurable.config
-        for name, factory in cls.config.items():
-            setattr(config, name, factory())
-
-    @classmethod
     def _get_config_kw(cls, configurable):
         """Get the config objects set up for this configurable into a dict.
 
@@ -374,7 +371,6 @@ class Action(object):
 
         :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
-
         """
         pass
 
@@ -400,7 +396,32 @@ class Composite(object):
     method and return a iterable of actions in there.
     """
 
-    def actions(self, obj):
+    config = {}
+    """Describe configuration.
+
+    A dict mapping configuration names to factory functions. The
+    resulting configuration objects is passed into :meth:`Composite.actions`
+    as keyword arguments, which this method can then use to
+    generate the appropriate sub-actions.
+
+    Usually you don't have to supply ``config`` for ``Composite`` but
+    it can be useful in some rare cases.
+    """
+
+    @classmethod
+    def _get_config_kw(cls, configurable):
+        """Get the config objects set up for this configurable into a dict.
+
+        This dict is then passed as keyword parameters (using ``**``)
+        into :meth:`Composite.actions`.
+        """
+        result = {}
+        config = configurable.config
+        for name, factory in cls.config.items():
+            result[name] = getattr(config, name)
+        return result
+
+    def actions(self, obj, **kw):
         """Specify a iterable of actions to perform for ``obj``.
 
         The iteratable should yield ``action``, ``obj`` tuples,
@@ -576,19 +597,22 @@ def sort_action_classes(action_classes):
     return topological_sort(action_classes, lambda c: c.depends)
 
 
-def expand_actions(actions):
+def expand_actions(configurable, actions):
     """Expand any :class:`Composite` instances into :class:`Action` instances.
 
     Expansion is recursive; composites that return composites are expanded
     again.
 
+    :param configurable: a :class:`Configurable` instance.
     :param actions: an iterable of :class:`Composite` and :class:`Action`
       instances.
     :return: an iterable of :class:`Action` instances.
     """
     for action, obj in actions:
         if isinstance(action, Composite):
-            for sub_action, sub_obj in expand_actions(action.actions(obj)):
+            kw = action._get_config_kw(configurable)
+            for sub_action, sub_obj in expand_actions(
+                    configurable, action.actions(obj, **kw)):
                 yield sub_action, sub_obj
         else:
             if not hasattr(action, 'order'):
@@ -632,6 +656,14 @@ def get_code_info(frame):
         path=frameinfo.filename,
         lineno=frameinfo.lineno,
         sourceline=sourceline)
+
+
+def setup_config(action, configurable):
+    """Set up the config objects on the ``config`` attribute.
+    """
+    config = configurable.config
+    for name, factory in action.config.items():
+        setattr(config, name, factory())
 
 
 def dotted_name(cls):
