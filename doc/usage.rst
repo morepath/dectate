@@ -474,19 +474,19 @@ We have now ensured that ``BarAction`` actions are performed after
 
 .. testcode::
 
-    @DependsApp.bar('a')
-    def f():
+   @DependsApp.bar('a')
+   def f():
        pass
 
-    @DependsApp.bar('b')
-    def g():
+   @DependsApp.bar('b')
+   def g():
        pass
 
-    @DependsApp.foo('a')
-    def x():
+   @DependsApp.foo('a')
+   def x():
        pass
 
-    dectate.commit([DependsApp])
+   dectate.commit([DependsApp])
 
 We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
 ``b``::
@@ -495,3 +495,55 @@ We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
 
   >>> DependsApp.config.bars
   [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
+
+before and after
+----------------
+
+It can be useful to do some additional setup just before all actions
+of a certain type are performed, or just afterwards. You can do this
+using ``before`` and ``after`` static methods on the Action class:
+
+.. testcode::
+
+  class BeforeAfterApp(dectate.App):
+      pass
+
+  @BeforeAfterApp.directive('foo')
+  class FooAction(dectate.Action):
+      config = {
+         'foos': list
+      }
+      def __init__(self, name):
+          self.name = name
+
+      @staticmethod
+      def before(foos):
+          print "before:", foos
+
+      @staticmethod
+      def after(foos):
+          print "after:", foos
+
+      def identifier(self, foos):
+          return self.name
+
+      def perform(self, obj, foos):
+          foos.append((self.name, obj))
+
+  @BeforeAfterApp.foo('a')
+  def f():
+      pass
+
+  @BeforeAfterApp.foo('b')
+  def g():
+      pass
+
+This executes ``before`` just before ``a`` and ``b`` are configured,
+and then executes ``after``::
+
+.. doctest::
+
+  >>> dectate.commit([BeforeAfterApp])
+  before: []
+  after: [('a', <function f at ...>), ('b', <function g at ...>)]
+
