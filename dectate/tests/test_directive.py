@@ -1151,3 +1151,42 @@ def test_rerun_commit_add_directive():
     commit([MyApp])
 
     assert MyApp.config.my == [('hello', f), ('bye', g)]
+
+
+def test_order_subclass():
+    class MyApp(App):
+        pass
+
+    class SubApp(MyApp):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @SubApp.foo('c')
+    def h():
+        pass
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.foo('b')
+    def g():
+        pass
+
+    commit([MyApp, SubApp])
+
+    assert SubApp.config.my == [('a', f), ('b', g), ('c', h)]
