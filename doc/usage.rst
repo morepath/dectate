@@ -389,27 +389,30 @@ What is going on here?
 * The directive is implemented with a custom class called
   ``PluginAction`` that inherits from :class:`dectate.Action`.
 
-* ``config`` specifies that this directive has a configuration effect
-  on ``plugins``. We declare that ``plugins`` is created using the
-  ``dict`` factory, so our registry is a plain dictionary. You provide
-  any factory function you like here.
+* ``config`` (:attr:`dectate.Action.config`) specifies that this
+  directive has a configuration effect on ``plugins``. We declare that
+  ``plugins`` is created using the ``dict`` factory, so our registry
+  is a plain dictionary. You provide any factory function you like
+  here.
 
-* ``__init__`` specifies the parameters the directive should take and
+* ``_init_`` specifies the parameters the directive should take and
   how to store them on the action object. You can use default
   parameters and such, but otherwise ``__init__`` should be very
   simple and not do any registration or validation. That logic should
   be in ``perform``.
 
-* ``identifier`` takes the configuration objects specified by
-  ``config`` as keyword arguments. It returns an immutable that
-  is unique for this action. This is used to detect conflicts and
-  determine how configurations override each other.
+* ``identifier`` (:meth:`dectate.Action.identifier`) takes the
+  configuration objects specified by ``config`` as keyword
+  arguments. It returns an immutable that is unique for this
+  action. This is used to detect conflicts and determine how
+  configurations override each other.
 
-* ``perform`` takes ``obj``, which is the function or class that the
-  decorator is used on, and the arguments specified in ``config``. It
-  should use ``obj`` and the information on ``self`` to configure the
-  configuration objects.  In this case we store ``obj`` under the key
-  ``self.name`` in the ``plugins`` dict.
+* ``perform`` (:meth:`dectate.Action.perform`) takes ``obj``, which is
+  the function or class that the decorator is used on, and the
+  arguments specified in ``config``. It should use ``obj`` and the
+  information on ``self`` to configure the configuration objects.  In
+  this case we store ``obj`` under the key ``self.name`` in the
+  ``plugins`` dict.
 
 Once we have declared the directive for our framework we can tell
 programmers to use it.
@@ -426,8 +429,9 @@ Depends
 
 In some cases you want to make sure that one type of directive has
 been executed before the other -- the configuration of the second type
-of directive depends on the former. You can make sure this happens
-by using the ``depends`` class attribute.
+of directive depends on the former. You can make sure this happens by
+using the ``depends`` (:attr:`dectate.Action.depends`) class
+attribute.
 
 First we set up a ``foo`` directive that registers into a ``foos``
 dict:
@@ -506,7 +510,8 @@ before and after
 
 It can be useful to do some additional setup just before all actions
 of a certain type are performed, or just afterwards. You can do this
-using ``before`` and ``after`` static methods on the Action class:
+using ``before`` (:meth:`dectate.Action.before`) and ``after``
+(:meth:`dectate.Action.after`) static methods on the Action class:
 
 .. testcode::
 
@@ -557,9 +562,9 @@ grouping actions
 
 Different actions normally don't conflict with each other. It can be
 useful to group different actions together in a group so that they do
-affect each other. You can do this with the ``group_class`` class
-attribute. Grouped classes share their ``config`` and their ``before`` and
-``after`` methods.
+affect each other. You can do this with the ``group_class``
+(:attr:`dectate.Action.group_class`) class attribute. Grouped classes
+share their ``config`` and their ``before`` and ``after`` methods.
 
 .. testcode::
 
@@ -628,8 +633,8 @@ Additional discriminators
 -------------------------
 
 In some cases an action should conflict with *multiple* other actions
-all at once. You can take care of this with the ``discriminators`` method
-on your action:
+all at once. You can take care of this with the ``discriminators``
+(:meth:`dectate.Action.discriminators`) method on your action:
 
 .. testcode::
 
@@ -686,7 +691,7 @@ Composite actions
 -----------------
 
 When you can define an action entirely in terms of other actions, you
-can use ``Composite``.
+can subclass :class:`dectate.Composite`.
 
 First we define a normal ``sub`` directive to use in the composite action
 later:
@@ -712,7 +717,8 @@ later:
           my.append((self.name, obj))
 
 Now we can define a special :meth:`dectate.Composite` subclass that
-uses ``SubAction`` in an ``actions`` method:
+uses ``SubAction`` in an ``actions``
+(:meth:`dectate.Composite.actions`) method:
 
 .. testcode::
 
@@ -826,8 +832,8 @@ messages. By default this goes to the
 Python :mod:`logging` module function to make this information go
 to a log file.
 
-If you want to override the name of the log you can set ``logger_name``
-on the app class::
+If you want to override the name of the log you can set
+``logger_name`` (:attr:`dectate.App.logger_name`) on the app class::
 
   class MorepathApp(dectate.App):
      logger_name = 'morepath.directive'

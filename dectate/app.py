@@ -8,10 +8,21 @@ global_configurables = []
 
 
 class Config(object):
+    """The object that contains the configurations.
+
+    The configurations are specified by the :attr:`Action.config`
+    class attribute of :class:`Action`.
+    """
     pass
 
 
 class AppMeta(type):
+    """Dectate metaclass.
+
+    Sets up ``config`` and ``dectate`` class attributes.
+
+    Keeps track of all :class:`App` subclasses.
+    """
     def __new__(cls, name, bases, d):
         extends = [base.dectate for base in bases
                    if hasattr(base, 'dectate')]
@@ -24,41 +35,51 @@ class AppMeta(type):
 
 
 def autocommit():
+    """Automatically commit all :class:`App` subclasses.
+
+    Dectate keeps track of all :class:`App` subclasses that have
+    been imported. You can automatically commit configuration for
+    all of them.
+    """
     commit(global_configurables)
 
 
 class App(with_metaclass(AppMeta)):
     """A configurable application object.
+
+    Subclass this in your framework and add directives using
+    the :meth:`App.directive` decorator.
+
+    Set the ``logger_name`` class attribute to the logging prefix
+    that Dectate should log to. By default it is ``"dectate.directive"``.
     """
-    testing_config = None
     logger_name = 'dectate.directive'
+    """The prefix to use for directive debug logging."""
 
     @classmethod
     def directive(cls, name):
         """Decorator to register a new directive with this application class.
 
-        You use this as a class decorator for a :class:`morepath.Directive`
-        subclass::
+        You use this as a class decorator for a :class:`Action` or
+        a :class:`Composite` subclass::
 
-           @App.directive('my_directive')
-           class FooDirective(morepath.Directive):
+           @MyApp.directive('my_directive')
+           class FooAction(dectate.Action):
                ...
 
-        This needs to be executed *before* the directive is being used
-        and thus might introduce import dependency issues unlike
-        normal Morepath configuration, so beware! An easy way to make
-        sure that all directives are installed before you use them is
-        to make sure you define them in the same module as where you
-        define the application class that has them.
+        This needs to be executed *before* the directive is used and
+        thus might introduce import dependency issues unlike normal
+        Dectate configuration, so beware! An easy way to make sure
+        that all directives are installed before you use them is to
+        make sure you define them in the same module as where you
+        define the :class:`App` subclass that has them.
         """
         return DirectiveDirective(cls, name)
 
-    @classmethod
-    def dotted_name(cls):
-        return '%s.%s' % (cls.__module__, cls.__name__)
-
 
 class DirectiveDirective(object):
+    """Implementation of the ``directive`` directive.
+    """
     def __init__(self, cls, name):
         self.cls = cls
         self.name = name

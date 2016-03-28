@@ -89,7 +89,7 @@ class Configurable(object):
         # now we create ActionGroup objects for each action class group
         self._action_groups = d = {}
         for action_class in sort_action_classes(action_classes):
-            action_class.setup_config(self)
+            action_class._setup_config(self)
             d[action_class] = ActionGroup(action_class,
                                           self.action_extends(action_class))
 
@@ -166,7 +166,7 @@ class ActionGroup(object):
         self._action_map = action_map = {}
 
         for action, obj in self._actions:
-            kw = action.get_config_kw(configurable)
+            kw = action._get_config_kw(configurable)
             id = action.identifier(**kw)
             discs = [id]
             discs.extend(action.discriminators(**kw))
@@ -206,7 +206,7 @@ class ActionGroup(object):
         actions = list(self._action_map.values())
         actions.sort(key=lambda value: value[0].order or 0)
 
-        kw = self.action_class.get_config_kw(configurable)
+        kw = self.action_class._get_config_kw(configurable)
 
         # run the group class before operation
         self.action_class.before(**kw)
@@ -214,7 +214,7 @@ class ActionGroup(object):
         # perform the actual actions
         for action, obj in actions:
             try:
-                action.log(configurable, obj)
+                action._log(configurable, obj)
                 action.perform(obj, **kw)
             except DirectiveError as e:
                 raise DirectiveReportError(u"{}".format(e), action)
@@ -236,28 +236,42 @@ class Action(object):
     discriminators. Actions can override each other based on their
     identifier. Actions can only be in conflict with actions of the
     same action class or actions with the same ``action_group``.
+    """
+    config = {}
+    """Describe configuration.
 
-    Action classes have a ``config`` class attribute which is a
-    dictionary mapping configuration names to factory functions. The
+    A dict mapping configuration names to factory functions. The
     resulting configuration objects are passed into
     :meth:`Action.identifier`, :meth:`Action.discriminators`,
     :meth:`Action.perform`, and :meth:`Action.before` and
     :meth:`Action.after`.
 
-    Action classes can have a ``depends`` class attribute, which is a
-    list of other action classes that need to be executed before this
-    one is. Actions which depend on another will be executed after
-    those actions are executed.
-
-    Action classes can have a ``group_class`` class attribute, which
-    is a class that this type of action should be grouped
-    with. Actions in the same group can be in conflict. Actions in the
-    same group share the ``config`` and ``before`` and ``after`` of
-    the action class indicated by ``group_class``.
+    After commit completes, the configured objects are found
+    as attributes on :class:`App.config`.
     """
-    config = {}
+
     depends = []
+    """List of other action classes to be executed before this one.
+
+    The ``depends`` class attribute contains a list of other action
+    classes that need to be executed before this one is. Actions which
+    depend on another will be executed after those actions are
+    executed.
+
+    Omit if you don't care about the order.
+    """
+
     group_class = None
+    """Action class to group with.
+
+    This class attribute can be supplied with the class of another
+    action that this action should be grouped with. Only actions in
+    the same group can be in conflict. Actions in the same group share
+    the ``config`` and ``before`` and ``after`` of the action class
+    indicated by ``group_class``.
+
+    By default an action only groups with others of its same class.
+    """
 
     # the directive that was used gets stored on the instance
     directive = None
@@ -265,14 +279,14 @@ class Action(object):
     def __init__(self):
         pass
 
-    def code_info(self):
+    def _code_info(self):
         """Info about where in the source code the action was invoked.
         """
         if self.directive is None:
             return None
         return self.directive.code_info
 
-    def log(self, configurable, obj):
+    def _log(self, configurable, obj):
         """Log this directive for configurable given configured obj.
         """
         if self.directive is None:
@@ -280,7 +294,7 @@ class Action(object):
         self.directive.log(configurable, obj)
 
     @classmethod
-    def setup_config(cls, configurable):
+    def _setup_config(cls, configurable):
         """Set up the config objects on the ``config`` attribute of this
         configurable.
         """
@@ -289,7 +303,7 @@ class Action(object):
             setattr(config, name, factory())
 
     @classmethod
-    def get_config_kw(cls, configurable):
+    def _get_config_kw(cls, configurable):
         """Get the config objects set up for this configurable into a dict.
 
         This dict can then be passed as keyword parameters (using ``**``)
@@ -313,13 +327,13 @@ class Action(object):
 
         If two actions in the same group have the same identifier in
         the same configurable, those two actions are in conflict and a
-        :class:`ConflictError` is raised during :function:`commit`.
+        :class:`ConflictError` is raised during :func:`commit`.
 
         If an action in an extending configurable has the same
         identifier as the configurable being extended, that action
         overrides the original one in the extending configurable.
 
-        :param **kw: a dictionary of configuration objects as specified
+        :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
         """
         raise NotImplementedError()  # pragma: nocoverage
@@ -331,7 +345,7 @@ class Action(object):
 
         Used for additional configuration conflict detection.
 
-        :param **kw: a dictionary of configuration objects as specified
+        :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
         """
         return []
@@ -341,12 +355,12 @@ class Action(object):
 
         Needs to be implemented by the :class:`Action` subclass.
 
-        Raise a :class:`DirectiveError` to indicate that the action
+        Raise a :exc:`DirectiveError` to indicate that the action
         cannot be performed due to incorrect configuration.
 
         :param obj: the object that the action should be performed
           for. Typically a function or a class object.
-        :param **kw: a dictionary of configuration objects as specified
+        :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
         """
         raise NotImplementedError()
@@ -358,7 +372,7 @@ class Action(object):
         Can be implemented as a static method by the :class:`Action`
         subclass.
 
-        :param **kw: a dictionary of configuration objects as specified
+        :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
 
         """
@@ -371,7 +385,7 @@ class Action(object):
         Can be implemented as a static method by the :class:`Action`
         subclass.
 
-        :param **kw: a dictionary of configuration objects as specified
+        :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
         """
         pass
@@ -464,7 +478,7 @@ class Directive(object):
         if self.logger is None:
             return
 
-        target_dotted_name = configurable.app_class.dotted_name()
+        target_dotted_name = dotted_name(configurable.app_class)
         is_same = self.app_class is configurable.app_class
 
         if inspect.isfunction(obj):
@@ -487,7 +501,7 @@ class Directive(object):
             func_dotted_name)
 
         if not is_same:
-            message += ' (from %s)' % self.app_class.dotted_name()
+            message += ' (from %s)' % dotted_name(self.app_class)
 
         self.logger.debug(message)
 
@@ -525,6 +539,9 @@ def commit(configurables):
     resulting configuration information is stored under the ``.config``
     class attribute of each configurable supplied.
 
+    This function may safely be invoked multiple times -- each time
+    the known configuration is recommitted.
+
     :param configurables: an iterable of configurables to perform
       configuration actions on.
     """
@@ -543,7 +560,7 @@ def sort_configurables(configurables):
     """Sort configurables topologically by ``extends``.
 
     :param configurables: an iterable of configurables to sort.
-    :returns: a topologically sorted list of configurables.
+    :return: a topologically sorted list of configurables.
     """
     return topological_sort(configurables, lambda c: c.extends)
 
@@ -553,7 +570,7 @@ def sort_action_classes(action_classes):
 
     :param action_classes: iterable of :class:`Action` subclasses
       class objects.
-    :returns: a topologically sorted list of action_classes.
+    :return: a topologically sorted list of action_classes.
     """
     return topological_sort(action_classes, lambda c: c.depends)
 
@@ -566,7 +583,7 @@ def expand_actions(actions):
 
     :param actions: an iterable of :class:`Composite` and :class:`Action`
       instances.
-    :returns: an iterable of :class:`Action` instances.
+    :return: an iterable of :class:`Action` instances.
     """
     for action, obj in actions:
         if isinstance(action, Composite):
@@ -614,3 +631,7 @@ def get_code_info(frame):
         path=frameinfo.filename,
         lineno=frameinfo.lineno,
         sourceline=sourceline)
+
+
+def dotted_name(cls):
+    return '%s.%s' % (cls.__module__, cls.__name__)
