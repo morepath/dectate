@@ -60,7 +60,7 @@ class Configurable(object):
                 group_class = action_class
             action_classes.add(group_class)
 
-        # nowe we create ActionGroup objects for each action class group
+        # now we create ActionGroup objects for each action class group
         self._action_groups = d = {}
         for action_class in sort_action_classes(action_classes):
             action_class.setup_config(self)
@@ -125,10 +125,10 @@ class ActionGroup(object):
         self._action_map = action_map = {}
 
         for action, obj in self._actions:
-            configurations = action.get_configurations(configurable)
-            id = action.identifier(**configurations)
+            kw = action.get_config_kw(configurable)
+            id = action.identifier(**kw)
             discs = [id]
-            discs.extend(action.discriminators(**configurations))
+            discs.extend(action.discriminators(**kw))
             for disc in discs:
                 other_action = discriminators.get(disc)
                 if other_action is not None:
@@ -161,14 +161,13 @@ class ActionGroup(object):
         actions = list(self._action_map.values())
         actions.sort(key=lambda value: value[0].order or 0)
 
-        kw = self.action_class.get_configurations(configurable)
+        kw = self.action_class.get_config_kw(configurable)
 
         # run the group class before operation
         self.action_class.before(**kw)
 
         # perform the actual actions
         for action, obj in actions:
-            kw = action.get_configurations(configurable)
             try:
                 action.log(configurable, obj)
                 action.perform(obj, **kw)
@@ -232,7 +231,7 @@ class Action(object):
                 setattr(config, name, c)
 
     @classmethod
-    def get_configurations(cls, configurable):
+    def get_config_kw(cls, configurable):
         result = {}
         config = configurable.config
         group_class = cls.group_class
