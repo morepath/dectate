@@ -403,11 +403,12 @@ class Composite(object):
     def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
 
-        You can include :class:`Action` and :class:`Composite`
-        instances in the iterable.
+        The iteratable should yield ``action``, ``obj`` tuples,
+        where ``action`` is instance of
+        class :class:`Action` or :class:`Composite` and ``obj``
+        is the object to perform the action with.
 
         Needs to be implemented by the :class:`Composite` subclass.
-
         """
         raise NotImplementedError
 
