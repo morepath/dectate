@@ -223,7 +223,8 @@ class ActionGroup(object):
                 action._log(configurable, obj)
                 action.perform(obj, **kw)
             except DirectiveError as e:
-                raise DirectiveReportError(u"{}".format(e), action)
+                raise DirectiveReportError(u"{}".format(e),
+                                           action._code_info())
 
         # run the group class after operation
         self.action_class.after(**kw)
@@ -470,7 +471,11 @@ class Directive(object):
     def action(self):
         """Get the :class:`Action` instance represented by this directive.
         """
-        result = self.action_factory(*self.args, **self.kw)
+        try:
+            result = self.action_factory(*self.args, **self.kw)
+        except TypeError as e:
+            raise DirectiveReportError(u"{}".format(e), self.code_info)
+
         # store the directive used on the action, useful for error reporting
         result.directive = self
         return result

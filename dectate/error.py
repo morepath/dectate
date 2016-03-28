@@ -39,8 +39,7 @@ class DirectiveReportError(ConfigError):
 
     Describes where in the code the problem occurred.
     """
-    def __init__(self, message, action):
-        code_info = action._code_info()
+    def __init__(self, message, code_info):
         result = [message]
         if code_info is not None:
             result.append('  File "%s", line %s' % (code_info.path,
