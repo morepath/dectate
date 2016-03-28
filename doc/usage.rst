@@ -86,6 +86,11 @@ Here are some features of Dectate:
   are executed only when the user explicitly *commits* the
   configuration.
 
+* Dectate-based decorators always return the function or class object
+  that is decorated unchanged, which makes the code more predictable
+  for a Python programmer -- you can use the function or class
+  directly in your Python code, just like any other.
+
 * Dectate-based configuration systems are themselves easily extensible
   with new directives.
 
