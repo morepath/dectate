@@ -11,13 +11,15 @@ order_count = 0
 class Configurable(object):
     """Object to which configuration actions apply.
 
-    This object can be tucked away inside an App class.
+    This object is normally tucked away as the ``dectate`` class
+    attribute on an :class:`dectate.App` subclass.
 
-    Actions are registered per configurable during the import phase. The
-    minimal activity happens during this phase.
+    Actions are registered per configurable during the import phase;
+    actions are not actually created or performed, so their
+    ``__init__`` and ``perform`` are not yet called.
 
-    During commit phase the configurable is executed. This expands any
-    composite actions, groups actions into action groups and sorts
+    During the commit phase the configurable is executed. This expands
+    any composite actions, groups actions into action groups and sorts
     them by depends so that they are executed in the correct order,
     and then executes each action group, which performs them.
     """
@@ -28,6 +30,10 @@ class Configurable(object):
         :param extends:
           the configurables that this configurable extends.
         :type extends: list of configurables.
+        :param config:
+          the object that will contains the actual configuration.
+          Normally it's the ``config`` class attribute of the
+          :class:`dectate.App` subclass.
         """
         self.extends = extends
         self.config = config
@@ -36,13 +42,28 @@ class Configurable(object):
         # directives used with configurable
         self._directives = []
 
-    def register_action_class(self, action_factory):
-        self._action_classes.add(action_factory)
+    def register_action_class(self, action_class):
+        """Register an action class with this configurable.
+
+        Called during import time when the :meth:`App.directive` directive
+        is executed.
+        """
+        self._action_classes.add(action_class)
 
     def register_directive(self, directive, obj):
+        """Register a directive with this configurable.
+
+        Called during import time when directives are used.
+        """
         self._directives.append((directive, obj))
 
     def setup(self):
+        """Set up config object and action groups.
+
+        This happens during the start of the commit phase.
+
+        Takes inheritance of apps into account.
+        """
         # add any action classes defined by base classes
         s = self._action_classes
         for configurable in self.extends:
@@ -73,6 +94,8 @@ class Configurable(object):
                                           self.action_extends(action_class))
 
     def group_actions(self):
+        """Groups actions for this configurable into action groups.
+        """
         # turn directives into actions
         actions = [(directive.action(), obj)
                    for (directive, obj) in self._directives]
@@ -86,24 +109,19 @@ class Configurable(object):
             d[action_class].add(action, obj)
 
     def action_extends(self, action_class):
-        """Get actions for action class in extends.
+        """Get ActionGroup for all action classes in extends.
         """
         return [
             configurable._action_groups.get(action_class,
                                             ActionGroup(action_class, []))
             for configurable in self.extends]
 
-    def action_classes(self):
-        """Get action classes sorted in dependency order.
-        """
-        return sort_action_classes(self._action_groups.keys())
-
     def execute(self):
         """Execute actions for configurable.
         """
         self.setup()
         self.group_actions()
-        for action_class in self.action_classes():
+        for action_class in sort_action_classes(self._action_groups.keys()):
             self._action_groups[action_class].execute(self)
 
 
