@@ -101,9 +101,17 @@ class Configurable(object):
             for action_class in configurable._action_classes:
                 if action_class not in s:
                     s.add(action_class)
-        true_action_classes = [action_class for action_class in s
-                               if issubclass(action_class, Action)]
-        for action_class in true_action_classes:
+
+        action_classes = set()
+        for action_class in s:
+            if not issubclass(action_class, Action):
+                continue
+            group_class = action_class.group_class
+            if group_class is None:
+                group_class = action_class
+            action_classes.add(group_class)
+
+        for action_class in sort_action_classes(action_classes):
             action_class.setup_config(self)
 
     def execute(self):
@@ -248,7 +256,10 @@ class Action(object):
     def get_configurations(cls, configurable):
         result = {}
         config = configurable.config
-        for name, factory in cls.config.items():
+        group_class = cls.group_class
+        if group_class is None:
+            group_class = cls
+        for name, factory in group_class.config.items():
             result[name] = getattr(config, name)
         return result
 

@@ -241,21 +241,17 @@ def test_same_group_conflict():
 
     @MyApp.directive('bar')
     class BarDirective(Action):
-        config = {
-            'bar': list
-        }
-
         # should now conflict
         group_class = FooDirective
 
         def __init__(self, message):
             self.message = message
 
-        def identifier(self, bar):
+        def identifier(self, foo):
             return self.message
 
-        def perform(self, obj, bar):
-            bar.append((self.message, obj))
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -759,10 +755,10 @@ def test_before_group():
         def __init__(self, name):
             self.name = name
 
-        def identifier(self):
+        def identifier(self, my):
             return self.name
 
-        def perform(self, obj):
+        def perform(self, obj, my):
             pass
 
         @staticmethod
@@ -787,7 +783,6 @@ def test_before_group():
     ]
 
 
-@pytest.mark.xfail
 def test_config_group():
     class MyApp(App):
         pass
@@ -835,7 +830,7 @@ def test_config_group():
 
     commit([MyApp])
 
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my == [
         ('bye', f), ('hello', g),
     ]
 
