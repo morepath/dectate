@@ -31,6 +31,7 @@ class App(with_metaclass(AppMeta)):
     """A configurable application object.
     """
     testing_config = None
+    logger_name = 'dectate.directive'
 
     @classmethod
     def directive(cls, name):
@@ -68,8 +69,8 @@ class DirectiveDirective(object):
         def method(self, *args, **kw):
             frame = sys._getframe(1)
             code_info = get_code_info(frame)
-            logger = logging.getLogger('dectate.directive.%s' %
-                                       directive_name)
+            logger = logging.getLogger('%s.%s' %
+                                       (self.logger_name, directive_name))
             return Directive(self, action_factory, args, kw,
                              code_info, directive_name, logger)
         update_wrapper(method, action_factory.__init__)

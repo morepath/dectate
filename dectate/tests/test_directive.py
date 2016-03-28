@@ -677,7 +677,6 @@ def test_before():
     ]
 
 
-
 def test_before_without_use():
     class Registry(object):
         def __init__(self):

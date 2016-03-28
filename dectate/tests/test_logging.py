@@ -131,3 +131,51 @@ def test_subclass_config_logging():
         "(from dectate.tests.test_logging.MyApp)")
 
     assert messages[1] == expected
+
+
+def test_override_logger_name():
+    log = logging.getLogger('morepath.directive.foo')
+
+    test_handler = Handler()
+
+    log.addHandler(test_handler)
+    log.setLevel(logging.DEBUG)
+
+    class Registry(object):
+        def __init__(self):
+            self.l = []
+
+        def add(self, message, obj):
+            self.l.append((message, obj))
+
+    class MyApp(App):
+        logger_name = 'morepath.directive'
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': Registry
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.add(self.message, obj)
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    messages = [r.getMessage() for r in test_handler.records]
+    assert len(messages) == 1
+    expected = (
+        "@dectate.tests.test_logging.MyApp.foo('hello') "
+        "on dectate.tests.test_logging.f")
+
+    assert messages[0] == expected
