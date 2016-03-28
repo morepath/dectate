@@ -787,6 +787,59 @@ def test_before_group():
     ]
 
 
+@pytest.mark.xfail
+def test_config_group():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.append((self.name, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        group_class = FooDirective
+
+        # should be ignored because of group_class,
+        # the config of the group_class is used instead
+        config = {
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, my):
+            return self.name
+
+        def perform(self, obj, my):
+            my.append((self.name, obj))
+
+    @MyApp.bar(name='bye')
+    def f():
+        pass
+
+    @MyApp.foo(name='hello')
+    def g():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.my.l == [
+        ('bye', f), ('hello', g),
+    ]
+
+
 def test_before_group_without_use():
     class Registry(object):
         def __init__(self):

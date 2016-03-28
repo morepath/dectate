@@ -49,7 +49,7 @@ class Configurable(object):
         for configurable in self.extends:
             for action_class in configurable.action_classes():
                 if action_class not in d:
-                    d[action_class] = Actions(
+                    d[action_class] = ActionGroup(
                         action_class,
                         self.action_extends(action_class))
 
@@ -64,7 +64,7 @@ class Configurable(object):
                 action_class = action.__class__
             actions = d.get(action_class)
             if actions is None:
-                d[action_class] = actions = Actions(
+                d[action_class] = actions = ActionGroup(
                     action_class,
                     self.action_extends(action_class))
             actions.add(action, obj)
@@ -79,14 +79,14 @@ class Configurable(object):
                 action_class = group_class
             if action_class in d:
                 continue
-            d[action_class] = Actions(action_class, [])
+            d[action_class] = ActionGroup(action_class, [])
 
     def action_extends(self, action_class):
         """Get actions for action class in extends.
         """
         return [
             configurable._action_groups.get(action_class,
-                                            Actions(action_class, []))
+                                            ActionGroup(action_class, []))
             for configurable in self.extends]
 
     def action_classes(self):
@@ -115,7 +115,7 @@ class Configurable(object):
             self._action_groups[action_class].execute(self)
 
 
-class Actions(object):
+class ActionGroup(object):
     def __init__(self, action_class, extends):
         self.action_class = action_class
         self._actions = []

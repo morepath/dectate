@@ -137,3 +137,6 @@
   group, but an action with both an action group *and* shortcut
   methods is an error.
 
+
+* the action_classes in setup_config should be sorted so that behavior
+  is consistent even if registries are set up inconsistently.
