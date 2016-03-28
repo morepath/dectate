@@ -677,6 +677,65 @@ And then:
     File "...", line 7
       @DiscriminatorsApp.foo('b', [])
 
+Composite actions
+-----------------
+
+When you can define an action entirely in terms of other actions, you
+can use ``Composite``.
+
+First we define a normal ``sub`` directive to use in the composite action
+later:
+
+.. testcode::
+
+  class CompositeApp(dectate.App):
+      pass
+
+  @CompositeApp.directive('sub')
+  class SubAction(dectate.Action):
+      config = {
+          'my': list
+      }
+
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, my):
+          return self.name
+
+      def perform(self, obj, my):
+          my.append((self.name, obj))
+
+Now we can define a special :meth:`dectate.Composite` subclass that
+uses ``SubAction`` in an ``actions`` method:
+
+.. testcode::
+
+  @CompositeApp.directive('composite')
+  class CompositeAction(dectate.Composite):
+      def __init__(self, names):
+          self.names = names
+
+      def actions(self, obj):
+          return [(SubAction(name), obj) for name in self.names]
+
+We can now use it:
+
+.. testcode::
+
+  @CompositeApp.composite(['a', 'b', 'c'])
+  def f():
+      pass
+
+  dectate.commit([CompositeApp])
+
+And ``SubAction`` is performed three times as a result:
+
+.. doctest::
+
+  >>> CompositeApp.config.my
+  [('a', <function f at ...>), ('b', <function f at ...>), ('c', <function f at ...>)]
+
 logging
 -------
 
