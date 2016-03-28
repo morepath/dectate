@@ -357,39 +357,61 @@ This won't affect ``TwoApp`` in any way:
 ``OneApp`` and ``TwoApp`` are isolated, so configurations are
 independent, and cannot conflict or override.
 
+The Anatomy of a Directive
+--------------------------
+
+Let's consider the directive registration again in detail::
+
+  @BaseApp.directive('plugin')
+  class PluginAction(dectate.Action):
+      config = {
+         'plugins': dict
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, plugins):
+          return self.name
+
+      def perform(self, obj, plugins):
+          plugins[self.name] = obj
 
 What is going on here?
 
-* We create a new directive called ``register`` on ``MyApp`` and
-  its subclasses.
+* We create a new directive called ``plugin`` on ``MyApp``. It also
+  exists for its subclasses.
 
 * The directive is implemented with a custom class called
-  ``RegisterAction`` that inherits from :class:`dectate.Action`.
+  ``PluginAction`` that inherits from :class:`dectate.Action`.
 
 * ``config`` specifies that this directive has a configuration effect
-  on ``registry``. We declare that ``registry`` is created using
-  a ``dict``, so our registry is a plain dictionary. You provide
+  on ``plugins``. We declare that ``plugins`` is created using the
+  ``dict`` factory, so our registry is a plain dictionary. You provide
   any factory function you like here.
 
-* ``__init__`` specifies the parameters the directive should take and how
-  to store them on the action object.
+* ``__init__`` specifies the parameters the directive should take and
+  how to store them on the action object. You can use default
+  parameters and such, but otherwise ``__init__`` should be very
+  simple and not do any registration or validation. That logic should
+  be in ``perform``.
 
-* ``identifier`` takes the configuration objects specified by ``config``
-  as arguments. It should return an immutable that is unique for
-  this action. This is used to detect conflicts and determine overrides.
+* ``identifier`` takes the configuration objects specified by
+  ``config`` as keyword arguments. It returns an immutable that
+  is unique for this action. This is used to detect conflicts and
+  determine how configurations override each other.
 
-* ``perform`` takes ``obj``, which is the function or class that is
-  being decorated, and a list of config objects. It should use ``obj`` and the
-  information on ``self`` to configure the configuration objects.
-  In this case we store ``obj`` under the key ``self.name`` in the
-  ``registry`` dict.
+* ``perform`` takes ``obj``, which is the function or class that the
+  decorator is used on, and the arguments specified in ``config``. It
+  should use ``obj`` and the information on ``self`` to configure the
+  configuration objects.  In this case we store ``obj`` under the key
+  ``self.name`` in the ``plugins`` dict.
 
 Once we have declared the directive for our framework we can tell
 programmers to use it.
 
 Directives have absolutely no effect until *commit* is called, which
-we did with ``dectate.commit``. This performs the actions and we can
+we do with ``dectate.commit``. This performs the actions and we can
 then find the result ``MyApp.config``.
 
-The results are in ``MyApp.config.registry`` as we set this up with
-``config`` in our ``RegisterAction``.
+The results are in ``MyApp.config.plugins`` as we set this up with
+``config`` in our ``PluginAction``.
