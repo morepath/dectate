@@ -611,8 +611,14 @@ def expand_actions(configurable, actions):
     for action, obj in actions:
         if isinstance(action, Composite):
             kw = action._get_config_kw(configurable)
-            for sub_action, sub_obj in expand_actions(
-                    configurable, action.actions(obj, **kw)):
+            # make sure all sub actions propagate originating directive
+            # info
+            sub_actions = []
+            for sub_action, sub_obj in action.actions(obj, **kw):
+                sub_action.directive = action.directive
+                sub_actions.append((sub_action, obj))
+            for sub_action, sub_obj in expand_actions(configurable,
+                                                      sub_actions):
                 yield sub_action, sub_obj
         else:
             if not hasattr(action, 'order'):

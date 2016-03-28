@@ -1,5 +1,5 @@
 from dectate.app import App
-from dectate.config import commit, Action
+from dectate.config import commit, Action, Composite
 
 from dectate.error import ConflictError, DirectiveError, DirectiveReportError
 from dectate.compat import text_type
@@ -103,4 +103,48 @@ def test_with_statement_error():
 
     assert value.startswith("A real problem")
     assert value.endswith(" @foo(name='a')")
+    assert '/test_error.py' in value
+
+
+def test_composite_codeinfo_propagation():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('sub')
+    class SubDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.directive('composite')
+    class CompositeDirective(Composite):
+        def __init__(self, messages):
+            self.messages = messages
+
+        def actions(self, obj):
+            return [(SubDirective(message), obj) for message in self.messages]
+
+    @MyApp.composite(['a'])
+    def f():
+        pass
+
+    @MyApp.composite(['a'])
+    def g():
+        pass
+
+    with pytest.raises(ConflictError) as e:
+        commit([MyApp])
+
+    value = text_type(e.value)
+
+    assert "@MyApp.composite(['a'])" in value
     assert '/test_error.py' in value
