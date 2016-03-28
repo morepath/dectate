@@ -4,43 +4,87 @@ Using Dectate
 Introduction
 ------------
 
-We say Dectate is a configuration system for Python, but what do we
-mean by that? *Configuration* in this context is the process of
-connecting pieces of code together into an application. Some examples
-of code configuration are declaring routes, assembling middleware and
-declaring views for models. What code configuration you need is
-determined by you, the framework author.
+Dectate is a configuration system for Python frameworks. A framework
+needs to record some information about the functions and classes that
+the user supplies to the framework. We call this process
+*configuration*.
+
+Imagine for instance a framework that supports a certain kind of
+plugins. You could then register it using a decorator::
+
+   from framework import plugin
+
+   @plugin(name="foo")
+   def foo_plugin(...):
+      ...
+
+The framework is supposed to register the function ``foo_plugin``
+under the name ``foo`` as a plugin.
+
+You can implement the ``plugin`` decorator as follows::
+
+   plugins = {}
+
+   class plugin(name):
+       def __init__(self, name):
+           self.name = name
+
+       def __call__(self, f):
+          plugins[self.name] = f
+
+After you import the code that uses the ``plugin`` decorator, the
+``plugins`` dict contains the names as keys and the functions as
+values. The framework can then use this information to do whatever it
+needs to do.
+
+There are a lot of examples of code configuration. In a web framework
+for instance you may need to declare routes and assemble middleware.
+
+A framework may be fine using the simple decorator technique described
+above. But advanced frameworks often want a lot more that the basic
+decorator system described above cannot offer. You may for instance
+want to reuse configurations, override them, do more advanced error
+checking, make sure configurations are registered in a particular
+order, and so on.
+
+Dectate supports such advanced use cases. It was extracted from the
+Morepath_ web framework.
+
+.. _Morepath: http://morepath.readthedocs.org
 
 Features
 --------
+
+Here are some features of Dectate:
 
 * Decorator-based configuration -- users declare things by using Python
   decorators on functions and classes: we call these *directives*,
   which issue configuration *actions*.
 
-* Dectate detects conflicts between pieces of configuration in user
-  code and reports what pieces of code are in conflict.
+* Dectate detects conflicts between configuration actions in user code
+  and reports what pieces of code are in conflict.
 
 * Users can easily reuse and extend configuration: it's just Python
   class inheritance.
 
-* Users can easily override configurations.
+* Users can easily override configurations in subclasses.
+
+* You can compose configuration actions from other, simpler ones.
+
+* You can control the order in which configuration actions are
+  executed. This is unrelated to where the user uses the directives in
+  code. You do this by declaring *dependencies* between types of
+  configuration actions, and by *grouping* configuration actions
+  together.
+
+* You can declare exactly what objects are used by a type of
+  configuration action to register the configuration -- different
+  types of actions can use different registries.
 
 * Unlike normal decorators, configuration actions aren't performed
   immediately when a module is imported. Instead configuration actions
   are executed only when the user explicitly *commits* the
   configuration.
-
-* You can control the order in which configuration actions are
-  executed. This is unrelated to where the user uses the directives in
-  code. You do this by declaring *dependencies* between types of
-  configuration actions.
-
-* You can declare exactly what registries are used by a type of
-  configuration action -- different types of actions can use
-  different registries.
-
-* You can compose configuration actions from other, simpler ones.
 
 * Dectate-based configuration systems are themselves easily extensible
   with new directives.
@@ -61,34 +105,35 @@ to derive from :class:`dectate.App`:
 Creating a directive
 --------------------
 
-We can now use the :meth:`dectate.App.directive` decorator We need to
-declare a *directive* which executes a special configuration action:
+We can now use the :meth:`dectate.App.directive` decorator to declare
+a *directive* which executes a special configuration action. Let's
+replicate the simple `plugins` example above using Dectate:
 
 .. testcode::
 
-  @MyApp.directive('register')
-  class RegisterAction(dectate.Action):
+  @MyApp.directive('plugin')
+  class PluginAction(dectate.Action):
       config = {
-         'registry': dict
+         'plugins': dict
       }
       def __init__(self, name):
           self.name = name
 
-      def identifier(self, registry):
+      def identifier(self, plugins):
           return self.name
 
-      def perform(self, obj, registry):
-          registry[self.name] = obj
+      def perform(self, obj, plugins):
+          plugins[self.name] = obj
 
 Let's use it now:
 
 .. testcode::
 
-  @MyApp.register('a')
+  @MyApp.plugin('a')
   def f():
       pass # do something interesting
 
-  @MyApp.register('b')
+  @MyApp.plugin('b')
   def g():
       pass # something else interesting
 
@@ -101,12 +146,217 @@ We can now commit the configuration for ``MyApp``:
 
   dectate.commit([MyApp])
 
-We can now take a look at the configuration:
+Once the commit has successfully completed, we can take a look at the
+configuration:
 
 .. doctest::
 
-  >>> MyApp.config.registry
-  {'a': <function f at ...>, 'b': <function g at ...>}
+  >>> sorted(MyApp.config.plugins.items())
+  [('a', <function f at ...>), ('b', <function g at ...>)]
+
+What are the changes between this and the simple plugins example?
+
+The main difference is that ``plugin`` decorator is associated with a
+class and so its the resulting configuration. The other difference is
+that we provide an ``identifier`` method in the action
+definition. These differences support configuration *reuse*,
+*conflicts*, *extension*, *overrides* and *isolation*.
+
+Reuse
+~~~~~
+
+You can reuse configuration by simply subclassing ``MyApp``:
+
+.. testcode::
+
+  class SubApp(MyApp):
+     pass
+
+We commit both classes:
+
+.. testcode::
+
+  dectate.commit([MyApp, SubApp])
+
+``SubClass`` now contains all the configuration declared for ``MyApp``:
+
+  >>> sorted(SubApp.config.plugins.items())
+  [('a', <function f at ...>), ('b', <function g at ...>)]
+
+So class inheritance lets us reuse configuration, which allows
+*extension* and *overrides*, which we discuss below.
+
+Conflicts
+~~~~~~~~~
+
+Consider this example:
+
+.. testcode::
+
+   class ConflictingApp(MyApp):
+       pass
+
+   @ConflictingApp.plugin('foo')
+   def f():
+       pass
+
+   @ConflictingApp.plugin('foo')
+   def g():
+       pass
+
+Which function should be registered for ``foo``, ``f`` or ``g``? We should
+refuse to guess and instead raise an error that the configuration is
+in conflict. This is exactly what Dectate does:
+
+.. doctest::
+
+   >>> dectate.commit([ConflictingApp])
+   Traceback (most recent call last):
+     ...
+   ConflictError: Conflict between:
+    File "...", line 4
+      @ConflictingApp.plugin('foo')
+    File "...", line 8
+      @ConflictingApp.plugin('foo')
+
+As you can see, Dectate reports the lines in which the conflicting
+configurations occurs.
+
+How does Dectate know that these configurations are in conflict? This
+is what the ``identifier`` method in our action definition did::
+
+  def identifier(self, plugins):
+      return self.name
+
+We say here that the configuration is uniquely identified by its
+``name`` attribute. If two configurations exist with the same name,
+the configuration is considered to be in conflict.
+
+Extension
+~~~~~~~~~
+
+When you subclass configuration, you can also *extend* ``SubApp`` with
+additional configuration actions:
+
+.. testcode::
+
+  @SubApp.plugin('c')
+  def h():
+      pass # do something interesting
+
+  dectate.commit([MyApp, SubApp])
+
+``SubApp`` now has the additional plugin ``c``:
+
+.. doctest::
+
+  >>> sorted(SubApp.config.plugins.items())
+  [('a', <function f at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
+
+But ``MyApp`` is unaffected:
+
+.. doctest::
+
+  >>> sorted(MyApp.config.plugins.items())
+  [('a', <function f at ...>), ('b', <function g at ...>)]
+
+Overrides
+~~~~~~~~~
+
+What if you wanted to override a piece of configuration? You can do
+this in ``SubApp`` by simply reusing the same ``name``:
+
+.. testcode::
+
+  @SubApp.plugin('a')
+  def x():
+      pass
+
+  dectate.commit([MyApp, SubApp])
+
+In ``SubApp`` we now have changed the configuration for ``a`` to
+register the function ``x`` instead of ``f``. If we had done this for
+``MyApp`` this would have been a conflict, but doing so in a subclass
+lets you override configuration instead:
+
+.. doctest::
+
+  >>> sorted(SubApp.config.plugins.items())
+  [('a', <function x at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
+
+But ``MyApp`` still uses ``f``:
+
+  >>> sorted(MyApp.config.plugins.items())
+  [('a', <function f at ...>), ('b', <function g at ...>)]
+
+Isolation
+~~~~~~~~~
+
+We have already seen in the inheritance and override examples that
+``MyApp`` is isolated from configuration extension and overrides done
+for ``SubApp``. We can in fact entirely isolate configuration from
+each other.
+
+We first set up a new base class with a directive, independently
+from everything before:
+
+.. testcode::
+
+  class BaseApp(dectate.App):
+      pass
+
+  @BaseApp.directive('plugin')
+  class PluginAction(dectate.Action):
+      config = {
+         'plugins': dict
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, plugins):
+          return self.name
+
+      def perform(self, obj, plugins):
+          plugins[self.name] = obj
+
+We don't set up any configuration for ``BaseApp``; it's intended to be
+part of our framework. Now we create two subclasses:
+
+.. testcode::
+
+  class OneApp(BaseApp):
+      pass
+
+  class TwoApp(BaseApp):
+      pass
+
+As you can see ``OneApp`` and ``TwoApp`` are completely isolated from
+each other; the only thing they share is a common ``BaseApp``.
+
+We register a plugin for ``OneApp``:
+
+.. testcode::
+
+  @OneApp.plugin('a')
+  def f():
+      pass
+
+This won't affect ``TwoApp`` in any way:
+
+.. testcode::
+
+  dectate.commit([OneApp, TwoApp])
+
+.. doctest::
+
+  >>> sorted(OneApp.config.plugins.items())
+  [('a', <function f at ...>)]
+  >>> sorted(TwoApp.config.plugins.items())
+  []
+
+``OneApp`` and ``TwoApp`` are isolated, so configurations are
+independent, and cannot conflict or override.
+
 
 What is going on here?
 
