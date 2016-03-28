@@ -42,44 +42,43 @@ class Configurable(object):
     def register_directive(self, directive, obj):
         self._directives.append((directive, obj))
 
-    def group_actions(self):
-        self._action_groups = d = {}
-
-        # get the actions our actions extend
+    def setup(self):
+        # add any action classes defined by base classes
+        s = self._action_classes
         for configurable in self.extends:
-            for action_class in configurable.action_classes():
-                if action_class not in d:
-                    d[action_class] = ActionGroup(
-                        action_class,
-                        self.action_extends(action_class))
+            for action_class in configurable._action_classes:
+                if action_class not in s:
+                    s.add(action_class)
 
+        # we want to have use group_class for each true Action class
+        action_classes = set()
+        for action_class in s:
+            if not issubclass(action_class, Action):
+                continue
+            group_class = action_class.group_class
+            if group_class is None:
+                group_class = action_class
+            action_classes.add(group_class)
+
+        # nowe we create ActionGroup objects for each action class group
+        self._action_groups = d = {}
+        for action_class in sort_action_classes(action_classes):
+            action_class.setup_config(self)
+            d[action_class] = ActionGroup(action_class,
+                                          self.action_extends(action_class))
+
+    def group_actions(self):
         # turn directives into actions
         actions = [(directive.action(), obj)
                    for (directive, obj) in self._directives]
 
-        # now add the actions for this configurable
+        # add the actions for this configurable to the action group
+        d = self._action_groups
         for action, obj in expand_actions(actions):
             action_class = action.group_class
             if action_class is None:
                 action_class = action.__class__
-            actions = d.get(action_class)
-            if actions is None:
-                d[action_class] = actions = ActionGroup(
-                    action_class,
-                    self.action_extends(action_class))
-            actions.add(action, obj)
-
-        # add any actions for action classes we know about but don't
-        # actually have any directive usage for
-        for action_class in self._action_classes:
-            if not issubclass(action_class, Action):
-                continue
-            group_class = action_class.group_class
-            if group_class is not None:
-                action_class = group_class
-            if action_class in d:
-                continue
-            d[action_class] = ActionGroup(action_class, [])
+            d[action_class].add(action, obj)
 
     def action_extends(self, action_class):
         """Get actions for action class in extends.
@@ -94,30 +93,10 @@ class Configurable(object):
         """
         return sort_action_classes(self._action_groups.keys())
 
-    def setup_config(self):
-        # add any action classes defined by base classes
-        s = self._action_classes
-        for configurable in self.extends:
-            for action_class in configurable._action_classes:
-                if action_class not in s:
-                    s.add(action_class)
-
-        action_classes = set()
-        for action_class in s:
-            if not issubclass(action_class, Action):
-                continue
-            group_class = action_class.group_class
-            if group_class is None:
-                group_class = action_class
-            action_classes.add(group_class)
-
-        for action_class in sort_action_classes(action_classes):
-            action_class.setup_config(self)
-
     def execute(self):
         """Execute actions for configurable.
         """
-        self.setup_config()
+        self.setup()
         self.group_actions()
         for action_class in self.action_classes():
             self._action_groups[action_class].execute(self)
