@@ -553,7 +553,7 @@ grouping actions
 Different actions normally don't conflict with each other. It can be
 useful to group different actions together in a group so that they do
 affect each other. You can do this with the ``group_class`` class
-attribute. Grouped classes share their config and their ``before`` and
+attribute. Grouped classes share their ``config`` and their ``before`` and
 ``after`` methods.
 
 .. testcode::
@@ -677,4 +677,18 @@ And then:
     File "...", line 7
       @DiscriminatorsApp.foo('b', [])
 
+logging
+-------
+
+Dectate logs information about the performed actions as debug log
+messages. By default this goes to the
+``dectate.directive.<directive_name>`` log. You can use the standard
+Python :mod:`logging` module function to make this information go
+to a log file.
+
+If you want to override the name of the log you can set ``logger_name``
+on the app class::
+
+  class MorepathApp(dectate.App):
+     logger_name = 'morepath.directive'
 
