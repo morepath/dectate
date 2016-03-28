@@ -140,3 +140,5 @@
 
 * the action_classes in setup_config should be sorted so that behavior
   is consistent even if registries are set up inconsistently.
+
+* group_class for a group_class should be an error.

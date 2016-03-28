@@ -547,3 +547,75 @@ and then executes ``after``::
   before: []
   after: [('a', <function f at ...>), ('b', <function g at ...>)]
 
+grouping actions
+----------------
+
+Different actions normally don't conflict with each other. It can be
+useful to group different actions together in a group so that they do
+affect each other. You can do this with the ``group_class`` class
+attribute. Grouped classes share their config and their ``before`` and
+``after`` methods.
+
+.. testcode::
+
+  class GroupApp(dectate.App):
+      pass
+
+  @GroupApp.directive('foo')
+  class FooAction(dectate.Action):
+      config = {
+         'foos': list
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, foos):
+          return self.name
+
+      def perform(self, obj, foos):
+          foos.append((self.name, obj))
+
+We now create a ``BarDirective`` that groups with ``FooAction``:
+
+.. testcode::
+
+  @GroupApp.directive('bar')
+  class BarAction(dectate.Action):
+     group_class = FooAction
+
+     def __init__(self, name):
+         self.name = name
+
+     def identifier(self, foos):
+         return self.name
+
+     def perform(self, obj, foos):
+         foos.append((self.name, obj))
+
+It reuses the ``config`` from ``FooAction``. This means that ``foo``
+and ``bar`` can be in conflict:
+
+.. testcode::
+
+  class GroupConflictApp(GroupApp):
+      pass
+
+  @GroupConflictApp.foo('a')
+  def f():
+      pass
+
+  @GroupConflictApp.bar('a')
+  def g():
+      pass
+
+.. doctest::
+
+  >>> dectate.commit([GroupConflictApp])
+  Traceback (most recent call last):
+    ...
+  ConflictError: Conflict between:
+    File "...", line 4
+      @GroupConflictApp.foo('a')
+    File "...", line 8
+      @GroupConflictApp.bar('a')
+
