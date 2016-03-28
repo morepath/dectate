@@ -1,7 +1,7 @@
 import sys
 import inspect
 from .error import (
-    ConflictError, DirectiveError, DirectiveReportError)
+    ConflictError, ConfigError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
 
 
@@ -58,6 +58,11 @@ class Configurable(object):
             group_class = action_class.group_class
             if group_class is None:
                 group_class = action_class
+            else:
+                if group_class.group_class is not None:
+                    raise ConfigError(
+                        "Cannot use group_class on class "
+                        "that uses group_class: %r" % action_class)
             action_classes.add(group_class)
 
         # now we create ActionGroup objects for each action class group

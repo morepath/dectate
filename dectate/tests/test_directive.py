@@ -1,6 +1,6 @@
 from dectate.app import App, autocommit
 from dectate.config import commit, Action, Composite
-from dectate.error import ConflictError
+from dectate.error import ConflictError, ConfigError
 
 import pytest
 
@@ -262,6 +262,43 @@ def test_same_group_conflict():
         pass
 
     with pytest.raises(ConflictError):
+        commit([MyApp])
+
+
+def test_cannot_group_class_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        group_class = FooDirective
+
+        def __init__(self, message):
+            pass
+
+    @MyApp.directive('qux')
+    class QuxDirective(Action):
+        group_class = BarDirective  # should go to FooDirective instead
+
+        def __init__(self, message):
+            pass
+
+    with pytest.raises(ConfigError):
         commit([MyApp])
 
 
