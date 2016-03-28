@@ -245,13 +245,11 @@ def test_same_group_conflict():
             'bar': list
         }
 
+        # should now conflict
+        group_class = FooDirective
+
         def __init__(self, message):
             self.message = message
-
-        # should now conflict
-        @classmethod
-        def group_class(cls):
-            return FooDirective
 
         def identifier(self, bar):
             return self.message
@@ -331,9 +329,7 @@ def test_discriminator_same_group_conflict():
 
     @MyApp.directive('bar')
     class BarDirective(FooDirective):
-        @classmethod
-        def group_class(cls):
-            return FooDirective
+        group_class = FooDirective
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -758,12 +754,10 @@ def test_before_group():
 
     @MyApp.directive('bar')
     class BarDirective(Action):
+        group_class = FooDirective
+
         def __init__(self, name):
             self.name = name
-
-        @classmethod
-        def group_class(cls):
-            return FooDirective
 
         def identifier(self):
             return self.name
@@ -827,12 +821,10 @@ def test_before_group_without_use():
 
     @MyApp.directive('bar')
     class BarDirective(Action):
+        group_class = FooDirective
+
         def __init__(self, name):
             self.name = name
-
-        @classmethod
-        def group_class(cls):
-            return FooDirective
 
         def identifier(self):
             return self.name
