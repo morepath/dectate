@@ -35,20 +35,13 @@ def test_simple_config_logging():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -58,7 +51,7 @@ def test_simple_config_logging():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -83,20 +76,13 @@ def test_subclass_config_logging():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         pass
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -106,7 +92,7 @@ def test_subclass_config_logging():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     class SubApp(MyApp):
         pass
@@ -141,20 +127,13 @@ def test_override_logger_name():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class Registry(object):
-        def __init__(self):
-            self.l = []
-
-        def add(self, message, obj):
-            self.l.append((message, obj))
-
     class MyApp(App):
         logger_name = 'morepath.directive'
 
     @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
-            'my': Registry
+            'my': list
         }
 
         def __init__(self, message):
@@ -164,7 +143,7 @@ def test_override_logger_name():
             return self.message
 
         def perform(self, obj, my):
-            my.add(self.message, obj)
+            my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
