@@ -415,3 +415,83 @@ then find the result ``MyApp.config``.
 
 The results are in ``MyApp.config.plugins`` as we set this up with
 ``config`` in our ``PluginAction``.
+
+Depends
+-------
+
+In some cases you want to make sure that one type of directive has
+been executed before the other -- the configuration of the second type
+of directive depends on the former. You can make sure this happens
+by using the ``depends`` class attribute.
+
+First we set up a ``foo`` directive that registers into a ``foos``
+dict:
+
+.. testcode::
+
+  class DependsApp(dectate.App):
+      pass
+
+  @DependsApp.directive('foo')
+  class FooAction(dectate.Action):
+      config = {
+         'foos': dict
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, foos):
+          return self.name
+
+      def perform(self, obj, foos):
+          foos[self.name] = obj
+
+Now we create a ``bar`` directive that depends on ``FooDirective`` and
+uses information in the ``foos`` dict:
+
+.. testcode::
+
+   @DependsApp.directive('bar')
+   class BarAction(dectate.Action):
+      depends = [FooAction]
+
+      config = {
+         'foos': dict,  # also use the foos dict
+         'bars': list
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, foos, bars):
+          return self.name
+
+      def perform(self, obj, foos, bars):
+          in_foo = self.name in foos
+          bars.append((self.name, obj, in_foo))
+
+We have now ensured that ``BarAction`` actions are performed after
+``FooAction`` action, no matter what order we use them:
+
+.. testcode::
+
+    @DependsApp.bar('a')
+    def f():
+       pass
+
+    @DependsApp.bar('b')
+    def g():
+       pass
+
+    @DependsApp.foo('a')
+    def x():
+       pass
+
+    dectate.commit([DependsApp])
+
+We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
+``b``::
+
+.. doctest::
+
+  >>> DependsApp.config.bars
+  [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
