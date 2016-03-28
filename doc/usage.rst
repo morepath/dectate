@@ -619,3 +619,62 @@ and ``bar`` can be in conflict:
     File "...", line 8
       @GroupConflictApp.bar('a')
 
+Additional discriminators
+-------------------------
+
+In some cases an action should conflict with *multiple* other actions
+all at once. You can take care of this with the ``discriminators`` method
+on your action:
+
+.. testcode::
+
+  class DiscriminatorsApp(dectate.App):
+      pass
+
+  @DiscriminatorsApp.directive('foo')
+  class FooAction(dectate.Action):
+      config = {
+         'foos': dict
+      }
+      def __init__(self, name, extras):
+          self.name = name
+          self.extras = extras
+
+      def identifier(self, foos):
+          return self.name
+
+      def discriminators(self, foos):
+          return self.extras
+
+      def perform(self, obj, foos):
+          foos[self.name] = obj
+
+An action now conflicts with an action of the same name *and* with
+any action that is in the ``extra`` list:
+
+.. testcode::
+
+  #
+
+  @DiscriminatorsApp.foo('a', ['b', 'c'])
+  def f():
+      pass
+
+  @DiscriminatorsApp.foo('b', [])
+  def g():
+      pass
+
+And then:
+
+.. doctest::
+
+  >>> dectate.commit([DiscriminatorsApp])
+  Traceback (most recent call last):
+    ...
+  ConflictError: Conflict between:
+    File "...", line 3:
+      @DiscriminatorsApp.foo('a', ['b', 'c'])
+    File "...", line 7
+      @DiscriminatorsApp.foo('b', [])
+
+
