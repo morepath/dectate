@@ -716,7 +716,7 @@ later:
       def perform(self, obj, my):
           my.append((self.name, obj))
 
-Now we can define a special :meth:`dectate.Composite` subclass that
+Now we can define a special :class:`dectate.Composite` subclass that
 uses ``SubAction`` in an ``actions``
 (:meth:`dectate.Composite.actions`) method:
 
