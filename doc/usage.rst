@@ -893,14 +893,6 @@ like this::
 The same line shows up on *both* sides of the configuration conflict,
 but the path is absolute on one side and relative on the other.
 
-.. sidebar:: Fooling Dectate after all
-
-  It *is* possible to fool Dectate into accepting a double import
-  without conflicts, but you'd need to work hard. You need to use a
-  global variable that gets modified during import time and then use
-  it as a directive argument. If you want to dynamically generate
-  directives then don't do that in module-scope -- do it in a function.
-
 This happens because in some scenarios involving ``__main__``, Python
 imports a module *twice* (`more about this`_). Dectate refuses to
 operate in this case until you change your imports so that this
@@ -912,6 +904,14 @@ How to avoid this scenario? If you use setuptools `automatic script
 creation`_ this problem is avoided entirely.
 
 .. _`automatic script creation`: https://pythonhosted.org/setuptools/setuptools.html#automatic-script-creation
+
+.. sidebar:: Fooling Dectate after all
+
+  It *is* possible to fool Dectate into accepting a double import
+  without conflicts, but you'd need to work hard. You need to use a
+  global variable that gets modified during import time and then use
+  it as a directive argument. If you want to dynamically generate
+  directives then don't do that in module-scope -- do it in a function.
 
 If you want to use the ``if __name__ == '__main__'`` system, keep your
 main module tiny and just import the main function you want to run
