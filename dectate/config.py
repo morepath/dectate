@@ -100,15 +100,9 @@ class Configurable(object):
         actions = [(directive.action(), obj)
                    for (directive, obj) in self._directives]
 
-        # create any Composite config
-        for action, obj in actions:
-            if not isinstance(action, Composite):
-                continue
-            setup_config(action, self)
-
         # add the actions for this configurable to the action group
         d = self._action_groups
-        for action, obj in expand_actions(self, actions):
+        for action, obj in expand_actions(actions):
             action_class = action.group_class
             if action_class is None:
                 action_class = action.__class__
@@ -397,32 +391,7 @@ class Composite(object):
     method and return a iterable of actions in there.
     """
 
-    config = {}
-    """Describe configuration.
-
-    A dict mapping configuration names to factory functions. The
-    resulting configuration objects is passed into :meth:`Composite.actions`
-    as keyword arguments, which this method can then use to
-    generate the appropriate sub-actions.
-
-    Usually you don't have to supply ``config`` for ``Composite`` but
-    it can be useful in some rare cases.
-    """
-
-    @classmethod
-    def _get_config_kw(cls, configurable):
-        """Get the config objects set up for this configurable into a dict.
-
-        This dict is then passed as keyword parameters (using ``**``)
-        into :meth:`Composite.actions`.
-        """
-        result = {}
-        config = configurable.config
-        for name, factory in cls.config.items():
-            result[name] = getattr(config, name)
-        return result
-
-    def actions(self, obj, **kw):
+    def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
 
         The iteratable should yield ``action``, ``obj`` tuples,
@@ -602,28 +571,25 @@ def sort_action_classes(action_classes):
     return topological_sort(action_classes, lambda c: c.depends)
 
 
-def expand_actions(configurable, actions):
+def expand_actions(actions):
     """Expand any :class:`Composite` instances into :class:`Action` instances.
 
     Expansion is recursive; composites that return composites are expanded
     again.
 
-    :param configurable: a :class:`Configurable` instance.
     :param actions: an iterable of :class:`Composite` and :class:`Action`
       instances.
     :return: an iterable of :class:`Action` instances.
     """
     for action, obj in actions:
         if isinstance(action, Composite):
-            kw = action._get_config_kw(configurable)
             # make sure all sub actions propagate originating directive
             # info
             sub_actions = []
-            for sub_action, sub_obj in action.actions(obj, **kw):
+            for sub_action, sub_obj in action.actions(obj):
                 sub_action.directive = action.directive
                 sub_actions.append((sub_action, sub_obj))
-            for sub_action, sub_obj in expand_actions(configurable,
-                                                      sub_actions):
+            for sub_action, sub_obj in expand_actions(sub_actions):
                 yield sub_action, sub_obj
         else:
             if not hasattr(action, 'order'):
