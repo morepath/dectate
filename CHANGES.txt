@@ -7,6 +7,9 @@ CHANGES
 - Remove clear_autocommit as it was useless during testing anyway.
   In tests just use explicit commit.
 
+- Add a ``dectate.sphinxext`` module that can be plugged into Sphinx
+  so that directives are documented properly.
+
 0.1 (2016-03-29)
 ================
 

@@ -838,3 +838,13 @@ If you want to override the name of the log you can set
   class MorepathApp(dectate.App):
      logger_name = 'morepath.directive'
 
+Sphinx Extension
+----------------
+
+If you use Sphinx_ to document your project and you use the
+``sphinx.ext.autodoc`` extension to document your API, you need to
+install a Sphinx extension so that directives are documented
+properly. In your Sphinx ``conf.py`` add ``'dectate.sphinxext'`` to
+the ``extensions`` list.
+
+.. _Sphinx: http://www.sphinx-doc.org
