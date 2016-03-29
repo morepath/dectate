@@ -848,3 +848,73 @@ properly. In your Sphinx ``conf.py`` add ``'dectate.sphinxext'`` to
 the ``extensions`` list.
 
 .. _Sphinx: http://www.sphinx-doc.org
+
+``__main__`` and conflicts
+--------------------------
+
+.. sidebar:: Import-time side effects are evil
+
+   This scenario is based on the one described in `Application
+   programmers don't control the module-scope codepath`_ in the
+   Pyramid design defense document. If you're curious, look under
+   ``scenarios/main_module`` in the Dectate project for a Dectate
+   version.
+
+   Dectate makes a different compromise than Venusian -- it reports an
+   error if a directive is executed because of a double import, so it
+   won't get you into trouble. But since Dectate's directives cause
+   registrations to happen immediately (but defer configuration), you
+   can dynamically generate them inside Python function, which won't
+   work with with Venusian.
+
+   .. _`Application programmers don't control the module-scope codepath`: http://docs.pylonsproject.org/projects/pyramid/en/latest/designdefense.html#application-programmers-don-t-control-the-module-scope-codepath-import-time-side-effects-are-evil
+
+In certain scenarios where you run your code like this::
+
+  $ python app.py
+
+and do something like this inside::
+
+  if __name__ == '__main__':
+      import another_module
+      dectate.commit()
+
+you might get a :exc:`ConflictError` from Dectate that looks somewhat
+like this::
+
+  Traceback (most recent call last):
+   ...
+  dectate.error.ConflictError: Conflict between:
+    File "/path/to/app.py", line 6
+      @App.foo(name='a')
+    File "app.py", line 6
+      @App.foo(name='a')
+
+The same line shows up on *both* sides of the configuration conflict,
+but the path is absolute on one side and relative on the other.
+
+.. sidebar:: Fooling Dectate after all
+
+  It *is* possible to fool Dectate into accepting a double import
+  without conflicts, but you'd need to work hard. You need to use a
+  global variable that gets modified during import time and then use
+  it as a directive argument. If you want to dynamically generate
+  directives then don't do that in module-scope -- do it in a function.
+
+This happens because in some scenarios involving ``__main__``, Python
+imports a module *twice* (`more about this`_). Dectate refuses to
+operate in this case until you change your imports so that this
+doesn't happen anymore.
+
+.. _`more about this`: http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#executing-the-main-module-twice
+
+How to avoid this scenario? If you use setuptools `automatic script
+creation`_ this problem is avoided entirely.
+
+.. _`automatic script creation`: https://pythonhosted.org/setuptools/setuptools.html#automatic-script-creation
+
+If you want to use the ``if __name__ == '__main__'`` system, keep your
+main module tiny and just import the main function you want to run
+from elsewhere.
+
+So, Dectate warns you if you do it wrong, so don't worry about it.
