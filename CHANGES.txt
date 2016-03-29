@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.2 (unreleased)
+0.2 (2016-03-29)
 ================
 
 - Remove clear_autocommit as it was useless during testing anyway.
