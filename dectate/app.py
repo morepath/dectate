@@ -60,8 +60,9 @@ class App(with_metaclass(AppMeta)):
     def directive(cls, name):
         """Decorator to register a new directive with this application class.
 
-        You use this as a class decorator for a :class:`Action` or
-        a :class:`Composite` subclass::
+        You use this as a class decorator for a
+        :class:`dectate.Action` or a :class:`dectate.Composite`
+        subclass::
 
            @MyApp.directive('my_directive')
            class FooAction(dectate.Action):
@@ -73,6 +74,7 @@ class App(with_metaclass(AppMeta)):
         that all directives are installed before you use them is to
         make sure you define them in the same module as where you
         define the :class:`App` subclass that has them.
+
         """
         return DirectiveDirective(cls, name)
 
