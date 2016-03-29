@@ -528,21 +528,22 @@ class DirectiveAbbreviation(object):
             logger=directive.logger)
 
 
-def commit(configurables):
-    """Commit an iterable of configurables.
+def commit(apps):
+    """Commit an iterable of app classes
 
     A commit causes the configuration actions to be performed. The
-    resulting configuration information is stored under the ``.config``
-    class attribute of each configurable supplied.
+    resulting configuration information is stored under the
+    ``.config`` class attribute of each :class:`App` subclass
+    supplied.
 
     This function may safely be invoked multiple times -- each time
     the known configuration is recommitted.
 
-    :param configurables: an iterable of configurables to perform
+    :param apps: an iterable of :class:`App` classes to perform
       configuration actions on.
     """
     configurables_from_apps = []
-    for c in configurables:
+    for c in apps:
         if isinstance(c, Configurable):
             configurables_from_apps.append(c)
         else:
