@@ -142,3 +142,8 @@
   is consistent even if registries are set up inconsistently.
 
 * group_class for a group_class should be an error.
+
+
+* handle TypeError if action_factory is called with wrong parameters.
+
+* write a test for TypeError handling.
