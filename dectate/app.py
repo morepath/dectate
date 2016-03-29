@@ -44,17 +44,6 @@ def autocommit():
     commit(global_configurables)
 
 
-def clear_autocommit():
-    """Clear any previously found global configurables.
-
-    Useful for testing purposes. Note that this cannot be
-    executed again for the same module -- any previously found
-    configurable is lost forever from the global lost.
-    """
-    global global_configurables
-    global_configurables = []
-
-
 class App(with_metaclass(AppMeta)):
     """A configurable application object.
 

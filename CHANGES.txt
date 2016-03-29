@@ -1,7 +1,13 @@
 CHANGES
 *******
 
-0.1 (unreleased)
+0.2 (unreleased)
+================
+
+- Remove clear_autocommit as it was useless during testing anyway.
+  In tests just use explicit commit.
+
+0.1 (2016-03-29)
 ================
 
 - Initial public release.
