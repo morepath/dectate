@@ -616,7 +616,7 @@ def expand_actions(configurable, actions):
             sub_actions = []
             for sub_action, sub_obj in action.actions(obj, **kw):
                 sub_action.directive = action.directive
-                sub_actions.append((sub_action, obj))
+                sub_actions.append((sub_action, sub_obj))
             for sub_action, sub_obj in expand_actions(configurable,
                                                       sub_actions):
                 yield sub_action, sub_obj

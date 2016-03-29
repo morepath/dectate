@@ -451,6 +451,7 @@ def test_discriminator_different_group_no_conflict():
 
     assert MyApp.config.my == [('f', f), ('g', g)]
 
+
 def test_depends():
     class MyApp(App):
         pass
@@ -534,7 +535,6 @@ def test_composite():
 
     commit([MyApp])
 
-    # since bar depends on foo, it should be executed last
     assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
 
 
@@ -576,9 +576,52 @@ def test_composite_config():
 
     commit([MyApp])
 
-    # since bar depends on foo, it should be executed last
     assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
     assert MyApp.config.reg['used']
+
+
+def test_composite_change_object():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('sub')
+    class SubDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    def other():
+        pass
+
+    @MyApp.directive('composite')
+    class CompositeDirective(Composite):
+        config = {
+            'reg': dict
+        }
+
+        def __init__(self, messages):
+            self.messages = messages
+
+        def actions(self, obj, reg):
+            return [(SubDirective(message),
+                     other) for message in self.messages]
+
+    @MyApp.composite(['a', 'b', 'c'])
+    def f():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.my == [('a', other), ('b', other), ('c', other)]
 
 
 def test_nested_composite():
