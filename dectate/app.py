@@ -124,6 +124,7 @@ class DirectiveDirective(object):
                                        (self.logger_name, directive_name))
             return Directive(self, action_factory, args, kw,
                              code_info, directive_name, logger)
+        method.action_factory = action_factory  # to help sphinxext
         update_wrapper(method, action_factory.__init__)
         setattr(self.cls, self.name, classmethod(method))
         self.cls.dectate.register_action_class(action_factory)
