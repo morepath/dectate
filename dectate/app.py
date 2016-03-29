@@ -76,6 +76,25 @@ class App(with_metaclass(AppMeta)):
         """
         return DirectiveDirective(cls, name)
 
+    @classmethod
+    def private_action_class(cls, action_class):
+        """Register a private action class.
+
+        In some cases action classes can be an implementation detail,
+        for instance in the implementation of a Composite action.
+
+        In this case you don't want the action class to be known
+        but not have a directive.
+
+        This function may be used as a decorator like this::
+
+          @App.private_action_class
+          class MyActionClass(dectate.Action):
+              ...
+        """
+        cls.dectate.register_action_class(action_class)
+        return action_class
+
 
 class DirectiveDirective(object):
     """Implementation of the ``directive`` directive.
