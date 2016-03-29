@@ -10,6 +10,8 @@ CHANGES
 - Add a ``dectate.sphinxext`` module that can be plugged into Sphinx
   so that directives are documented properly.
 
+- Document how Dectate deals with double imports.
+
 0.1 (2016-03-29)
 ================
 
