@@ -7,6 +7,8 @@ API
 
 .. autofunction:: autocommit
 
+.. autofunction:: clear_autocommit
+
 .. autoclass:: App
   :members:
 
