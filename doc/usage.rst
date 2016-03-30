@@ -4,13 +4,13 @@ Using Dectate
 Introduction
 ------------
 
-Dectate is a configuration system for Python frameworks. A framework
-needs to record some information about the functions and classes that
-the user supplies to the framework. We call this process
+Dectate is a configuration system that can help you construct Python
+frameworks. A framework needs to record some information about the
+functions and classes that the user supplies. We call this process
 *configuration*.
 
 Imagine for instance a framework that supports a certain kind of
-plugins. You could then register it using a decorator::
+plugins. The user registers each plugin with a decorator::
 
    from framework import plugin
 
@@ -18,8 +18,8 @@ plugins. You could then register it using a decorator::
    def foo_plugin(...):
       ...
 
-The framework is supposed to register the function ``foo_plugin``
-under the name ``foo`` as a plugin.
+Here the framework registers as a plugin the function ``foo_plugin``
+under the name ``foo``.
 
 You can implement the ``plugin`` decorator as follows::
 
@@ -32,20 +32,21 @@ You can implement the ``plugin`` decorator as follows::
        def __call__(self, f):
           plugins[self.name] = f
 
-After you import the code that uses the ``plugin`` decorator, the
-``plugins`` dict contains the names as keys and the functions as
-values. The framework can then use this information to do whatever it
-needs to do.
+In the user application the user makes sure to import all modules that
+use the ``plugin`` decorator. As a result, the ``plugins`` dict
+contains the names as keys and the functions as values. Your framework
+can then use this information to do whatever you need to do.
 
-There are a lot of examples of code configuration. In a web framework
-for instance you may need to declare routes and assemble middleware.
+There are a lot of examples of code configuration in frameworks. In a
+web framework for instance the user can declare routes and assemble
+middleware.
 
-A framework may be fine using the simple decorator technique described
-above. But advanced frameworks often want a lot more that the basic
-decorator system described above cannot offer. You may for instance
-want to reuse configurations, override them, do more advanced error
-checking, make sure configurations are registered in a particular
-order, and so on.
+You may be okay constructing a framework with the simple decorator
+technique described above. But advanced frameworks need a lot more
+that the basic decorator system described above cannot offer. You may
+for instance want to allow the user to reuse configuration, override
+it, do more advanced error checking, and execute configuration in a
+particular order.
 
 Dectate supports such advanced use cases. It was extracted from the
 Morepath_ web framework.
@@ -57,9 +58,9 @@ Features
 
 Here are some features of Dectate:
 
-* Decorator-based configuration -- users declare things by using Python
-  decorators on functions and classes: we call these *directives*,
-  which issue configuration *actions*.
+* Decorator-based configuration -- users declare things by using
+  Python decorators on functions and classes: we call these decorators
+  *directives*, which issue configuration *actions*.
 
 * Dectate detects conflicts between configuration actions in user code
   and reports what pieces of code are in conflict.
@@ -84,21 +85,22 @@ Here are some features of Dectate:
 * Unlike normal decorators, configuration actions aren't performed
   immediately when a module is imported. Instead configuration actions
   are executed only when the user explicitly *commits* the
-  configuration.
+  configuration. This way, all configuration actions are known when
+  they are performed.
 
 * Dectate-based decorators always return the function or class object
   that is decorated unchanged, which makes the code more predictable
-  for a Python programmer -- you can use the function or class
-  directly in your Python code, just like any other.
+  for a Python programmer -- the user can use the decorated function
+  or class directly in their Python code, just like any other.
 
 * Dectate-based configuration systems are themselves easily extensible
-  with new directives.
+  with new directives and registries.
 
 App classes
 -----------
 
-Configuration in Dectate is associated with special *classes* which need
-to derive from :class:`dectate.App`:
+Configuration in Dectate is associated with special *classes* which
+derive from :class:`dectate.App`:
 
 .. testcode::
 
