@@ -825,6 +825,26 @@ And this has the same configuration effect:
   >>> SuccinctWithApp.config.my
   [('a', 'x', <function f at ...>), ('a', 'y', <function g at ...>), ('a', 'z', <function h at ...>)]
 
+importing recursively
+---------------------
+
+When you use dectate-based decorators across a package, it can be
+useful to just import *all* modules in it at once. This way the user
+cannot forget to import a module with decorators in it.
+
+Dectate itself does not offer this facility, but you can use the
+importscan_ library to do this recursive import. Simply do something
+like::
+
+  import my_package
+
+  importscan.scan(my_package, ignore=['.tests'])
+
+This imports every module in ``my_package``, except for the ``tests``
+sub package.
+
+.. importscan: http://importscan.readthedocs.org/en/latest/
+
 logging
 -------
 
