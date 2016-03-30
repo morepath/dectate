@@ -843,7 +843,7 @@ like::
 This imports every module in ``my_package``, except for the ``tests``
 sub package.
 
-.. importscan: http://importscan.readthedocs.org/en/latest/
+.. _importscan: http://importscan.readthedocs.org/en/latest/
 
 logging
 -------
