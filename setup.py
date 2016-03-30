@@ -6,7 +6,7 @@ long_description = (
     open('CHANGES.txt').read())
 
 setup(name='dectate',
-      version='0.3',
+      version='0.4.dev0',
       description="A configuration engine for Python frameworks",
       long_description=long_description,
       author="Martijn Faassen",
