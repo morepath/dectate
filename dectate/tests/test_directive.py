@@ -1434,3 +1434,39 @@ def test_registry_factory_arguments_depends():
     commit([MyApp])
 
     assert MyApp.config.other.my == [('hello', f)]
+
+
+def test_registry_factory_arguments_depends_complex():
+    class MyApp(App):
+        pass
+
+    class Registry(object):
+        pass
+
+    class PredicateRegistry(object):
+        factory_arguments = {
+            'registry': Registry
+        }
+
+        def __init__(self, registry):
+            self.registry = registry
+
+    @MyApp.directive('setting')
+    class SettingAction(Action):
+        config = {'registry': Registry}
+
+    @MyApp.directive('predicate')
+    class PredicateAction(Action):
+        config = {'predicate_registry': PredicateRegistry}
+
+        depends = [SettingAction]
+
+    @MyApp.directive('view')
+    class ViewAction(Action):
+        config = {'registry': Registry}
+
+        depends = [PredicateAction]
+
+    commit([MyApp])
+
+    assert MyApp.config.registry is MyApp.config.predicate_registry.registry
