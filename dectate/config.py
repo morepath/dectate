@@ -636,12 +636,44 @@ def get_code_info(frame):
         sourceline=sourceline)
 
 
+def factory_key(item):
+    name, factory = item
+    arguments = getattr(factory, 'factory_arguments', None)
+    if arguments is None:
+        return []
+    return arguments.items()
+
+
+def get_factory_arguments(action, config, factory):
+    arguments = getattr(factory, 'factory_arguments', None)
+    if arguments is None:
+        return {}
+    result = {}
+    for name in arguments.keys():
+        value = getattr(config, name, None)
+        if value is None:
+            raise ConfigError(
+                ("Cannot find factory argument %r for "
+                 "factory %r in action class %r") %
+                (name, factory, action))
+        result[name] = getattr(config, name, None)
+    return result
+
+
 def setup_config(action, configurable):
     """Set up the config objects on the ``config`` attribute.
     """
+    # sort the items in order of creation
+    items = topological_sort(action.config.items(), factory_key)
+
     config = configurable.config
-    for name, factory in action.config.items():
-        setattr(config, name, factory())
+    for name, factory in items:
+        if name not in action.config:
+            # topological sort introduces all dependencies, but
+            # we only want to construct those we have in actual config
+            continue
+        kw = get_factory_arguments(action, config, factory)
+        setattr(config, name, factory(**kw))
 
 
 def dotted_name(cls):

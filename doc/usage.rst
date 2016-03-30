@@ -507,6 +507,108 @@ We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
   >>> DependsApp.config.bars
   [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
 
+config dependencies
+-------------------
+
+In the example above, the items in ``bars`` depend on the items in ``foos``
+and we've implemented this dependency in the ``perform`` of ``BarDirective``.
+
+We can instead make the configuration object for the ``BarDirective``
+depend on ``foos``. This way ``BarDirective`` does not need to know
+about ``foos``. You can declare a dependency between config objects
+with the ``factory_arguments`` attribute of the config factory. Any
+config object that is created in earlier dependencies of this action,
+or in the action itself, can be listed in ``factory_arguments``. The
+key and value in ``factory_arguments`` have to match the key and value
+in ``config`` of that earlier action.
+
+First we create an app with a ``FooAction`` that sets up a ``foos``
+config item as before:
+
+.. testcode::
+
+  class ConfigDependsApp(dectate.App):
+      pass
+
+  @ConfigDependsApp.directive('foo')
+  class FooAction(dectate.Action):
+      config = {
+         'foos': dict
+      }
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, foos):
+          return self.name
+
+      def perform(self, obj, foos):
+          foos[self.name] = obj
+
+Now we create a ``Bar`` class that also depends on the ``foos`` dict by
+listing it in ``factory_arguments``:
+
+.. testcode::
+
+  class Bar(object):
+      factory_arguments = {
+          'foos': dict
+      }
+
+      def __init__(self, foos):
+          self.foos = foos
+          self.l = []
+
+      def add(self, name, obj):
+          in_foo = name in self.foos
+          self.l.append((name, obj, in_foo))
+
+We create a ``BarAction`` that depends on the ``FooAction`` (so that
+``foos`` is created first) and that uses the ``Bar`` factory:
+
+.. testcode::
+
+   @ConfigDependsApp.directive('bar')
+   class BarAction(dectate.Action):
+      depends = [FooAction]
+
+      config = {
+         'bar': Bar
+      }
+
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, bar):
+          return self.name
+
+      def perform(self, obj, bar):
+          bar.add(self.name, obj)
+
+When we use our directives:
+
+.. testcode::
+
+   @ConfigDependsApp.bar('a')
+   def f():
+       pass
+
+   @ConfigDependsApp.bar('b')
+   def g():
+       pass
+
+   @ConfigDependsApp.foo('a')
+   def x():
+       pass
+
+   dectate.commit([ConfigDependsApp])
+
+we get the same result as before:
+
+.. doctest::
+
+  >>> ConfigDependsApp.config.bar.l
+  [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
+
 before and after
 ----------------
 

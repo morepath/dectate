@@ -147,3 +147,14 @@
 * handle TypeError if action_factory is called with wrong parameters.
 
 * write a test for TypeError handling.
+
+* Registry dependencies:
+
+  a registry can be initialized with another registry as the constructor.
+
+  if the registry is listed it will be used. the other registry must
+  be listed in the config *or* be initialized by one of the depends.
+
+  {
+     'template_engine_registry': TemplateEngineRegistry, ('settings',)
+  }

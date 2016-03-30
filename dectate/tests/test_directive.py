@@ -1302,3 +1302,135 @@ def test_order_subclass():
     commit([MyApp, SubApp])
 
     assert SubApp.config.my == [('a', f), ('b', g), ('c', h)]
+
+
+def test_registry_single_factory_argument():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list,
+            'other': Other
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my, other):
+            return self.message
+
+        def perform(self, obj, my, other):
+            my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.other.my == [('hello', f)]
+
+
+def test_registry_mutiple_factory_arguments():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': list,
+            'my2': list
+        }
+
+        def __init__(self, my, my2):
+            self.my = my
+            self.my2 = my2
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list,
+            'my2': list,
+            'other': Other
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my, my2, other):
+            return self.message
+
+        def perform(self, obj, my, my2, other):
+            my.append((self.message, obj))
+            my2.append('blah')
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.other.my == [('hello', f)]
+    assert MyApp.config.other.my2 == ['blah']
+
+
+def test_registry_factory_arguments_depends():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        depends = [FooDirective]
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, other):
+            return self.name
+
+        def perform(self, obj, other):
+            pass
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.other.my == [('hello', f)]
