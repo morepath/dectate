@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.3 (unreleased)
+0.3 (2016-03-30)
 ================
 
 - Document ``importscan`` package that can be used in combination with
