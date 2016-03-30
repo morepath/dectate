@@ -11,6 +11,10 @@ CHANGES
   which can be used to create dependency relationships between
   configuration.
 
+- Fix a bug where config items were not always properly reused. Now
+  only the first one in the action class dependency order is used, and
+  it is not recreated.
+
 0.2 (2016-03-29)
 ================
 
