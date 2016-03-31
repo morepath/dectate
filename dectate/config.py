@@ -82,7 +82,7 @@ class Configurable(object):
             else:
                 if group_class.group_class is not None:
                     raise ConfigError(
-                        "Cannot use group_class on class "
+                        "Cannot use group_class on another action class "
                         "that uses group_class: %r" % action_class)
             action_classes.add(group_class)
 
