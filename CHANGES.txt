@@ -8,6 +8,9 @@ CHANGES
   particular can be useful in implementing a directive such as
   Morepath's ``template_directory``.
 
+- Report a few more errors; you cannot use ``config``, ``before`` or
+  ``after`` after in an action class if ``group_class`` is set.
+
 0.3 (2016-03-30)
 ================
 
