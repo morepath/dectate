@@ -147,10 +147,13 @@
   grouping. Done: now the action group is in charge of before, after,
   config. (done)
 
-* if a group_class class defines before or after or config, that should
-  be an error.
+* group_class for a group_class should be an error. (done)
 
-* Deal properly with an action or composite that has no __init__. Error.
+* if a group_class class defines before or after or config, that should
+  be an error. But subclassing it is okay. (done)
+
+* Deal properly with an action or composite that has no
+  __init__. Error. Fixed by providing a base __init__.(done)
 
 * if multiple directives declare different classes for the configuration
   registry that should be an error.
@@ -169,6 +172,3 @@
   be based around directives?
 
 * config.py's understanding of '.config/.dectate' is not ideal.
-  
-
-* group_class for a group_class should be an error.
