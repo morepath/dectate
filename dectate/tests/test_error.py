@@ -403,3 +403,28 @@ def test_cannot_use_after_with_group_class():
 
     with pytest.raises(ConfigError):
         commit([MyApp])
+
+
+def test_action_without_init():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def identifier(self, foo):
+            return ()
+
+        def perform(self, obj, foo):
+            foo.append(obj)
+
+    @MyApp.foo()
+    def f():
+        pass
+
+    commit([MyApp])
+
+    assert MyApp.config.foo == [f]
