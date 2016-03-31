@@ -331,9 +331,6 @@ class Action(object):
         if group_class is None:
             group_class = cls
         for name, factory in group_class.config.items():
-            if name == 'app_class':
-                result[name] = configurable.app_class
-                continue
             result[name] = getattr(config, name)
         return result
 
@@ -700,10 +697,9 @@ def setup_config(action, configurable):
 
     config = configurable.config
     for name, factory in items:
-        if name not in action.config or name == 'app_class':
+        if name not in action.config:
             # topological sort introduces all dependencies, but
             # we only want to construct those we have in actual config
-            # we also don't want to set up the special attribute 'app_class'
             continue
         # if we already have this set up, we don't want to create
         # it anew

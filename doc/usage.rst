@@ -927,48 +927,6 @@ And this has the same configuration effect:
   >>> SuccinctWithApp.config.my
   [('a', 'x', <function f at ...>), ('a', 'y', <function g at ...>), ('a', 'z', <function h at ...>)]
 
-access to the application class
--------------------------------
-
-Usually an action only need access to the specific configuration
-items. In some rare cases an action may need direct access to the
-application class that it is used on. You can get this access by using
-an entry in ``config`` named ``app_class``. The factory is
-ignored and can be ``None``:
-
-.. testcode::
-
-  class AppClassApp(dectate.App):
-      pass
-
-  @AppClassApp.directive('foo')
-  class FooAction(dectate.Action):
-      config = {
-         'my': list,
-         'app_class': None
-      }
-      def __init__(self, name):
-          self.name = name
-
-      def identifier(self, my, app_class):
-          return self.name
-
-      def perform(self, obj, my, app_class):
-          my.append((self.name, obj, app_class))
-
-  @AppClassApp.foo('a')
-  def f():
-      pass
-
-  dectate.commit([AppClassApp])
-
-The ``app_class`` was sent in correctly:
-
-.. doctest::
-
-  >>> AppClassApp.config.my
-  [('a', <function f at ...>, <class 'AppClassApp'>)]
-
 importing recursively
 ---------------------
 

@@ -1416,38 +1416,3 @@ def test_registry_factory_arguments_depends_complex():
     commit([MyApp])
 
     assert MyApp.config.registry is MyApp.config.predicate_registry.registry
-
-
-def test_app_class():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
-    class MyDirective(Action):
-        config = {
-            'my': list,
-            'app_class': None,
-        }
-
-        def __init__(self, message):
-            self.message = message
-
-        def identifier(self, my, app_class):
-            return self.message
-
-        def perform(self, obj, my, app_class):
-            my.append((self.message, obj, app_class))
-
-    @MyApp.foo('hello')
-    def f():
-        pass
-
-    commit([MyApp, SubApp])
-
-    assert MyApp.config.my == [('hello', f, MyApp)]
-    assert SubApp.config.my == [('hello', f, SubApp)]
-    assert not hasattr(MyApp.config, 'app_class')
-    assert not hasattr(SubApp.config, 'app_class')
