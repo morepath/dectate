@@ -7,7 +7,7 @@ class ConfigError(Exception):
 
 
 def conflict_keyfunc(action):
-    code_info = action._code_info()
+    code_info = action.code_info
     if code_info is None:
         return 0
     return (code_info.path, code_info.lineno)
@@ -24,7 +24,7 @@ class ConflictError(ConfigError):
         result = [
             'Conflict between:']
         for action in actions:
-            code_info = action._code_info()
+            code_info = action.code_info
             if code_info is None:
                 continue
             result.append('  File "%s", line %s' % (code_info.path,

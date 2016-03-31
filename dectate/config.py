@@ -234,7 +234,7 @@ class ActionGroup(object):
                 action.perform(obj, **kw)
             except DirectiveError as e:
                 raise DirectiveReportError(u"{}".format(e),
-                                           action._code_info())
+                                           action.code_info)
 
         # run the group class after operation
         self.action_class.after(**kw)
@@ -298,8 +298,14 @@ class Action(object):
     def __init__(self):
         pass
 
-    def _code_info(self):
+    @property
+    def code_info(self):
         """Info about where in the source code the action was invoked.
+
+        Is an instance of :class:`CodeInfo`.
+
+        Can be ``None`` if action does not have an associated directive
+        but was created manually.
         """
         if self.directive is None:
             return None
@@ -535,7 +541,7 @@ class DirectiveAbbreviation(object):
         """Combine the args and kw from the directive with supplied ones.
         """
         frame = sys._getframe(1)
-        code_info = get_code_info(frame)
+        code_info = create_code_info(frame)
         directive = self.directive
 
         combined_args = directive.args + args
@@ -640,7 +646,7 @@ class CodeInfo(object):
         self.sourceline = sourceline
 
 
-def get_code_info(frame):
+def create_code_info(frame):
     """Return code information about a frame.
 
     Returns a :class:`CodeInfo` instance.

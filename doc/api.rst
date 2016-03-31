@@ -16,6 +16,9 @@ API
 .. autoclass:: Composite
   :members:
 
+.. autoclass:: CodeInfo
+  :members:
+
 .. autoexception:: ConfigError
 
 .. autoexception:: ConflictError

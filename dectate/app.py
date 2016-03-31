@@ -1,7 +1,7 @@
 from functools import update_wrapper
 import logging
 import sys
-from .config import Configurable, Directive, commit, get_code_info
+from .config import Configurable, Directive, commit, create_code_info
 from .compat import with_metaclass
 
 global_configurables = []
@@ -110,7 +110,7 @@ class DirectiveDirective(object):
 
         def method(self, *args, **kw):
             frame = sys._getframe(1)
-            code_info = get_code_info(frame)
+            code_info = create_code_info(frame)
             logger = logging.getLogger('%s.%s' %
                                        (self.logger_name, directive_name))
             return Directive(self, action_factory, args, kw,

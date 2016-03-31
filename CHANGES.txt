@@ -4,8 +4,9 @@ CHANGES
 0.4 (unreleased)
 ================
 
-- Nothing changed yet.
-
+- Expose ``code_info`` attribute for action. The ``path`` in
+  particular can be useful in implementing a directive such as
+  Morepath's ``template_directory``.
 
 0.3 (2016-03-30)
 ================
