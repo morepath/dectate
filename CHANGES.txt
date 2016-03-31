@@ -11,6 +11,9 @@ CHANGES
 - Report a few more errors; you cannot use ``config``, ``before`` or
   ``after`` after in an action class if ``group_class`` is set.
 
+- Introduce a new feature where using ``app_class`` in the ``config``
+  dictionary causes the application class to be passed in.
+
 0.3 (2016-03-30)
 ================
 
