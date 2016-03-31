@@ -282,3 +282,124 @@ def test_cannot_use_config_with_group_class():
 
     with pytest.raises(ConfigError):
         commit([MyApp])
+
+
+def test_cann_inherit_config_with_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(FooDirective):
+        group_class = FooDirective
+
+        def __init__(self, message):
+            pass
+
+    commit([MyApp])
+
+
+def test_cannot_use_before_with_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        group_class = FooDirective
+
+        @staticmethod
+        def before():
+            pass
+
+    with pytest.raises(ConfigError):
+        commit([MyApp])
+
+
+def test_can_inherit_before_with_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+        @staticmethod
+        def before(foo):
+            pass
+
+    @MyApp.directive('bar')
+    class BarDirective(FooDirective):
+        group_class = FooDirective
+
+    commit([MyApp])
+
+
+def test_cannot_use_after_with_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        group_class = FooDirective
+
+        @staticmethod
+        def after():
+            pass
+
+    with pytest.raises(ConfigError):
+        commit([MyApp])

@@ -88,6 +88,14 @@ class Configurable(object):
                     raise ConfigError(
                         "Cannot use config class attribute when you use "
                         "group_class: %r" % action_class)
+                if 'before' in action_class.__dict__:
+                    raise ConfigError(
+                        "Cannot define before method when you use "
+                        "group_class: %r" % action_class)
+                if 'after' in action_class.__dict__:
+                    raise ConfigError(
+                        "Cannot define after method when you use "
+                        "group_class: %r" % action_class)
             action_classes.add(group_class)
 
         # delete any old configuration in case we run this a second time

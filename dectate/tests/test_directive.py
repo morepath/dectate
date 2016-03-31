@@ -836,12 +836,6 @@ def test_before_group():
         def perform(self, obj, my):
             pass
 
-        @staticmethod
-        def before():
-            # doesn't do anything, but should use the one indicated
-            # by group_class
-            assert False
-
     @MyApp.bar(name='bye')
     def f():
         pass
@@ -949,12 +943,6 @@ def test_before_group_without_use():
 
         def perform(self, obj):
             pass
-
-        @staticmethod
-        def before():
-            # doesn't do anything, but should use the one indicated
-            # by group_class
-            assert False
 
     commit([MyApp])
 
