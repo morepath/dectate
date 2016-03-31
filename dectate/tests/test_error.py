@@ -148,3 +148,65 @@ def test_composite_codeinfo_propagation():
 
     assert "@MyApp.composite(['a'])" in value
     assert '/test_error.py' in value
+
+
+def test_type_error_not_enough_arguments():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    # not enough arguments
+    @MyApp.foo()
+    def f():
+        pass
+
+    with pytest.raises(DirectiveReportError) as e:
+        commit([MyApp])
+
+    value = text_type(e.value)
+    assert "@MyApp.foo()" in value
+
+
+def test_type_error_too_many_arguments():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    # not enough arguments
+    @MyApp.foo('a', 'b')
+    def f():
+        pass
+
+    with pytest.raises(DirectiveReportError) as e:
+        commit([MyApp])
+
+    value = text_type(e.value)
+    assert "@MyApp.foo('a', 'b')" in value
