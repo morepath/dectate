@@ -428,3 +428,36 @@ def test_action_without_init():
     commit([MyApp])
 
     assert MyApp.config.foo == [f]
+
+
+def test_composite_without_init():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('sub')
+    class SubDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.directive('composite')
+    class CompositeDirective(Composite):
+        def actions(self, obj):
+            return [(SubDirective(message), obj) for message in ['a', 'b']]
+
+    commit([MyApp])
+
+    @MyApp.composite()
+    def f():
+        pass
+
+    commit([MyApp])

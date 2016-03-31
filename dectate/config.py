@@ -293,6 +293,8 @@ class Action(object):
     # the directive that was used gets stored on the instance
     directive = None
 
+    # this is here to make update_wrapper work even when an __init__
+    # is not provided by the subclass
     def __init__(self):
         pass
 
@@ -406,6 +408,11 @@ class Composite(object):
     Composite actions are very simple: implement the ``action``
     method and return a iterable of actions in there.
     """
+
+    # this is here to make update_wrapper work even when an __init__
+    # is not provided by the subclass
+    def __init__(self):
+        pass
 
     def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
