@@ -124,6 +124,8 @@
 
 * handle TypeError if action_factory is called with wrong parameters. (done)
 
+* write a test for TypeError handling. (done)
+
 * Registry dependencies:
 
   a registry can be initialized with another registry as the constructor.
@@ -136,6 +138,14 @@
   }
 
   Now implemented as factory_arguments. (done)
+
+* rethink the way action groups work; right now they're by action
+  class, but the implementation gets confusing as we have the true
+  action class used to do the config setup and also the action group
+  class used for before/after. Either use the action group class for
+  everything, including config setup, or use another mechanism for
+  grouping. Done: now the action group is in charge of before, after,
+  config. (done)
 
 * if a group_class class defines before or after or config, that should
   be an error.
@@ -159,14 +169,6 @@
   be based around directives?
 
 * config.py's understanding of '.config/.dectate' is not ideal.
-
-* rethink the way action groups work; right now they're by action
-  class, but the implementation gets confusing as we have the true
-  action class used to do the config setup and also the action group
-  class used for before/after. Either use the action group class for
-  everything, including config setup, or use another mechanism for
-  grouping.
+  
 
 * group_class for a group_class should be an error.
-
-* write a test for TypeError handling.
