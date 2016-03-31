@@ -84,6 +84,10 @@ class Configurable(object):
                     raise ConfigError(
                         "Cannot use group_class on another action class "
                         "that uses group_class: %r" % action_class)
+                if 'config' in action_class.__dict__:
+                    raise ConfigError(
+                        "Cannot use config class attribute when you use "
+                        "group_class: %r" % action_class)
             action_classes.add(group_class)
 
         # delete any old configuration in case we run this a second time

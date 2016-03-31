@@ -248,3 +248,37 @@ def test_cannot_group_class_group_class():
 
     with pytest.raises(ConfigError):
         commit([MyApp])
+
+
+def test_cannot_use_config_with_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Action):
+        config = {
+            'foo': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, foo):
+            return self.message
+
+        def perform(self, obj, foo):
+            foo.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class BarDirective(Action):
+        config = {
+            'bar': list
+        }
+
+        group_class = FooDirective
+
+        def __init__(self, message):
+            pass
+
+    with pytest.raises(ConfigError):
+        commit([MyApp])

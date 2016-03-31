@@ -881,11 +881,6 @@ def test_config_group():
     class BarDirective(Action):
         group_class = FooDirective
 
-        # should be ignored because of group_class,
-        # the config of the group_class is used instead
-        config = {
-        }
-
         def __init__(self, name):
             self.name = name
 
