@@ -72,62 +72,44 @@
 * but if a module is imported twice and a variable is increased upon
   import that causes a non-conflict, a ConflictError won't be raised...
   How contrived is that scenario? Could happen if you generate information
-  dynamically.
-
-* Deal properly with an action or composite that has no __init__. Error.
+  dynamically. This is now documented. (done)
 
 * Ensure that morepath directives get registered before we start using them
-  in imports.
+  in imports. Appears to be not a problem. (done)
 
-* Directives have documentation that shows up in the sphinx docs
+* Directives have documentation that shows up in the sphinx docs (done)
 
-* Implement scanning using recursive import.
-
-* if multiple directives declare different classes for the configuration
-  registry that should be an error.
-
-* There's another use case to apply the action to the app, not to
-  app.registry directly: the logging functionality needs this
-  information. I've worked around it now with a hack that sets up the
-  app as an attribute on the registry after the fact...
+* Implement scanning using recursive import. Done in Morepath using
+  importscan module. (done)
 
 * Support configuration isolation: re-run configuration multiple times.
+  (done)
 
 * Determine that two toplevel directives are actually the same one by
-  looking at line number information.
-
-* Support querying the registration database to see what directives
-  have been applied. Should this be the registration data or should it
-  be based around directives?
-
-* config.py's understanding of '.config/.dectate' is not ideal.
+  looking at line number information. Not done: we rely on a different
+  mechanism, conflict detection, to detect this now. this is documented.
+  (done)
 
 * Refuse to support classmethod & staticmethod? Or refuse to support
-  methods?
+  methods? Conclusion: no classmethod, do support staticmethod. (done)
 
 * the implicit list of global configurables can be reset for testing
-  purposes.
-
-* Configure logger by directive directive?
+  purposes. Conclusion: don't allow this as it's useless for testing. (done)
 
 * is it possible to set up the registries before the action group is
   executed? Maybe not, as action group could still contain multiple
   types of action. Unless we make `config` behave like `before` and
   `after`. Or should we simply set up *all* registries, including
   those for directives we never encountered? Should we also do before/after
-  for those registries without content? (done)
+  for those registries without content? Conclusion: we set up the
+  registries for all action groups, and only action group main class
+  has a config. (done)
 
 * should also do the above for action classes defined by base classes
   and not used. (done)
 
-* rethink the way action groups work; right now they're by action
-  class, but the implementation gets confusing as we have the true
-  action class used to do the config setup and also the action group
-  class used for before/after. Either use the action group class for
-  everything, including config setup, or use another mechanism for
-  grouping.
-
-* group_class used to fill in action classes for those (done)
+* Configure logger by directive directive? This is now done in the App
+  base class with logger_name. (done)
 
 * refactor so that action groups are set up *before* the rest of the
   commit, so we don't have to create action groups just in time while
@@ -135,18 +117,12 @@
   registered. an action group has a before, after and a config.
   there's a shortcut way to register an action without an action
   group, but an action with both an action group *and* shortcut
-  methods is an error.
-
+  methods is an error. (done)
 
 * the action_classes in setup_config should be sorted so that behavior
-  is consistent even if registries are set up inconsistently.
+  is consistent even if registries are set up inconsistently. (done)
 
-* group_class for a group_class should be an error.
-
-
-* handle TypeError if action_factory is called with wrong parameters.
-
-* write a test for TypeError handling.
+* handle TypeError if action_factory is called with wrong parameters. (done)
 
 * Registry dependencies:
 
@@ -158,3 +134,39 @@
   {
      'template_engine_registry': TemplateEngineRegistry, ('settings',)
   }
+
+  Now implemented as factory_arguments. (done)
+
+* if a group_class class defines before or after or config, that should
+  be an error.
+
+* Deal properly with an action or composite that has no __init__. Error.
+
+* if multiple directives declare different classes for the configuration
+  registry that should be an error.
+
+* if factory_arguments declares a different class than the directive,
+  should be an error too.
+
+* There's another use case to apply the action to the app, not to
+  app.registry directly: the logging functionality needs this
+  information. I've worked around it now with a hack that sets up the
+  app as an attribute on the registry after the fact... Happens
+  also for template directive with configurables.
+
+* Support querying the registration database to see what directives
+  have been applied. Should this be the registration data or should it
+  be based around directives?
+
+* config.py's understanding of '.config/.dectate' is not ideal.
+
+* rethink the way action groups work; right now they're by action
+  class, but the implementation gets confusing as we have the true
+  action class used to do the config setup and also the action group
+  class used for before/after. Either use the action group class for
+  everything, including config setup, or use another mechanism for
+  grouping.
+
+* group_class for a group_class should be an error.
+
+* write a test for TypeError handling.
