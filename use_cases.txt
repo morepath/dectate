@@ -154,21 +154,3 @@
 
 * Deal properly with an action or composite that has no
   __init__. Error. Fixed by providing a base __init__.(done)
-
-* if multiple directives declare different classes for the configuration
-  registry that should be an error.
-
-* if factory_arguments declares a different class than the directive,
-  should be an error too.
-
-* There's another use case to apply the action to the app, not to
-  app.registry directly: the logging functionality needs this
-  information. I've worked around it now with a hack that sets up the
-  app as an attribute on the registry after the fact... Happens
-  also for template directive with configurables.
-
-* Support querying the registration database to see what directives
-  have been applied. Should this be the registration data or should it
-  be based around directives?
-
-* config.py's understanding of '.config/.dectate' is not ideal.
