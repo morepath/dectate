@@ -118,6 +118,7 @@ class Configurable(object):
 
         # add the actions for this configurable to the action group
         d = self._action_groups
+
         for action, obj in expand_actions(actions):
             action_class = action.group_class
             if action_class is None:
@@ -420,6 +421,19 @@ class Composite(object):
     def __init__(self):
         pass
 
+    @property
+    def code_info(self):
+        """Info about where in the source code the action was invoked.
+
+        Is an instance of :class:`CodeInfo`.
+
+        Can be ``None`` if action does not have an associated directive
+        but was created manually.
+        """
+        if self.directive is None:
+            return None
+        return self.directive.code_info
+
     def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
 
@@ -615,10 +629,14 @@ def expand_actions(actions):
         if isinstance(action, Composite):
             # make sure all sub actions propagate originating directive
             # info
-            sub_actions = []
-            for sub_action, sub_obj in action.actions(obj):
-                sub_action.directive = action.directive
-                sub_actions.append((sub_action, sub_obj))
+            try:
+                sub_actions = []
+                for sub_action, sub_obj in action.actions(obj):
+                    sub_action.directive = action.directive
+                    sub_actions.append((sub_action, sub_obj))
+            except DirectiveError as e:
+                raise DirectiveReportError(u"{}".format(e),
+                                           action.code_info)
             for sub_action, sub_obj in expand_actions(sub_actions):
                 yield sub_action, sub_obj
         else:

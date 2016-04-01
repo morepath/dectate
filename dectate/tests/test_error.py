@@ -8,7 +8,7 @@ from dectate.compat import text_type
 import pytest
 
 
-def test_directive_error():
+def test_directive_error_in_action():
     class MyApp(App):
         pass
 
@@ -32,6 +32,31 @@ def test_directive_error():
 
     value = text_type(e.value)
     assert value.startswith("A real problem")
+    assert value.endswith(" @MyApp.foo('hello')")
+    assert '/test_error.py' in value
+
+
+def test_directive_error_in_composite():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooDirective(Composite):
+        def __init__(self, name):
+            self.name = name
+
+        def actions(self, obj):
+            raise DirectiveError("Something went wrong")
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    with pytest.raises(DirectiveReportError) as e:
+        commit([MyApp])
+
+    value = text_type(e.value)
+    assert value.startswith("Something went wrong")
     assert value.endswith(" @MyApp.foo('hello')")
     assert '/test_error.py' in value
 

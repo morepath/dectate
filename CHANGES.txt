@@ -6,10 +6,13 @@ CHANGES
 
 - Expose ``code_info`` attribute for action. The ``path`` in
   particular can be useful in implementing a directive such as
-  Morepath's ``template_directory``.
+  Morepath's ``template_directory``. Expose it for composite too.
 
 - Report a few more errors; you cannot use ``config``, ``before`` or
   ``after`` after in an action class if ``group_class`` is set.
+
+- Raise a DirectiveReportError if a DirectiveError is raised in a
+  composite ``actions`` method.
 
 0.3 (2016-03-30)
 ================
