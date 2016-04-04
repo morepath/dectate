@@ -291,6 +291,14 @@ class Action(object):
     By default an action only groups with others of its same class.
     """
 
+    query_names = {}
+    """Map of names used in public query to attribute names.
+
+    If for instance you want to be able to filter the attribute
+    ``_foo`` using ``foo`` in the query, you can map ``foo`` to
+    ``_foo``.
+    """
+
     # the directive that was used gets stored on the instance
     directive = None
 
