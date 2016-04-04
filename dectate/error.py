@@ -27,8 +27,7 @@ class ConflictError(ConfigError):
             code_info = action.code_info
             if code_info is None:
                 continue
-            result.append('  File "%s", line %s' % (code_info.path,
-                                                    code_info.lineno))
+            result.append('  %s' % code_info.filelineno())
             result.append('    %s' % code_info.sourceline)
         msg = '\n'.join(result)
         super(ConflictError, self).__init__(msg)
@@ -42,8 +41,7 @@ class DirectiveReportError(ConfigError):
     def __init__(self, message, code_info):
         result = [message]
         if code_info is not None:
-            result.append('  File "%s", line %s' % (code_info.path,
-                                                    code_info.lineno))
+            result.append('  %s' % code_info.filelineno())
             result.append('    %s' % code_info.sourceline)
         msg = '\n'.join(result)
         super(DirectiveReportError, self).__init__(msg)

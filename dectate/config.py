@@ -671,6 +671,9 @@ class CodeInfo(object):
         self.lineno = lineno
         self.sourceline = sourceline
 
+    def filelineno(self):
+        return 'File "%s", line %s' % (self.path, self.lineno)
+
 
 def create_code_info(frame):
     """Return code information about a frame.
