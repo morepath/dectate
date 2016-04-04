@@ -57,7 +57,7 @@ def test_simple_config_logging():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 1
@@ -101,7 +101,7 @@ def test_subclass_config_logging():
     def f():
         pass
 
-    commit([MyApp, SubApp])
+    commit(MyApp, SubApp)
 
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 2
@@ -149,7 +149,7 @@ def test_override_logger_name():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 1

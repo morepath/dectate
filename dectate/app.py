@@ -41,7 +41,7 @@ def autocommit():
     been imported. You can automatically commit configuration for
     all of them.
     """
-    commit(global_configurables)
+    commit(*global_configurables)
 
 
 class App(with_metaclass(AppMeta)):

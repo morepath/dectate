@@ -151,7 +151,7 @@ We can now commit the configuration for ``MyApp``:
 
 .. testcode::
 
-  dectate.commit([MyApp])
+  dectate.commit(MyApp)
 
 Once the commit has successfully completed, we can take a look at the
 configuration:
@@ -183,7 +183,7 @@ We commit both classes:
 
 .. testcode::
 
-  dectate.commit([MyApp, SubApp])
+  dectate.commit(MyApp, SubApp)
 
 ``SubClass`` now contains all the configuration declared for ``MyApp``:
 
@@ -217,7 +217,7 @@ in conflict. This is exactly what Dectate does:
 
 .. doctest::
 
-   >>> dectate.commit([ConflictingApp])
+   >>> dectate.commit(ConflictingApp)
    Traceback (most recent call last):
      ...
    ConflictError: Conflict between:
@@ -251,7 +251,7 @@ additional configuration actions:
   def h():
       pass # do something interesting
 
-  dectate.commit([MyApp, SubApp])
+  dectate.commit(MyApp, SubApp)
 
 ``SubApp`` now has the additional plugin ``c``:
 
@@ -279,7 +279,7 @@ this in ``SubApp`` by simply reusing the same ``name``:
   def x():
       pass
 
-  dectate.commit([MyApp, SubApp])
+  dectate.commit(MyApp, SubApp)
 
 In ``SubApp`` we now have changed the configuration for ``a`` to
 register the function ``x`` instead of ``f``. If we had done this for
@@ -352,7 +352,7 @@ This won't affect ``TwoApp`` in any way:
 
 .. testcode::
 
-  dectate.commit([OneApp, TwoApp])
+  dectate.commit(OneApp, TwoApp)
 
 .. doctest::
 
@@ -497,7 +497,7 @@ We have now ensured that ``BarAction`` actions are performed after
    def x():
        pass
 
-   dectate.commit([DependsApp])
+   dectate.commit(DependsApp)
 
 We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
 ``b``::
@@ -600,7 +600,7 @@ When we use our directives:
    def x():
        pass
 
-   dectate.commit([ConfigDependsApp])
+   dectate.commit(ConfigDependsApp)
 
 we get the same result as before:
 
@@ -657,7 +657,7 @@ and then executes ``after``::
 
 .. doctest::
 
-  >>> dectate.commit([BeforeAfterApp])
+  >>> dectate.commit(BeforeAfterApp)
   before: []
   after: [('a', <function f at ...>), ('b', <function g at ...>)]
 
@@ -724,7 +724,7 @@ and ``bar`` can be in conflict:
 
 .. doctest::
 
-  >>> dectate.commit([GroupConflictApp])
+  >>> dectate.commit(GroupConflictApp)
   Traceback (most recent call last):
     ...
   ConflictError: Conflict between:
@@ -782,7 +782,7 @@ And then:
 
 .. doctest::
 
-  >>> dectate.commit([DiscriminatorsApp])
+  >>> dectate.commit(DiscriminatorsApp)
   Traceback (most recent call last):
     ...
   ConflictError: Conflict between:
@@ -842,7 +842,7 @@ We can now use it:
   def f():
       pass
 
-  dectate.commit([CompositeApp])
+  dectate.commit(CompositeApp)
 
 And ``SubAction`` is performed three times as a result:
 
@@ -921,7 +921,7 @@ And this has the same configuration effect:
 
 .. doctest::
 
-  >>> dectate.commit([VerboseWithApp, SuccinctWithApp])
+  >>> dectate.commit(VerboseWithApp, SuccinctWithApp)
   >>> VerboseWithApp.config.my
   [('a', 'x', <function f at ...>), ('a', 'y', <function g at ...>), ('a', 'z', <function h at ...>)]
   >>> SuccinctWithApp.config.my
@@ -997,11 +997,12 @@ In certain scenarios where you run your code like this::
 
   $ python app.py
 
-and do something like this inside::
+and you use ``__name__ == '__main__'`` to determine whether the module
+should run::
 
   if __name__ == '__main__':
       import another_module
-      dectate.commit()
+      dectate.commit(App)
 
 you might get a :exc:`ConflictError` from Dectate that looks somewhat
 like this::

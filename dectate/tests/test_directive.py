@@ -28,7 +28,7 @@ def test_simple():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('hello', f)]
 
@@ -89,7 +89,7 @@ def test_conflict_same_directive():
         pass
 
     with pytest.raises(ConflictError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_app_inherit():
@@ -122,7 +122,7 @@ def test_app_inherit():
     def f():
         pass
 
-    commit([MyApp, SubApp])
+    commit(MyApp, SubApp)
 
     assert MyApp.config.my.message == 'hello'
     assert MyApp.config.my.obj is f
@@ -164,7 +164,7 @@ def test_app_override():
     def f2():
         pass
 
-    commit([MyApp, SubApp])
+    commit(MyApp, SubApp)
 
     assert MyApp.config.my.message == 'hello'
     assert MyApp.config.my.obj is f
@@ -214,7 +214,7 @@ def test_different_group_no_conflict():
     def g():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.foo == [('hello', f)]
     assert MyApp.config.bar == [('hello', g)]
@@ -262,7 +262,7 @@ def test_same_group_conflict():
         pass
 
     with pytest.raises(ConflictError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_discriminator_conflict():
@@ -297,7 +297,7 @@ def test_discriminator_conflict():
         pass
 
     with pytest.raises(ConflictError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_discriminator_same_group_conflict():
@@ -336,7 +336,7 @@ def test_discriminator_same_group_conflict():
         pass
 
     with pytest.raises(ConflictError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_discriminator_no_conflict():
@@ -370,7 +370,7 @@ def test_discriminator_no_conflict():
     def g():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('f', f), ('g', g)]
 
@@ -410,7 +410,7 @@ def test_discriminator_different_group_no_conflict():
     def g():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('f', f), ('g', g)]
 
@@ -459,7 +459,7 @@ def test_depends():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     # since bar depends on foo, it should be executed last
     assert MyApp.config.my == [('b', f), ('a', g)]
@@ -496,7 +496,7 @@ def test_composite():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
 
@@ -536,7 +536,7 @@ def test_composite_change_object():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('a', other), ('b', other), ('c', other)]
 
@@ -572,7 +572,7 @@ def test_composite_private_sub():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
 
@@ -618,7 +618,7 @@ def test_nested_composite():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     # since bar depends on foo, it should be executed last
     assert MyApp.config.my == [
@@ -660,7 +660,7 @@ def test_with_statement_kw():
         def g():
             pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [
         (Dummy, 'a', f),
@@ -701,7 +701,7 @@ def test_with_statement_args():
         def g():
             pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [
         (Dummy, 'a', f),
@@ -745,7 +745,7 @@ def test_before():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.before
     assert MyApp.config.my.l == [
@@ -785,7 +785,7 @@ def test_before_without_use():
         def before(my):
             my.before = True
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.before
     assert MyApp.config.my.l == []
@@ -844,7 +844,7 @@ def test_before_group():
     def g():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.before
     assert MyApp.config.my.l == [
@@ -892,7 +892,7 @@ def test_config_group():
     def g():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [
         ('bye', f), ('hello', g),
@@ -944,7 +944,7 @@ def test_before_group_without_use():
         def perform(self, obj):
             pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.before
     assert MyApp.config.my.l == []
@@ -986,7 +986,7 @@ def test_after():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.after
     assert MyApp.config.my.l == [
@@ -1026,7 +1026,7 @@ def test_after_without_use():
         def after(my):
             my.after = True
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my.after
     assert MyApp.config.my.l == []
@@ -1057,7 +1057,7 @@ def test_action_loop_should_conflict():
             pass
 
     with pytest.raises(ConflictError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_action_init_only_during_commit():
@@ -1088,7 +1088,7 @@ def test_action_init_only_during_commit():
 
     assert init_called == []
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert init_called == ["there"]
 
@@ -1112,7 +1112,7 @@ def test_registry_should_exist_even_without_directive_use():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == []
 
@@ -1139,7 +1139,7 @@ def test_registry_should_exist_even_without_directive_use_subclass():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    commit([MyApp, SubApp])
+    commit(MyApp, SubApp)
 
     assert MyApp.config.my == []
     assert SubApp.config.my == []
@@ -1168,10 +1168,10 @@ def test_rerun_commit():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     # and again
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('hello', f)]
 
@@ -1199,14 +1199,14 @@ def test_rerun_commit_add_directive():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     @MyApp.foo('bye')
     def g():
         pass
 
     # and again
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.my == [('hello', f), ('bye', g)]
 
@@ -1245,7 +1245,7 @@ def test_order_subclass():
     def g():
         pass
 
-    commit([MyApp, SubApp])
+    commit(MyApp, SubApp)
 
     assert SubApp.config.my == [('a', f), ('b', g), ('c', h)]
 
@@ -1282,7 +1282,7 @@ def test_registry_single_factory_argument():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.other.my == [('hello', f)]
 
@@ -1323,7 +1323,7 @@ def test_registry_mutiple_factory_arguments():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.other.my == [('hello', f)]
     assert MyApp.config.other.my2 == ['blah']
@@ -1377,7 +1377,7 @@ def test_registry_factory_arguments_depends():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.other.my == [('hello', f)]
 
@@ -1413,6 +1413,6 @@ def test_registry_factory_arguments_depends_complex():
 
         depends = [PredicateAction]
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.registry is MyApp.config.predicate_registry.registry

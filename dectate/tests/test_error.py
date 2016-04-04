@@ -28,7 +28,7 @@ def test_directive_error_in_action():
         pass
 
     with pytest.raises(DirectiveReportError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
     assert value.startswith("A real problem")
@@ -53,7 +53,7 @@ def test_directive_error_in_composite():
         pass
 
     with pytest.raises(DirectiveReportError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
     assert value.startswith("Something went wrong")
@@ -85,7 +85,7 @@ def test_conflict_error():
         pass
 
     with pytest.raises(ConflictError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
     assert value.startswith("Conflict between:")
@@ -123,7 +123,7 @@ def test_with_statement_error():
             pass
 
     with pytest.raises(DirectiveReportError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
 
@@ -168,7 +168,7 @@ def test_composite_codeinfo_propagation():
         pass
 
     with pytest.raises(ConflictError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
 
@@ -201,7 +201,7 @@ def test_type_error_not_enough_arguments():
         pass
 
     with pytest.raises(DirectiveReportError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
     assert "@MyApp.foo()" in value
@@ -232,7 +232,7 @@ def test_type_error_too_many_arguments():
         pass
 
     with pytest.raises(DirectiveReportError) as e:
-        commit([MyApp])
+        commit(MyApp)
 
     value = text_type(e.value)
     assert "@MyApp.foo('a', 'b')" in value
@@ -272,7 +272,7 @@ def test_cannot_group_class_group_class():
             pass
 
     with pytest.raises(ConfigError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_cannot_use_config_with_group_class():
@@ -306,7 +306,7 @@ def test_cannot_use_config_with_group_class():
             pass
 
     with pytest.raises(ConfigError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_cann_inherit_config_with_group_class():
@@ -335,7 +335,7 @@ def test_cann_inherit_config_with_group_class():
         def __init__(self, message):
             pass
 
-    commit([MyApp])
+    commit(MyApp)
 
 
 def test_cannot_use_before_with_group_class():
@@ -366,7 +366,7 @@ def test_cannot_use_before_with_group_class():
             pass
 
     with pytest.raises(ConfigError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_can_inherit_before_with_group_class():
@@ -396,7 +396,7 @@ def test_can_inherit_before_with_group_class():
     class BarDirective(FooDirective):
         group_class = FooDirective
 
-    commit([MyApp])
+    commit(MyApp)
 
 
 def test_cannot_use_after_with_group_class():
@@ -427,7 +427,7 @@ def test_cannot_use_after_with_group_class():
             pass
 
     with pytest.raises(ConfigError):
-        commit([MyApp])
+        commit(MyApp)
 
 
 def test_action_without_init():
@@ -450,7 +450,7 @@ def test_action_without_init():
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
 
     assert MyApp.config.foo == [f]
 
@@ -479,10 +479,10 @@ def test_composite_without_init():
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in ['a', 'b']]
 
-    commit([MyApp])
+    commit(MyApp)
 
     @MyApp.composite()
     def f():
         pass
 
-    commit([MyApp])
+    commit(MyApp)
