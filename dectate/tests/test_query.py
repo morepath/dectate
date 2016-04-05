@@ -87,7 +87,7 @@ def test_multi_action_query():
 
     q = Query(FooAction, BarAction).attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert sorted(list(execute(MyApp, q))) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -564,3 +564,63 @@ def test_composite_action_without_query_classes():
 
     with pytest.raises(QueryError):
         list(execute(MyApp, q))
+
+
+def test_nested_composite_action():
+    class MyApp(App):
+        pass
+
+    @MyApp.private_action_class
+    class SubSubAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.private_action_class
+    class SubAction(Composite):
+        query_classes = [
+            SubSubAction
+        ]
+
+        def __init__(self, names):
+            self.names = names
+
+        def actions(self, obj):
+            return [(SubSubAction(name), obj) for name in self.names]
+
+    @MyApp.directive('composite')
+    class CompositeAction(Composite):
+        query_classes = [
+            SubAction
+        ]
+
+        def __init__(self, amount):
+            self.amount = amount
+
+        def actions(self, obj):
+            for i in range(self.amount):
+                yield SubAction(['a%s' % i, 'b%s' % i]), obj
+
+    @MyApp.composite(2)
+    def f():
+        pass
+
+    commit(MyApp)
+
+    q = Query(CompositeAction).attrs('name')
+
+    assert sorted(list(execute(MyApp, q))) == [
+        {'name': 'a0'},
+        {'name': 'a1'},
+        {'name': 'b0'},
+        {'name': 'b1'},
+    ]
