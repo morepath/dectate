@@ -577,6 +577,42 @@ def test_composite_private_sub():
     assert MyApp.config.my == [('a', f), ('b', f), ('c', f)]
 
 
+def test_composite_private_composite():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('sub')
+    class SubDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.private_action_class
+    class CompositeDirective(Composite):
+        def __init__(self, messages):
+            self.messages = messages
+
+        def actions(self, obj):
+            return [(SubDirective(message), obj) for message in self.messages]
+
+    @MyApp.sub('a')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.my == [('a', f)]
+
+
 def test_nested_composite():
     class MyApp(App):
         pass
