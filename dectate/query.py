@@ -1,4 +1,3 @@
-import inspect
 from .config import Composite
 from .error import QueryError
 
