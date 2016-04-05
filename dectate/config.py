@@ -125,6 +125,16 @@ class Configurable(object):
                 action_class = action.__class__
             d[action_class].add(action, obj)
 
+    def get_action_group(self, action_class):
+        """Return ActionGroup for ``action_class`` or None if not found.
+
+        Takes into account group_class.
+        """
+        group_class = action_class.group_class
+        if group_class is not None:
+            action_class = group_class
+        return self._action_groups.get(action_class, None)
+
     def action_extends(self, action_class):
         """Get ActionGroup for all action classes in ``extends``.
         """
@@ -197,6 +207,13 @@ class ActionGroup(object):
         for extend in self.extends:
             self.combine(extend)
 
+    def get_actions(self):
+        """Get all actions registered for this action group.
+        """
+        result = list(self._action_map.values())
+        result.sort(key=lambda value: value[0].order or 0)
+        return result
+
     def combine(self, actions):
         """Combine another prepared actions with this one.
 
@@ -220,16 +237,13 @@ class ActionGroup(object):
         """
         self.prepare(configurable)
 
-        actions = list(self._action_map.values())
-        actions.sort(key=lambda value: value[0].order or 0)
-
         kw = self.action_class._get_config_kw(configurable)
 
         # run the group class before operation
         self.action_class.before(**kw)
 
         # perform the actual actions
-        for action, obj in actions:
+        for action, obj in self.get_actions():
             try:
                 action._log(configurable, obj)
                 action.perform(obj, **kw)

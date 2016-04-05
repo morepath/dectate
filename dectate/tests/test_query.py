@@ -74,7 +74,6 @@ def test_filter():
     ]
 
 
-
 def test_filter_multiple_fields():
     class MyApp(App):
         pass
@@ -263,3 +262,125 @@ def test_filter_class():
     assert list(execute(
         MyApp,
         Query(ViewAction).filter(model=Delta).obj())) == [i]
+
+
+def test_query_group_class():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('bar')
+    class BarAction(FooAction):
+        group_class = FooAction
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.bar('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction).attrs('name')
+
+    assert list(execute(MyApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
+def test_query_on_group_class_action():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('bar')
+    class BarAction(FooAction):
+        group_class = FooAction
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.bar('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(BarAction).attrs('name')
+
+    assert list(execute(MyApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
+def test_inheritance():
+    class MyApp(App):
+        pass
+
+    class SubApp(MyApp):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @SubApp.foo('b')
+    def g():
+        pass
+
+    commit(SubApp)
+
+    q = Query(FooAction).attrs('name')
+
+    assert list(execute(SubApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]

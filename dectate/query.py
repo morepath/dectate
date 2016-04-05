@@ -22,8 +22,8 @@ class Query(Base):
         self.action_class = action_class
 
     def __call__(self, configurable):
-        action_group = configurable._action_groups.get(self.action_class, None)
-        for action, obj in action_group._actions:
+        action_group = configurable.get_action_group(self.action_class)
+        for action, obj in action_group.get_actions():
             yield action, obj
 
 
