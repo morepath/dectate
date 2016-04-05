@@ -61,6 +61,14 @@ class NotFound(object):
 NOT_FOUND = NotFound()
 
 
+def compare_equality(compared, value):
+    return compared == value
+
+
+def compare_subclass(compared, value):
+    return issubclass(compared, value)
+
+
 class Filter(Base):
     def __init__(self, query, **kw):
         self.query = query
@@ -68,16 +76,14 @@ class Filter(Base):
 
     def __call__(self, configurable):
         for action, obj in self.query(configurable):
-            match = True
             for name, value in self.kw.items():
-                actual_name = action.query_names.get(name, name)
+                actual_name = action.filter_name.get(name, name)
                 compared = getattr(action, actual_name, NOT_FOUND)
-                if inspect.isclass(value):
-                    if not issubclass(compared, value):
-                        match = False
-                elif compared != value:
-                    match = False
-            if match:
+                compare_func = action.filter_compare.get(
+                    name, compare_equality)
+                if not compare_func(compared, value):
+                    break
+            else:
                 yield action, obj
 
 
@@ -90,7 +96,7 @@ class Attrs(object):
         for action, obj in self.query(configurable):
             attrs = {}
             for name in self.names:
-                actual_name = action.query_names.get(name, name)
+                actual_name = action.filter_name.get(name, name)
                 attrs[name] = getattr(action, actual_name, NOT_FOUND)
             yield attrs
 

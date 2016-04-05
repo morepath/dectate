@@ -300,12 +300,38 @@ class Action(object):
     By default an action only groups with others of its same class.
     """
 
-    query_names = {}
-    """Map of names used in public query to attribute names.
+    filter_name = {}
+    """Map of names used in query filter to attribute names.
 
     If for instance you want to be able to filter the attribute
     ``_foo`` using ``foo`` in the query, you can map ``foo`` to
-    ``_foo``.
+    ``_foo``::
+
+       filter_name = {
+          'foo': '_foo'
+       }
+
+    If a filter name is omitted the filter name is assumed to be the
+    same as the attribute name.
+    """
+
+    filter_compare = {}
+    """Map of names used in query filter to comparison functions.
+
+    If for instance you want to be able check whether the value of
+    ``model`` on the action is a subclass of the value provided in the
+    filter, you can provide it here::
+
+      filter_compare = {
+          'model': lambda compared, filter_value: issubclass(
+                     compared, filter_value)
+      }
+
+    Dectate exposes compare functions:
+    :func:`dectate.compare_equality` (the default) and
+    :func:`dectate.compare_subclass`.
+
+    If the filter care is omitted the default ``compare_equality`` is used.
     """
 
     # the directive that was used gets stored on the instance

@@ -139,6 +139,10 @@ def test_filter_multiple_fields():
             'registry': list
         }
 
+        filter_compare = {
+            'model': lambda compared, value: issubclass(compared, value)
+        }
+
         def __init__(self, model, name):
             self.model = model
             self.name = name
@@ -225,7 +229,7 @@ def test_filter_different_attribute_name():
             'registry': list
         }
 
-        query_names = {
+        filter_name = {
             'name': '_name'
         }
 
@@ -261,6 +265,10 @@ def test_filter_class():
     class ViewAction(Action):
         config = {
             'registry': list
+        }
+
+        filter_compare = {
+            'model': lambda compared, value: issubclass(compared, value)
         }
 
         def __init__(self, model):
