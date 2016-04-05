@@ -1,51 +1,56 @@
 from __future__ import print_function
 
-
 import argparse
 import inspect
 from .query import Query, execute
 from .app import App
-from .config import Action
 
 
-def querytool():
-    # XXX factor various parsing logics out into separate functions
-    # that can be tested
+class ToolError(Exception):
+    pass
+
+
+def querytool(directive_app_class, app_classes):
     parser = argparse.ArgumentParser(description="Query Dectate actions")
-    parser.add_argument('app_class', help="Dotted name for App subclass.",
-                        type=parse_app_class)
+    parser.add_argument('--app', help="Dotted name for App subclass.",
+                        type=parse_app_class, action='append')
     parser.add_argument('directive', help="Name of the directive.")
 
     args, query = parser.parse_known_args()
 
-    directive_name = args.directive
+    try:
+        action_class = parse_directive(directive_app_class, args.directive)
+    except ToolError as e:
+        parser.error(e.value)
 
-    app_class = args.app_class
+    filter_kw = parse_filter(action_class, query)
 
+    if args.app:
+        app_classes = args.app
+
+    query = Query(action_class).filter(**filter_kw)
+
+    for app_class in app_classes:
+        print("App: %r" % app_class)
+        for action, obj in execute(app_class, query):
+            if action.directive is None:
+                continue  # XXX handle this case
+            print(action.directive.code_info.filelineno())
+            print(action.directive.code_info.sourceline)
+            print()
+        print()
+
+
+def parse_directive(app_class, directive_name):
     directive_method = getattr(app_class, directive_name, None)
     if directive_method is None:
-        parser.error("No directive exists with name: %s" % directive_name)
+        raise ToolError("No directive exists on %r with name: %s" %
+                        (app_class, directive_name))
     action_class = getattr(directive_method, 'action_factory', None)
     if action_class is None:
-        parser.error("No directive exists with name: %s" % directive_name)
-    if not issubclass(action_class, Action):
-        parser.error("No directive exists with name: %s" % directive_name)
-
-    filter_kw = {}
-
-    for entry in query:
-        name, value = entry.split("=")
-        name = name.strip()
-        value = value.strip()
-        filter_kw[name] = value
-
-    for action, obj in execute(app_class,
-                               Query(action_class).filter(**filter_kw)):
-        if action.directive is None:
-            continue  # XXX handle this case
-        print(action.directive.code_info.filelineno())
-        print(action.directive.code_info.sourceline)
-        print()
+        raise ToolError("%r on %r is not a directive" %
+                        (directive_name, app_class))
+    return action_class
 
 
 def parse_app_class(s):
@@ -61,6 +66,18 @@ def parse_app_class(s):
         raise argparse.ArgumentTypeError(
             "%r is not a subclass of dectate.App" % s)
     return app_class
+
+
+def parse_filter(action_class, entries):
+    result = {}
+
+    for entry in entries:
+        name, value = entry.split("=")
+        name = name.strip()
+        value = value.strip()
+        result[name] = value
+
+    return result
 
 
 def resolve_dotted_name(name, module=None):

@@ -1,0 +1,88 @@
+decq foo.App.view name=blah model=Foo
+
+
+
+
+decq view name=blah model=Foo
+
+should use the *default* app class and search all sub-classes known.
+
+decq --app=foo.App view name=blah
+
+will specifically only search in app. can be repeated.
+
+
+this means that the view action or directive needs more
+information about model, i.e. that it is a class.
+
+* how to deal with queries that are inverse, i.e. where is this
+  path defined? that in fact could be done with:
+
+ decq foo.App.view path=/foo
+
+* some queries need to process the value to match with other things
+  too, like path queries with slash or no slash and class inheritance.
+
+* how do you query the composite directive? the directive info is
+  okay but how do we know the actions to even query? I think the
+  composite needs to declare what it generates so that dectate can
+  find it.
+
+* multi-app queries? give me all apps that define this view?
+
+* what if you want to look for all registered views and you want therefore
+  want all subclasses of view action? they are already grouped so should
+  be okay. try it out in a test.
+
+* is there sorting of results?
+
+
+There are more general queries like what is this model used for that
+would need to investigate multiple directives.
+
+decq foo.App.view name=blah model=Foo
+
+the action can define per query parameter:
+
+* how to check there is a match. this includes converting the
+  input.
+
+tool_filter = {
+   'model': lambda value: resolve_dotted_name(value)
+}
+
+query_filter = {
+   'model': lambda action, value: issubclass(action._model, value)
+}
+
+The filter system won't work for composite as what is being compared
+with is the real action and not the composite. So the composite should
+define how to map things:
+
+filter_classes = {
+   SubAction: {
+      
+   }
+}
+
+Examples:
+
+setting_section section=foo
+
+  filter 'section' is on underlying action
+
+path
+
+  filters are all on underlying action.
+
+identity_policy
+
+  no filter at all possible.
+
+verify_identity
+
+  identity does not map to function action. so this cannot
+  be queried. Could rewrite to register function directly and then
+  this would be not a composite.
+
+
