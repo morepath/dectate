@@ -140,7 +140,7 @@ def test_filter_multiple_fields():
         }
 
         filter_compare = {
-            'model': lambda compared, value: issubclass(compared, value)
+            'model': issubclass
         }
 
         def __init__(self, model, name):
@@ -268,7 +268,7 @@ def test_filter_class():
         }
 
         filter_compare = {
-            'model': lambda compared, value: issubclass(compared, value)
+            'model': issubclass
         }
 
         def __init__(self, model):

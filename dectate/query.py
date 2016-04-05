@@ -65,10 +65,6 @@ def compare_equality(compared, value):
     return compared == value
 
 
-def compare_subclass(compared, value):
-    return issubclass(compared, value)
-
-
 class Filter(Base):
     def __init__(self, query, **kw):
         self.query = query

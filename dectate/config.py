@@ -323,15 +323,10 @@ class Action(object):
     filter, you can provide it here::
 
       filter_compare = {
-          'model': lambda compared, filter_value: issubclass(
-                     compared, filter_value)
+          'model': issubclass
       }
 
-    Dectate exposes compare functions:
-    :func:`dectate.compare_equality` (the default) and
-    :func:`dectate.compare_subclass`.
-
-    If the filter care is omitted the default ``compare_equality`` is used.
+    The default filter compare is an equality comparison.
     """
 
     # the directive that was used gets stored on the instance
