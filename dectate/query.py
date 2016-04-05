@@ -1,4 +1,6 @@
 import inspect
+from .config import Composite
+from .error import QueryError
 
 
 def execute(app_class, query):
@@ -18,13 +20,28 @@ class Base(object):
 
 
 class Query(Base):
-    def __init__(self, action_class):
-        self.action_class = action_class
+    def __init__(self, *action_classes):
+        self.action_classes = action_classes
 
     def __call__(self, configurable):
-        action_group = configurable.get_action_group(self.action_class)
-        for action, obj in action_group.get_actions():
-            yield action, obj
+        return query_action_classes(configurable, self.action_classes)
+
+
+def query_action_classes(configurable, action_classes):
+    for action_class in action_classes:
+        if issubclass(action_class, Composite):
+            query_classes = action_class.query_classes
+            if not query_classes:
+                raise QueryError(
+                    "Query of composite action %r but no "
+                    "query_classes defined." % action_class)
+            for action, obj in query_action_classes(
+                    configurable, query_classes):
+                yield action, obj
+        else:
+            action_group = configurable.get_action_group(action_class)
+            for action, obj in action_group.get_actions():
+                yield action, obj
 
 
 class NotFound(object):

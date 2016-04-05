@@ -438,6 +438,15 @@ class Composite(object):
     method and return a iterable of actions in there.
     """
 
+    query_classes = []
+    """A list of actual action classes that this composite can generate.
+
+    This is to allow the querying of composites. If the list if empty
+    (the default) the query system refuses to query the
+    composite. Note that if actions of the same action class can also
+    be generated in another way they are in the same query result.
+    """
+
     # this is here to make update_wrapper work even when an __init__
     # is not provided by the subclass
     def __init__(self):
@@ -459,8 +468,8 @@ class Composite(object):
     def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
 
-        The iteratable should yield ``action``, ``obj`` tuples,
-        where ``action`` is instance of
+        The iteratable should yield ``action, obj`` tuples,
+        where ``action`` is an instance of
         class :class:`Action` or :class:`Composite` and ``obj``
         is the object to perform the action with.
 

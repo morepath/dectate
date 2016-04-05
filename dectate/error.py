@@ -63,3 +63,7 @@ class DirectiveError(ConfigError):
 
 class TopologicalSortError(Exception):
     pass
+
+
+class QueryError(Exception):
+    pass

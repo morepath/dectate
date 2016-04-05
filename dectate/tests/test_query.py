@@ -1,4 +1,7 @@
-from dectate import Query, execute, App, Action, commit
+import pytest
+
+from dectate import (
+    Query, execute, App, Action, Composite, commit, QueryError)
 
 
 def test_query():
@@ -384,3 +387,87 @@ def test_inheritance():
         {'name': 'a'},
         {'name': 'b'}
     ]
+
+
+def test_composite_action():
+    class MyApp(App):
+        pass
+
+    @MyApp.private_action_class
+    class SubAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('composite')
+    class CompositeAction(Composite):
+        query_classes = [
+            SubAction
+        ]
+
+        def __init__(self, names):
+            self.names = names
+
+        def actions(self, obj):
+            return [(SubAction(name), obj) for name in self.names]
+
+    @MyApp.composite(['a', 'b'])
+    def f():
+        pass
+
+    commit(MyApp)
+
+    q = Query(CompositeAction).attrs('name')
+
+    assert list(execute(MyApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
+def test_composite_action_without_query_classes():
+    class MyApp(App):
+        pass
+
+    @MyApp.private_action_class
+    class SubAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('composite')
+    class CompositeAction(Composite):
+        def __init__(self, names):
+            self.names = names
+
+        def actions(self, obj):
+            return [(SubAction(name), obj) for name in self.names]
+
+    @MyApp.composite(['a', 'b'])
+    def f():
+        pass
+
+    commit(MyApp)
+
+    q = Query(CompositeAction).attrs('name')
+
+    with pytest.raises(QueryError):
+        list(execute(MyApp, q))
