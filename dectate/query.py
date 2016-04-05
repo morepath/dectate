@@ -27,7 +27,8 @@ class Query(Base):
         return query_action_classes(configurable, self.action_classes)
 
 
-def query_action_classes(configurable, action_classes):
+def expand_action_classes(action_classes):
+    result = set()
     for action_class in action_classes:
         if issubclass(action_class, Composite):
             query_classes = action_class.query_classes
@@ -35,13 +36,22 @@ def query_action_classes(configurable, action_classes):
                 raise QueryError(
                     "Query of composite action %r but no "
                     "query_classes defined." % action_class)
-            for action, obj in query_action_classes(
-                    configurable, query_classes):
-                yield action, obj
+            for query_class in expand_action_classes(query_classes):
+                result.add(query_class)
         else:
-            action_group = configurable.get_action_group(action_class)
-            for action, obj in action_group.get_actions():
-                yield action, obj
+            group_class = action_class.group_class
+            if group_class is None:
+                result.add(action_class)
+            else:
+                result.add(group_class)
+    return result
+
+
+def query_action_classes(configurable, action_classes):
+    for action_class in expand_action_classes(action_classes):
+        action_group = configurable.get_action_group(action_class)
+        for action, obj in action_group.get_actions():
+            yield action, obj
 
 
 class NotFound(object):

@@ -127,12 +127,7 @@ class Configurable(object):
 
     def get_action_group(self, action_class):
         """Return ActionGroup for ``action_class`` or None if not found.
-
-        Takes into account group_class.
         """
-        group_class = action_class.group_class
-        if group_class is not None:
-            action_class = group_class
         return self._action_groups.get(action_class, None)
 
     def action_extends(self, action_class):

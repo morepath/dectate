@@ -41,6 +41,58 @@ def test_query():
     ]
 
 
+def test_multi_action_query():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('bar')
+    class BarAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.bar('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction, BarAction).attrs('name')
+
+    assert list(execute(MyApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
 def test_filter():
     class MyApp(App):
         pass
@@ -344,6 +396,47 @@ def test_query_on_group_class_action():
     q = Query(BarAction).attrs('name')
 
     assert list(execute(MyApp, q)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
+def test_multi_query_on_group_class_action():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.directive('bar')
+    class BarAction(FooAction):
+        group_class = FooAction
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.bar('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction, BarAction).attrs('name')
+
+    assert sorted(list(execute(MyApp, q))) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
