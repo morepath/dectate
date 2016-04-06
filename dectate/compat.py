@@ -8,6 +8,10 @@ if PY3:  # pragma: no cover
 else:
     text_type = unicode
 
+if PY3:
+    string_types = (str,)  # pragma: nocoverage
+else:
+    string_types = (basestring,)
 
 # Newer versions of flask and six have the following version of
 # with_metaclass, which seems to have a constant number of function

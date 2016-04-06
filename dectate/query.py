@@ -1,5 +1,6 @@
 from .config import Composite
 from .error import QueryError
+from .compat import string_types
 
 
 class Callable(object):
@@ -61,13 +62,21 @@ class Query(Base):
     :meth:`Query.obj`.
 
     :param: ``*action_classes``: one or more action classes to query for.
-      Can be instances of :class:`Action` or :class:`Composite`.
+      Can be instances of :class:`Action` or :class:`Composite`. Can
+      also be strings indicating directive names, in which case they
+      are looked up on the app class before execution.
     """
     def __init__(self, *action_classes):
         self.action_classes = action_classes
 
     def execute(self, configurable):
-        return query_action_classes(configurable, self.action_classes)
+        app_class = configurable.app_class
+        action_classes = []
+        for action_class in self.action_classes:
+            if isinstance(action_class, string_types):
+                action_class = get_action_class(app_class, action_class)
+            action_classes.append(action_class)
+        return query_action_classes(configurable, action_classes)
 
 
 def expand_action_classes(action_classes):
@@ -98,6 +107,18 @@ def query_action_classes(configurable, action_classes):
                              (action_class, configurable.app_class))
         for action, obj in action_group.get_actions():
             yield action, obj
+
+
+def get_action_class(app_class, directive_name):
+    directive_method = getattr(app_class, directive_name, None)
+    if directive_method is None:
+        raise QueryError("No directive exists on %r with name: %s" %
+                         (app_class, directive_name))
+    action_class = getattr(directive_method, 'action_factory', None)
+    if action_class is None:
+        raise QueryError("%r on %r is not a directive" %
+                         (directive_name, app_class))
+    return action_class
 
 
 class NotFound(object):
