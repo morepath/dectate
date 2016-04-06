@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'decq = query.main:main',
+            'decq = query.main:query_tool',
         ]
     },
     install_requires=[

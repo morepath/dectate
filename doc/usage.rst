@@ -313,7 +313,7 @@ from everything before:
       pass
 
   @BaseApp.directive('plugin')
-  class PluginAction(dectate.Action):
+  class PluginAction2(dectate.Action):
       config = {
          'plugins': dict
       }
@@ -369,7 +369,7 @@ The Anatomy of a Directive
 
 Let's consider the directive registration again in detail::
 
-  @BaseApp.directive('plugin')
+  @MyApp.directive('plugin')
   class PluginAction(dectate.Action):
       config = {
          'plugins': dict
@@ -961,6 +961,117 @@ If you want to override the name of the log you can set
 
   class MorepathApp(dectate.App):
      logger_name = 'morepath.directive'
+
+querying
+--------
+
+Dectate keeps a database of committed actions that can be queried.
+Here is an example of a query for all the plugin actions on ``MyApp``:
+
+.. testcode::
+
+  q = dectate.Query(PluginAction)
+
+We can now run the query:
+
+.. doctest::
+  :options: +NORMALIZE_WHITESPACE
+
+  >>> list(q(MyApp))
+  [(<PluginAction ...>, <function f ...>),
+   (<PluginAction ...>, <function g ...>)]
+
+We can also filter the query for attributes of the action:
+
+.. doctest::
+
+  >>> list(q.filter(name='a')(MyApp))
+  [(<PluginAction object ...>, <function f ...>)]
+
+Sometimes the attribute on the action is not the same as the name
+you may want to use in the filter. You can use :attr:`Action.filter_names`
+to create a mapping to the correct attribute.
+
+By default the filter does an equality comparison. You can define your
+own comparison function for an attribute using
+:attr:`Action.filter_compare`.
+
+If you want to allow a query on a :class:`Composite` action you need
+to give it some help by defining :attr:`Composite.query_classes`.
+
+query tool
+----------
+
+Dectate also includes a command-line tool that lets you issue queries. You
+need to configure it for your application. For instance, in the module
+``main.py`` of your project::
+
+  import dectate
+
+  def query_tool():
+      dectate.commit(SomeApp)
+      dectate.query_tool([SomeApp])
+
+In this function you should commit any :class:`App` subclasses your
+application normally uses, and then provide a list of them to
+:func:`query_tool`. This is the list of applications that is queried
+by default if you don't specify ``--app``.
+
+Then in ``setup.py`` of your project::
+
+    entry_points={
+        'console_scripts': [
+            'decq = query.main:query_tool',
+        ]
+    },
+
+When you re-install this project you have a command-line tool called
+``decq`` that lets you issues queries. For instance, this query
+returns all uses of directive ``foo`` in the apps you provided to
+``query_tool``::
+
+  $ decq foo
+  App: <class 'query.a.App'>
+    File ".../query/b.py", line 4
+    @App.foo(name='alpha')
+
+    File ".../query/b.py", line 9
+    @App.foo(name='beta')
+
+    File ".../query/b.py", line 14
+    @App.foo(name='gamma')
+
+    File ".../query/c.py", line 4
+    @App.foo(name='lah')
+
+  App: <class 'query.a.Other'>
+    File ".../query/b.py", line 19
+    @Other.foo(name='alpha')
+
+And this query filters by ``name``::
+
+  $ decq foo name=alpha
+  App: <class 'query.a.App'>
+    File ".../query/b.py", line 4
+    @App.foo(name='alpha')
+
+  App: <class 'query.a.Other'>
+    File ".../query/b.py", line 19
+    @Other.foo(name='alpha')
+
+You can also explicit provide the app classes to query with the
+``--app`` option; the default list of app classes is ignored in this
+case::
+
+  $ bin/decq --app query.a.App foo name=alpha
+  App: <class 'query.a.App'>
+    File ".../query/b.py", line 4
+    @App.foo(name='alpha')
+
+You need to give ``--app`` a dotted name of the :class:`App` subclass
+to query. You can repeat the ``--app`` option to query multiple apps.
+
+A working example is in ``scenarios/query`` of the Dectate project.
 
 Sphinx Extension
 ----------------

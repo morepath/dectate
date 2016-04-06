@@ -49,6 +49,9 @@ def expand_action_classes(action_classes):
 def query_action_classes(configurable, action_classes):
     for action_class in expand_action_classes(action_classes):
         action_group = configurable.get_action_group(action_class)
+        if action_group is None:
+            raise QueryError("%r is not an action of %r" %
+                             (action_class, configurable.app_class))
         for action, obj in action_group.get_actions():
             yield action, obj
 

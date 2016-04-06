@@ -624,3 +624,56 @@ def test_nested_composite_action():
         {'name': 'b0'},
         {'name': 'b1'},
     ]
+
+
+def test_query_action_for_other_app():
+    class MyApp(App):
+        pass
+
+    class OtherApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @OtherApp.directive('foo')
+    class BarAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.foo('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(BarAction)
+
+    with pytest.raises(QueryError):
+        list(q(MyApp))

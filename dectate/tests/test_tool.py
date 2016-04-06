@@ -4,7 +4,7 @@ from argparse import ArgumentTypeError
 from dectate.config import Action, commit
 from dectate.app import App
 from dectate.tool import (parse_app_class, parse_directive, parse_filter,
-                          convert_dotted_name, querytool_output, ToolError)
+                          convert_dotted_name, query_tool_output, ToolError)
 
 
 def test_parse_app_class_main():
@@ -99,7 +99,7 @@ def test_parse_filter_value_error():
         parse_filter(MyAction, ["count=a"])
 
 
-def test_querytool_output():
+def test_query_tool_output():
     class MyApp(App):
         pass
 
@@ -124,7 +124,7 @@ def test_querytool_output():
 
     commit(MyApp)
 
-    l = list(querytool_output([MyApp], 'foo', ['name=a']))
+    l = list(query_tool_output([MyApp], 'foo', ['name=a']))
 
     # we are not going to assert too much about the content of things
     # here as we probably want to tweak for a while, just assert that
@@ -132,7 +132,7 @@ def test_querytool_output():
     assert l
 
 
-def test_querytool_uncommitted():
+def test_query_tool_uncommitted():
     class MyApp(App):
         pass
 
@@ -156,4 +156,4 @@ def test_querytool_uncommitted():
         pass
 
     with pytest.raises(ToolError):
-        list(querytool_output([MyApp], 'foo', ['name=a']))
+        list(query_tool_output([MyApp], 'foo', ['name=a']))

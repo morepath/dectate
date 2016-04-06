@@ -11,7 +11,7 @@ class ToolError(Exception):
     pass
 
 
-def querytool(app_classes):
+def query_tool(app_classes):
     parser = argparse.ArgumentParser(description="Query Dectate actions")
     parser.add_argument('--app', help="Dotted name for App subclass.",
                         type=parse_app_class, action='append')
@@ -23,8 +23,8 @@ def querytool(app_classes):
         app_classes = args.app
 
     try:
-        lines = list(querytool_output(app_classes, args.directive,
-                                      filter_entries))
+        lines = list(query_tool_output(app_classes, args.directive,
+                                       filter_entries))
     except ToolError as e:
         parser.error(text_type(e))
 
@@ -32,7 +32,7 @@ def querytool(app_classes):
         print(line)
 
 
-def querytool_output(app_classes, directive, filter_entries):
+def query_tool_output(app_classes, directive, filter_entries):
     for app_class in app_classes:
         if not app_class.dectate.commited:
             raise ToolError("App %r was not committed." % app_class)

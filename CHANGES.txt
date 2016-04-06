@@ -4,8 +4,8 @@ CHANGES
 0.6 (unreleased)
 ================
 
-- Nothing changed yet.
-
+- Introduce a query system for actions and a command-line tool that
+  lets you query actions.
 
 0.5 (2016-04-04)
 ================
