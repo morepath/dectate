@@ -3,9 +3,10 @@ from argparse import ArgumentTypeError
 
 from dectate.config import Action, commit
 from dectate.app import App
-from dectate.tool import (parse_app_class, parse_directive, parse_filter,
+from dectate.tool import (parse_app_class, parse_directive, parse_filters,
+                          convert_filters,
                           convert_dotted_name, convert_bool,
-                          query_tool_output, ToolError)
+                          query_tool_output, query_app, ToolError)
 
 
 def test_parse_app_class_main():
@@ -51,53 +52,67 @@ def test_parse_directive_not_a_directive():
         parse_directive(anapp.AnApp, 'known')
 
 
-def test_parse_filter_main():
+def test_parse_filters_main():
+    assert parse_filters(['a=b', 'c = d', 'e=f ', ' g=h']) == {
+        'a': 'b',
+        'c': 'd',
+        'e': 'f',
+        'g': 'h'
+    }
+
+
+def test_parse_filters_error():
+    with pytest.raises(ToolError):
+        parse_filters(['a'])
+
+
+def test_convert_filters_main():
     class MyAction(Action):
         filter_convert = {
             'model': convert_dotted_name
         }
 
-    converted = parse_filter(
+    converted = convert_filters(
         MyAction,
-        ["model=dectate.tests.fixtures.anapp.OtherClass"])
+        {'model': 'dectate.tests.fixtures.anapp.OtherClass'})
     assert len(converted) == 1
     from dectate.tests.fixtures.anapp import OtherClass
     assert converted['model'] is OtherClass
 
 
-def test_parse_filter_default():
+def test_convert_filters_default():
     class MyAction(Action):
         pass
 
-    converted = parse_filter(
+    converted = convert_filters(
         MyAction,
-        ["name=foo"])
+        {"name": "foo"})
     assert len(converted) == 1
     assert converted['name'] == 'foo'
 
 
-def test_parse_filter_convert_error():
+def test_convert_filters_error():
     class MyAction(Action):
         filter_convert = {
             'model': convert_dotted_name
         }
 
     with pytest.raises(ToolError):
-        parse_filter(
+        convert_filters(
             MyAction,
-            ["model=dectate.tests.fixtures.anapp.DoesntExist"])
+            {"model": "dectate.tests.fixtures.anapp.DoesntExist"})
 
 
-def test_parse_filter_value_error():
+def test_convert_filters_value_error():
     class MyAction(Action):
         filter_convert = {
             'count': int
         }
 
-    assert parse_filter(MyAction, ["count=3"]) == {'count': 3}
+    assert convert_filters(MyAction, {"count": "3"}) == {'count': 3}
 
     with pytest.raises(ToolError):
-        parse_filter(MyAction, ["count=a"])
+        convert_filters(MyAction, {"count": "a"})
 
 
 def test_query_tool_output():
@@ -125,12 +140,46 @@ def test_query_tool_output():
 
     commit(MyApp)
 
-    l = list(query_tool_output([MyApp], 'foo', ['name=a']))
+    l = list(query_tool_output([MyApp], 'foo', {'name': 'a'}))
 
     # we are not going to assert too much about the content of things
     # here as we probably want to tweak for a while, just assert that
     # we successfully produce output
     assert l
+
+
+def test_query_app():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        filter_convert = {
+            'count': int
+        }
+
+        def __init__(self, count):
+            self.count = count
+
+        def identifier(self):
+            return self.count
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo(1)
+    def f():
+        pass
+
+    @MyApp.foo(2)
+    def g():
+        pass
+
+    commit(MyApp)
+
+    l = list(query_app(MyApp, 'foo', count='1'))
+    assert len(l) == 1
+    assert l[0][0].count == 1
 
 
 def test_query_tool_uncommitted():
@@ -157,7 +206,7 @@ def test_query_tool_uncommitted():
         pass
 
     with pytest.raises(ToolError):
-        list(query_tool_output([MyApp], 'foo', ['name=a']))
+        list(query_tool_output([MyApp], 'foo', {'name': 'a'}))
 
 
 def test_convert_bool():

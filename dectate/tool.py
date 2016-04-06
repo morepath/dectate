@@ -38,14 +38,16 @@ def query_tool(app_classes):
                         type=parse_app_class, action='append')
     parser.add_argument('directive', help="Name of the directive.")
 
-    args, filter_entries = parser.parse_known_args()
+    args, filters = parser.parse_known_args()
 
     if args.app:
         app_classes = args.app
 
+    filters = parse_filters(filters)
+
     try:
         lines = list(query_tool_output(app_classes, args.directive,
-                                       filter_entries))
+                                       filters))
     except ToolError as e:
         parser.error(text_type(e))
 
@@ -53,18 +55,14 @@ def query_tool(app_classes):
         print(line)
 
 
-def query_tool_output(app_classes, directive, filter_entries):
+def query_tool_output(app_classes, directive, filters):
     for app_class in app_classes:
         if not app_class.dectate.commited:
             raise ToolError("App %r was not committed." % app_class)
 
         yield "App: %r" % app_class
 
-        action_class = parse_directive(app_class, directive)
-        filter_kw = parse_filter(action_class, filter_entries)
-        query = Query(action_class).filter(**filter_kw)
-
-        actions = list(query(app_class))
+        actions = list(query_app(app_class, directive, **filters))
 
         if not actions:
             yield "  Nothing found"
@@ -76,6 +74,23 @@ def query_tool_output(app_classes, directive, filter_entries):
             yield "  %s" % action.directive.code_info.filelineno()
             yield "  %s" % action.directive.code_info.sourceline
             yield ""
+
+
+def query_app(app_class, directive, **filters):
+    """Query a single app with raw filters.
+
+    This function is especially useful for writing unit tests that
+    test the conversion behavior.
+
+    :param app_class: a :class:`App` subclass to query.
+    :param directive: name of directive to query.
+    :param ``**filters``: raw (unconverted) filter values.
+    :return: iterable of ``action, obj`` tuples.
+    """
+    action_class = parse_directive(app_class, directive)
+    filter_kw = convert_filters(action_class, filters)
+    query = Query(action_class).filter(**filter_kw)
+    return query(app_class)
 
 
 def parse_directive(app_class, directive_name):
@@ -136,19 +151,30 @@ def convert_bool(s):
         raise ValueError("Cannot convert bool: %r" % s)
 
 
-def parse_filter(action_class, entries):
+def parse_filters(entries):
+    result = {}
+    for entry in entries:
+        try:
+            name, value = entry.split("=")
+        except ValueError:
+            raise ToolError("Cannot parse query filter, no =.")
+        name = name.strip()
+        result[name] = value.strip()
+    return result
+
+
+def convert_filters(action_class, filters):
     filter_convert = action_class.filter_convert
 
     result = {}
 
-    for entry in entries:
-        name, value = entry.split("=")
-        name = name.strip()
-        parse = filter_convert.get(name, convert_default)
+    for key, value in filters.items():
+        parse = filter_convert.get(key, convert_default)
         try:
-            result[name] = parse(value.strip())
+            result[key] = parse(value.strip())
         except ValueError as e:
             raise ToolError(text_type(e))
+
     return result
 
 
