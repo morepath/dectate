@@ -3,5 +3,5 @@ from . import a, b, c
 
 
 def main():
-    dectate.commit(a.App)
-    dectate.querytool()
+    dectate.commit(a.App, a.Other)
+    dectate.querytool([a.App, a.Other])

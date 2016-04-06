@@ -11,43 +11,50 @@ class ToolError(Exception):
     pass
 
 
-def querytool(directive_app_class, app_classes):
+def querytool(app_classes):
     parser = argparse.ArgumentParser(description="Query Dectate actions")
     parser.add_argument('--app', help="Dotted name for App subclass.",
                         type=parse_app_class, action='append')
     parser.add_argument('directive', help="Name of the directive.")
 
-    args, query = parser.parse_known_args()
-
-    try:
-        action_class = parse_directive(directive_app_class, args.directive)
-    except ToolError as e:
-        parser.error(e.value)
-
-    try:
-        filter_kw = parse_filter(action_class, query)
-    except ToolError as e:
-        parser.error(e.value)
+    args, filter_entries = parser.parse_known_args()
 
     if args.app:
         app_classes = args.app
 
-    for line in querytool_output(app_classes, action_class, filter_kw):
+    try:
+        lines = list(querytool_output(app_classes, args.directive,
+                                      filter_entries))
+    except ToolError as e:
+        parser.error(text_type(e))
+
+    for line in lines:
         print(line)
 
 
-def querytool_output(app_classes, action_class, filter_kw):
-    query = Query(action_class).filter(**filter_kw)
-
+def querytool_output(app_classes, directive, filter_entries):
     for app_class in app_classes:
+        if not app_class.dectate.commited:
+            raise ToolError("App %r was not committed." % app_class)
+
         yield "App: %r" % app_class
-        for action, obj in execute(app_class, query):
+
+        action_class = parse_directive(app_class, directive)
+        filter_kw = parse_filter(action_class, filter_entries)
+        query = Query(action_class).filter(**filter_kw)
+
+        actions = list(execute(app_class, query))
+
+        if not actions:
+            yield "  Nothing found"
+            return
+
+        for action, obj in actions:
             if action.directive is None:
                 continue  # XXX handle this case
-            yield action.directive.code_info.filelineno()
-            yield action.directive.code_info.sourceline
+            yield "  %s" % action.directive.code_info.filelineno()
+            yield "  %s" % action.directive.code_info.sourceline
             yield ""
-        yield ""
 
 
 def parse_directive(app_class, directive_name):

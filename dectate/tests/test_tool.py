@@ -124,9 +124,36 @@ def test_querytool_output():
 
     commit(MyApp)
 
-    l = list(querytool_output([MyApp], FooAction, {'name': 'a'}))
+    l = list(querytool_output([MyApp], 'foo', ['name=a']))
 
     # we are not going to assert too much about the content of things
     # here as we probably want to tweak for a while, just assert that
     # we successfully produce output
     assert l
+
+
+def test_querytool_uncommitted():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self):
+            return self.name
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.foo('b')
+    def g():
+        pass
+
+    with pytest.raises(ToolError):
+        list(querytool_output([MyApp], 'foo', ['name=a']))

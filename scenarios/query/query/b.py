@@ -1,4 +1,4 @@
-from .a import App
+from .a import App, Other
 
 
 @App.foo(name='alpha')
@@ -13,4 +13,9 @@ def g():
 
 @App.foo(name='gamma')
 def h():
+    pass
+
+
+@Other.foo(name='alpha')
+def i():
     pass
