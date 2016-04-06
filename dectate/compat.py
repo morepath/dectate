@@ -9,12 +9,24 @@ else:
     text_type = unicode
 
 
-# the with_meta in python-future doesn't work as it has an inconsistent
-# stack frame. the with_meta in newer versions of six has the same issue.
-# an older version does the job for us, so copy it in here
+# Newer versions of flask and six have the following version of
+# with_metaclass, which seems to have a constant number of function
+# calls. Hence, stack frame navigation does not depend on the
+# execution path, as previously was the case.
+#
 # see:
+# https://github.com/pallets/flask/pull/1539
+#
+# and the following for a description of the problem that previous versions had:
+#
 # https://bitbucket.org/gutworth/six/issue/83/with_meta-and-stack-frame-issues
 # https://github.com/PythonCharmers/python-future/issues/75
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
-    return meta("NewBase", bases, {})
+    # This requires a bit of explanation: the basic idea is to make a
+    # dummy metaclass for one level of class instantiation that replaces
+    # itself with the actual metaclass.
+    class metaclass(type):
+        def __new__(cls, name, this_bases, attrs):
+            return meta(name, bases, attrs)
+    return type.__new__(metaclass, 'temporary_class', (), {})
