@@ -96,6 +96,10 @@ Here are some features of Dectate:
 * Dectate-based configuration systems are themselves easily extensible
   with new directives and registries.
 
+* Dectate-based configuration systems can be queried. Dectate also
+  provides the infrastructure to easily construct command-line tools
+  for querying configuration.
+
 App classes
 -----------
 
