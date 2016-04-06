@@ -109,6 +109,13 @@ def convert_default(s):
 
 
 def convert_dotted_name(s):
+    """Convert input string to an object in a module.
+
+    Takes a dotted name: ``pkg.module.attr`` gets ``attr``
+    from module ``module`` which is in package ``pkg``.
+
+    Raises ``ValueError`` if it cannot be imported.
+    """
     try:
         return resolve_dotted_name(s)
     except ImportError:

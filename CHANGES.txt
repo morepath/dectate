@@ -4,8 +4,9 @@ CHANGES
 0.7 (unreleased)
 ================
 
-- Nothing changed yet.
+- Fix a few documentation issues.
 
+- Expose `convert_dotted_name` and document it.
 
 0.6 (2016-04-06)
 ================

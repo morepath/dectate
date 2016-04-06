@@ -772,8 +772,7 @@ any action that is in the ``extra`` list:
 
 .. testcode::
 
-  #
-
+  # example
   @DiscriminatorsApp.foo('a', ['b', 'c'])
   def f():
       pass
@@ -790,9 +789,9 @@ And then:
   Traceback (most recent call last):
     ...
   ConflictError: Conflict between:
-    File "...", line 3:
+    File "...", line 2:
       @DiscriminatorsApp.foo('a', ['b', 'c'])
-    File "...", line 7
+    File "...", line 6
       @DiscriminatorsApp.foo('b', [])
 
 Composite actions
@@ -994,16 +993,18 @@ We can also filter the query for attributes of the action:
   >>> list(q.filter(name='a')(MyApp))
   [(<PluginAction object ...>, <function f ...>)]
 
-Sometimes the attribute on the action is not the same as the name
-you may want to use in the filter. You can use :attr:`Action.filter_name`
-to create a mapping to the correct attribute.
+Sometimes the attribute on the action is not the same as the name you
+may want to use in the filter. You can use
+:attr:`dectate.Action.filter_name` to create a mapping to the correct
+attribute.
 
 By default the filter does an equality comparison. You can define your
 own comparison function for an attribute using
-:attr:`Action.filter_compare`.
+:attr:`dectate.Action.filter_compare`.
 
 If you want to allow a query on a :class:`Composite` action you need
-to give it some help by defining :attr:`Composite.query_classes`.
+to give it some help by defining
+:attr:`dectate.Composite.query_classes`.
 
 query tool
 ----------
@@ -1077,6 +1078,11 @@ case::
 You need to give ``--app`` a dotted name of the :class:`dectate.App`
 subclass to query. You can repeat the ``--app`` option to query
 multiple apps.
+
+Not all things you would wish to query on are string attributes.  You
+can provide a conversion function that takes the string input and
+converts it to the underlying object you want to compare to using
+:attr:`dectate.Action.filter_convert`.
 
 A working example is in ``scenarios/query`` of the Dectate project.
 

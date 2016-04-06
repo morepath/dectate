@@ -339,6 +339,14 @@ class Action(object):
     application uses this information to parse filter input into
     actual objects. If omitted it defaults to passing through the
     string unchanged.
+
+    A conversion function takes a string as input and outputs a Python
+    object. The conversion function may raise ``ValueError`` if the
+    conversion failed.
+
+    A useful conversion function is provided that can be used to refer
+    to an object in a module using a dotted name:
+    :func:`convert_dotted_name`.
     """
 
     # the directive that was used gets stored on the instance
@@ -482,6 +490,14 @@ class Composite(object):
     application uses this information to parse filter input into
     actual objects. If omitted it defaults to passing through the
     string unchanged.
+
+    A conversion function takes a string as input and outputs a Python
+    object. The conversion function may raise ``ValueError`` if the
+    conversion failed.
+
+    A useful conversion function is provided that can be used to refer
+    to an object in a module using a dotted name:
+    :func:`convert_dotted_name`.
     """
 
     # this is here to make update_wrapper work even when an __init__

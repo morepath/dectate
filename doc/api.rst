@@ -22,6 +22,8 @@ API
 
 .. autofunction:: query_tool
 
+.. autofunction:: convert_dotted_name
+
 .. autoclass:: CodeInfo
   :members:
 
