@@ -504,7 +504,7 @@ We have now ensured that ``BarAction`` actions are performed after
    dectate.commit(DependsApp)
 
 We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
-``b``::
+``b``:
 
 .. doctest::
 
