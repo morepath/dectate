@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import argparse
 import inspect
-from .query import Query
+from .query import Query, get_action_class
+from .error import QueryError
 from .app import App
 from .compat import text_type
 
@@ -78,15 +79,10 @@ def query_tool_output(app_classes, directive, filter_entries):
 
 
 def parse_directive(app_class, directive_name):
-    directive_method = getattr(app_class, directive_name, None)
-    if directive_method is None:
-        raise ToolError("No directive exists on %r with name: %s" %
-                        (app_class, directive_name))
-    action_class = getattr(directive_method, 'action_factory', None)
-    if action_class is None:
-        raise ToolError("%r on %r is not a directive" %
-                        (directive_name, app_class))
-    return action_class
+    try:
+        return get_action_class(app_class, directive_name)
+    except QueryError as e:
+        raise ToolError(text_type(e))
 
 
 def parse_app_class(s):

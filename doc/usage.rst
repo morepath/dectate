@@ -975,7 +975,7 @@ Here is an example of a query for all the plugin actions on ``MyApp``:
 
 .. testcode::
 
-  q = dectate.Query(PluginAction)
+  q = dectate.Query('plugin')
 
 We can now run the query:
 

@@ -41,6 +41,43 @@ def test_query():
     ]
 
 
+def test_query_directive_name():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        config = {
+            'registry': list
+        }
+
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self, registry):
+            return self.name
+
+        def perform(self, obj, registry):
+            registry.append((self.name, obj))
+
+    @MyApp.foo('a')
+    def f():
+        pass
+
+    @MyApp.foo('b')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query('foo').attrs('name')
+
+    assert list(q(MyApp)) == [
+        {'name': 'a'},
+        {'name': 'b'}
+    ]
+
+
 def test_multi_action_query():
     class MyApp(App):
         pass
