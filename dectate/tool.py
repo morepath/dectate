@@ -4,6 +4,7 @@ import argparse
 import inspect
 from .query import Query, execute
 from .app import App
+from .compat import text_type
 
 
 class ToolError(Exception):
@@ -23,22 +24,30 @@ def querytool(directive_app_class, app_classes):
     except ToolError as e:
         parser.error(e.value)
 
-    filter_kw = parse_filter(action_class, query)
+    try:
+        filter_kw = parse_filter(action_class, query)
+    except ToolError as e:
+        parser.error(e.value)
 
     if args.app:
         app_classes = args.app
 
+    for line in querytool_output(app_classes, action_class, filter_kw):
+        print(line)
+
+
+def querytool_output(app_classes, action_class, filter_kw):
     query = Query(action_class).filter(**filter_kw)
 
     for app_class in app_classes:
-        print("App: %r" % app_class)
+        yield "App: %r" % app_class
         for action, obj in execute(app_class, query):
             if action.directive is None:
                 continue  # XXX handle this case
-            print(action.directive.code_info.filelineno())
-            print(action.directive.code_info.sourceline)
-            print()
-        print()
+            yield action.directive.code_info.filelineno()
+            yield action.directive.code_info.sourceline
+            yield ""
+        yield ""
 
 
 def parse_directive(app_class, directive_name):
@@ -68,15 +77,30 @@ def parse_app_class(s):
     return app_class
 
 
+def convert_default(s):
+    return s
+
+
+def convert_dotted_name(s):
+    try:
+        return resolve_dotted_name(s)
+    except ImportError:
+        raise ToolError("Cannot resolve dotted name: %s" % s)
+
+
 def parse_filter(action_class, entries):
+    filter_convert = action_class.filter_convert
+
     result = {}
 
     for entry in entries:
         name, value = entry.split("=")
         name = name.strip()
-        value = value.strip()
-        result[name] = value
-
+        parse = filter_convert.get(name, convert_default)
+        try:
+            result[name] = parse(value.strip())
+        except ValueError as e:
+            raise ToolError(text_type(e))
     return result
 
 

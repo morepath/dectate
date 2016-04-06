@@ -329,6 +329,15 @@ class Action(object):
     The default filter compare is an equality comparison.
     """
 
+    filter_convert = {}
+    """Map of names to convert functions.
+
+    The query tool that can be generated for a Dectate-based
+    application uses this information to parse filter input into
+    actual objects. If omitted it defaults to passing through the
+    string unchanged.
+    """
+
     # the directive that was used gets stored on the instance
     directive = None
 
@@ -461,6 +470,15 @@ class Composite(object):
     (the default) the query system refuses to query the
     composite. Note that if actions of the same action class can also
     be generated in another way they are in the same query result.
+    """
+
+    filter_convert = {}
+    """Map of names to convert functions.
+
+    The query tool that can be generated for a Dectate-based
+    application uses this information to parse filter input into
+    actual objects. If omitted it defaults to passing through the
+    string unchanged.
     """
 
     # this is here to make update_wrapper work even when an __init__
