@@ -8,6 +8,8 @@ CHANGES
 
 - Expose `convert_dotted_name` and document it.
 
+- Implement new `convert_bool`.
+
 0.6 (2016-04-06)
 ================
 

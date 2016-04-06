@@ -122,6 +122,19 @@ def convert_dotted_name(s):
         raise ToolError("Cannot resolve dotted name: %s" % s)
 
 
+def convert_bool(s):
+    """Convert input string to boolean.
+
+    Input string must either be ``True`` or ``False``.
+    """
+    if s == 'True':
+        return True
+    elif s == 'False':
+        return False
+    else:
+        raise ValueError("Cannot convert bool: %r" % s)
+
+
 def parse_filter(action_class, entries):
     filter_convert = action_class.filter_convert
 

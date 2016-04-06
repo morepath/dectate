@@ -24,6 +24,8 @@ API
 
 .. autofunction:: convert_dotted_name
 
+.. autofunction:: convert_bool
+
 .. autoclass:: CodeInfo
   :members:
 

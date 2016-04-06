@@ -4,7 +4,8 @@ from argparse import ArgumentTypeError
 from dectate.config import Action, commit
 from dectate.app import App
 from dectate.tool import (parse_app_class, parse_directive, parse_filter,
-                          convert_dotted_name, query_tool_output, ToolError)
+                          convert_dotted_name, convert_bool,
+                          query_tool_output, ToolError)
 
 
 def test_parse_app_class_main():
@@ -157,3 +158,10 @@ def test_query_tool_uncommitted():
 
     with pytest.raises(ToolError):
         list(query_tool_output([MyApp], 'foo', ['name=a']))
+
+
+def test_convert_bool():
+    assert convert_bool('True')
+    assert not convert_bool('False')
+    with pytest.raises(ValueError):
+        convert_bool('flurb')
