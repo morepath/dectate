@@ -657,7 +657,7 @@ using ``before`` (:meth:`dectate.Action.before`) and ``after``
       pass
 
 This executes ``before`` just before ``a`` and ``b`` are configured,
-and then executes ``after``::
+and then executes ``after``:
 
 .. doctest::
 
