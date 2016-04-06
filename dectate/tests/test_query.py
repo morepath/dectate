@@ -87,7 +87,7 @@ def test_multi_action_query():
 
     q = Query(FooAction, BarAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q))) == [
+    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -444,7 +444,7 @@ def test_multi_query_on_group_class_action():
 
     q = Query(FooAction, BarAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q))) == [
+    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -626,7 +626,7 @@ def test_nested_composite_action():
 
     q = Query(CompositeAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q))) == [
+    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
         {'name': 'a0'},
         {'name': 'a1'},
         {'name': 'b0'},
