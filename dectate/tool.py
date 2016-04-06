@@ -114,7 +114,12 @@ def convert_dotted_name(s):
     Takes a dotted name: ``pkg.module.attr`` gets ``attr``
     from module ``module`` which is in package ``pkg``.
 
+    To refer to builtin objects, such as ``int`` or ``object``, prefix
+    with ``__builtin__.``, so ``__builtin__.int`` or
+    ``__builtin__.object``.
+
     Raises ``ValueError`` if it cannot be imported.
+
     """
     try:
         return resolve_dotted_name(s)

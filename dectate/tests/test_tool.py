@@ -165,3 +165,8 @@ def test_convert_bool():
     assert not convert_bool('False')
     with pytest.raises(ValueError):
         convert_bool('flurb')
+
+
+def test_convert_dotted_name_builtin():
+    assert convert_dotted_name('__builtin__.int') is int
+    assert convert_dotted_name('__builtin__.object') is object
