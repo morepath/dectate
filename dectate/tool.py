@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
-from .query import Query, execute
+from .query import Query
 from .app import App
 from .compat import text_type
 
@@ -43,7 +43,7 @@ def querytool_output(app_classes, directive, filter_entries):
         filter_kw = parse_filter(action_class, filter_entries)
         query = Query(action_class).filter(**filter_kw)
 
-        actions = list(execute(app_class, query))
+        actions = list(query(app_class))
 
         if not actions:
             yield "  Nothing found"

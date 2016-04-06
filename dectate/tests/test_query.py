@@ -1,7 +1,7 @@
 import pytest
 
 from dectate import (
-    Query, execute, App, Action, Composite, commit, QueryError)
+    Query, App, Action, Composite, commit, QueryError)
 
 
 def test_query():
@@ -35,7 +35,7 @@ def test_query():
 
     q = Query(FooAction).attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert list(q(MyApp)) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -87,7 +87,7 @@ def test_multi_action_query():
 
     q = Query(FooAction, BarAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
+    assert sorted(list(q(MyApp)), key=lambda d: d['name']) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -124,7 +124,7 @@ def test_filter():
 
     q = Query(FooAction).filter(name='a').attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert list(q(MyApp)) == [
         {'name': 'a'},
     ]
 
@@ -179,10 +179,10 @@ def test_filter_multiple_fields():
 
     q = Query(FooAction)
 
-    assert list(execute(MyApp, q.filter(model=Alpha, name='a').obj())) == [f]
-    assert list(execute(MyApp, q.filter(model=Alpha, name='b').obj())) == [g]
-    assert list(execute(MyApp, q.filter(model=Beta, name='a').obj())) == [h]
-    assert list(execute(MyApp, q.filter(model=Beta, name='b').obj())) == [i]
+    assert list(q.filter(model=Alpha, name='a').obj()(MyApp)) == [f]
+    assert list(q.filter(model=Alpha, name='b').obj()(MyApp)) == [g]
+    assert list(q.filter(model=Beta, name='a').obj()(MyApp)) == [h]
+    assert list(q.filter(model=Beta, name='b').obj()(MyApp)) == [i]
 
 
 def test_filter_not_found():
@@ -216,7 +216,7 @@ def test_filter_not_found():
 
     q = Query(FooAction).filter(unknown='a').attrs('name')
 
-    assert list(execute(MyApp, q)) == []
+    assert list(q(MyApp)) == []
 
 
 def test_filter_different_attribute_name():
@@ -254,7 +254,7 @@ def test_filter_different_attribute_name():
 
     q = Query(FooAction).filter(name='a').attrs('name')
 
-    assert list(execute(MyApp, q)) == [{'name': 'a'}]
+    assert list(q(MyApp)) == [{'name': 'a'}]
 
 
 def test_filter_class():
@@ -310,21 +310,13 @@ def test_filter_class():
 
     commit(MyApp)
 
-    assert list(execute(
-        MyApp,
-        Query(ViewAction).filter(model=Alpha).obj())) == [f]
+    assert list(Query(ViewAction).filter(model=Alpha).obj()(MyApp)) == [f]
 
-    assert list(execute(
-        MyApp,
-        Query(ViewAction).filter(model=Beta).obj())) == [g, h, i]
+    assert list(Query(ViewAction).filter(model=Beta).obj()(MyApp)) == [g, h, i]
 
-    assert list(execute(
-        MyApp,
-        Query(ViewAction).filter(model=Gamma).obj())) == [h, i]
+    assert list(Query(ViewAction).filter(model=Gamma).obj()(MyApp)) == [h, i]
 
-    assert list(execute(
-        MyApp,
-        Query(ViewAction).filter(model=Delta).obj())) == [i]
+    assert list(Query(ViewAction).filter(model=Delta).obj()(MyApp)) == [i]
 
 
 def test_query_group_class():
@@ -362,7 +354,7 @@ def test_query_group_class():
 
     q = Query(FooAction).attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert list(q(MyApp)) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -403,7 +395,7 @@ def test_query_on_group_class_action():
 
     q = Query(BarAction).attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert list(q(MyApp)) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -444,7 +436,7 @@ def test_multi_query_on_group_class_action():
 
     q = Query(FooAction, BarAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
+    assert sorted(list(q(MyApp)), key=lambda d: d['name']) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -484,7 +476,7 @@ def test_inheritance():
 
     q = Query(FooAction).attrs('name')
 
-    assert list(execute(SubApp, q)) == [
+    assert list(q(SubApp)) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -529,7 +521,7 @@ def test_composite_action():
 
     q = Query(CompositeAction).attrs('name')
 
-    assert list(execute(MyApp, q)) == [
+    assert list(q(MyApp)) == [
         {'name': 'a'},
         {'name': 'b'}
     ]
@@ -571,7 +563,7 @@ def test_composite_action_without_query_classes():
     q = Query(CompositeAction).attrs('name')
 
     with pytest.raises(QueryError):
-        list(execute(MyApp, q))
+        list(q(MyApp))
 
 
 def test_nested_composite_action():
@@ -626,7 +618,7 @@ def test_nested_composite_action():
 
     q = Query(CompositeAction).attrs('name')
 
-    assert sorted(list(execute(MyApp, q)), key=lambda d: d['name']) == [
+    assert sorted(list(q(MyApp)), key=lambda d: d['name']) == [
         {'name': 'a0'},
         {'name': 'a1'},
         {'name': 'b0'},

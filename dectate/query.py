@@ -2,12 +2,12 @@ from .config import Composite
 from .error import QueryError
 
 
-def execute(app_class, query):
-    configurable = app_class.dectate
-    return query(configurable)
+class Callable(object):
+    def __call__(self, app_class):
+        return self.execute(app_class.dectate)
 
 
-class Base(object):
+class Base(Callable):
     def filter(self, **kw):
         return Filter(self, **kw)
 
@@ -22,7 +22,7 @@ class Query(Base):
     def __init__(self, *action_classes):
         self.action_classes = action_classes
 
-    def __call__(self, configurable):
+    def execute(self, configurable):
         return query_action_classes(configurable, self.action_classes)
 
 
@@ -69,8 +69,8 @@ class Filter(Base):
         self.query = query
         self.kw = kw
 
-    def __call__(self, configurable):
-        for action, obj in self.query(configurable):
+    def execute(self, configurable):
+        for action, obj in self.query.execute(configurable):
             for name, value in self.kw.items():
                 actual_name = action.filter_name.get(name, name)
                 compared = getattr(action, actual_name, NOT_FOUND)
@@ -82,13 +82,13 @@ class Filter(Base):
                 yield action, obj
 
 
-class Attrs(object):
+class Attrs(Callable):
     def __init__(self, query, names):
         self.query = query
         self.names = names
 
-    def __call__(self, configurable):
-        for action, obj in self.query(configurable):
+    def execute(self, configurable):
+        for action, obj in self.query.execute(configurable):
             attrs = {}
             for name in self.names:
                 actual_name = action.filter_name.get(name, name)
@@ -96,10 +96,10 @@ class Attrs(object):
             yield attrs
 
 
-class Obj(object):
+class Obj(Callable):
     def __init__(self, query):
         self.query = query
 
-    def __call__(self, configurable):
-        for action, obj in self.query(configurable):
+    def execute(self, configurable):
+        for action, obj in self.query.execute(configurable):
             yield obj
