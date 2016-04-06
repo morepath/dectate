@@ -4,21 +4,65 @@ from .error import QueryError
 
 class Callable(object):
     def __call__(self, app_class):
+        """Execute the query against an app class.
+
+        :param app_class: a :class:`App` subclass to execute the query
+        against.
+        :return: iterable of ``(action, obj)`, where ``action`` is a
+        :class:`Action` instance and `obj` is the function or class
+        that was decorated.
+        """
         return self.execute(app_class.dectate)
 
 
 class Base(Callable):
     def filter(self, **kw):
+        """Filter this query by keyword arguments.
+
+        The keyword arguments are matched with attributes on the
+        action. :attr:`Action.filter_name` is used to map keyword name
+        to attribute name, by default they are the same.
+
+        By default the keyword argument values are matched by equality,
+        but you can override this using :attr:`Action.filter_compare`.
+
+        Can be chained again with a new ``filter``.
+
+        :param ``**kw``: keyword arguments to match against.
+        :return: iterable of ``(action, obj)``.
+        """
         return Filter(self, **kw)
 
     def attrs(self, *names):
+        """Extract attributes from resulting actions.
+
+        The list of attribute names indicates which keys to include
+        in the dictionary. Obeys :attr:`Action.filter_name`.
+
+        :param: ``*names``: list of names to extract.
+        :return: iterable of dictionaries.
+        """
         return Attrs(self, names)
 
     def obj(self):
+        """Get objects from results.
+
+        Throws away actions in the results and return an iterable of objects.
+
+        :return: iterable of decorated objects.
+        """
         return Obj(self)
 
 
 class Query(Base):
+    """An object representing a query.
+
+    A query can be chained with :meth:`Query.filter`, :meth:`Query.attrs`,
+    :meth:`Query.obj`.
+
+    :param: ``*action_classes``: one or more action classes to query for.
+      Can be instances of :class:`Action` or :class:`Composite`.
+    """
     def __init__(self, *action_classes):
         self.action_classes = action_classes
 

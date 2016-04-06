@@ -965,7 +965,9 @@ If you want to override the name of the log you can set
 querying
 --------
 
-Dectate keeps a database of committed actions that can be queried.
+Dectate keeps a database of committed actions that can be queried by
+using :class:`dectate.Query`.
+
 Here is an example of a query for all the plugin actions on ``MyApp``:
 
 .. testcode::
@@ -989,7 +991,7 @@ We can also filter the query for attributes of the action:
   [(<PluginAction object ...>, <function f ...>)]
 
 Sometimes the attribute on the action is not the same as the name
-you may want to use in the filter. You can use :attr:`Action.filter_names`
+you may want to use in the filter. You can use :attr:`Action.filter_name`
 to create a mapping to the correct attribute.
 
 By default the filter does an equality comparison. You can define your
@@ -1012,10 +1014,10 @@ need to configure it for your application. For instance, in the module
       dectate.commit(SomeApp)
       dectate.query_tool([SomeApp])
 
-In this function you should commit any :class:`App` subclasses your
-application normally uses, and then provide a list of them to
-:func:`query_tool`. This is the list of applications that is queried
-by default if you don't specify ``--app``.
+In this function you should commit any :class:`dectate.App` subclasses
+your application normally uses, and then provide a list of them to
+:func:`dectate.query_tool`. This is the list of applications that is
+queried by default if you don't specify ``--app``.
 
 Then in ``setup.py`` of your project::
 
@@ -1068,8 +1070,9 @@ case::
     File ".../query/b.py", line 4
     @App.foo(name='alpha')
 
-You need to give ``--app`` a dotted name of the :class:`App` subclass
-to query. You can repeat the ``--app`` option to query multiple apps.
+You need to give ``--app`` a dotted name of the :class:`dectate.App`
+subclass to query. You can repeat the ``--app`` option to query
+multiple apps.
 
 A working example is in ``scenarios/query`` of the Dectate project.
 

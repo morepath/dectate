@@ -12,6 +12,26 @@ class ToolError(Exception):
 
 
 def query_tool(app_classes):
+    """Command-line query tool for dectate.
+
+    Uses command-line arguments to do the query and prints the results.
+
+    usage: decq [-h] [--app APP] directive <filter>
+
+    Query all directives named ``foo`` in given app classes::
+
+      $ decq foo
+
+    Query directives ``foo`` with ``name`` attribute set to ``alpha``::
+
+      $ decq foo name=alpha
+
+    Query directives ``foo`` specifically in given app::
+
+      $ decq --app=myproject.App foo
+
+    :param app_classes: a list of :class:`App` subclasses to query by default.
+    """
     parser = argparse.ArgumentParser(description="Query Dectate actions")
     parser.add_argument('--app', help="Dotted name for App subclass.",
                         type=parse_app_class, action='append')

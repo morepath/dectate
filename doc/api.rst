@@ -16,6 +16,12 @@ API
 .. autoclass:: Composite
   :members:
 
+.. autoclass:: Query
+  :inherited-members:
+  :members:
+
+.. autofunction:: query_tool
+
 .. autoclass:: CodeInfo
   :members:
 
