@@ -21,7 +21,8 @@ else:
 # see:
 # https://github.com/pallets/flask/pull/1539
 #
-# and the following for a description of the problem that previous versions had:
+# and the following for a description of the problem that previous
+# versions had:
 #
 # https://bitbucket.org/gutworth/six/issue/83/with_meta-and-stack-frame-issues
 # https://github.com/PythonCharmers/python-future/issues/75

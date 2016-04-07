@@ -16,6 +16,8 @@ CHANGES
 - A `query_app` function which is especially helpful when writing tests
   for the query tool -- it takes unconverted filter arguments.
 
+- Use newer version of ``with_metaclass`` from six.
+
 0.6 (2016-04-06)
 ================
 
