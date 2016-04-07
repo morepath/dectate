@@ -5,6 +5,13 @@ from .error import (
 from .toposort import topological_sort
 
 
+class NotFound(object):
+    pass
+
+
+NOT_FOUND = NotFound()
+"""Sentinel value returned if filter value cannot be found on action."""
+
 order_count = 0
 
 
@@ -318,6 +325,25 @@ class Action(object):
     same as the attribute name.
     """
 
+    def filter_get_value(self, name):
+        """A function to get the filter value.
+
+        Takes two arguments, action and name. Should return the
+        value on the filter.
+
+        This function is called if the name cannot be determined
+        by looking for the attribute directly using filter_name.
+
+        The function should return :attr:`NOT_FOUND` if no value with that
+        name can be found.
+
+        For example if the filter values are stored on ``key_dict``::
+
+          def filter_get_value(self, name):
+              return self.key_dict.get(name, dectate.NOT_FOUND)
+        """
+        return NOT_FOUND
+
     filter_compare = {}
     """Map of names used in query filter to comparison functions.
 
@@ -376,6 +402,20 @@ class Action(object):
         if self.directive is None:
             return
         self.directive.log(configurable, obj)
+
+    def get_value_for_filter(self, name):
+        """Get value, takes into account filter_name, filter_get_value.
+
+        Used by the query system. You can override it if your action
+        has a different way storing values altogether.
+        """
+        actual_name = self.filter_name.get(name, name)
+        value = getattr(self, actual_name, NOT_FOUND)
+        if value is not NOT_FOUND:
+            return value
+        if self.filter_get_value is None:
+            return value
+        return self.filter_get_value(name)
 
     @classmethod
     def _get_config_kw(cls, configurable):

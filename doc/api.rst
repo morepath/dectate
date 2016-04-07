@@ -28,6 +28,8 @@ API
 
 .. autofunction:: convert_bool
 
+.. autodata:: NOT_FOUND
+
 .. autoclass:: CodeInfo
   :members:
 

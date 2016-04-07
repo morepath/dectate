@@ -22,7 +22,9 @@ class Base(Callable):
 
         The keyword arguments are matched with attributes on the
         action. :attr:`Action.filter_name` is used to map keyword name
-        to attribute name, by default they are the same.
+        to attribute name, by default they are the
+        same. :meth:`Action.filter_get_value` can also be implemented
+        for more complicated attribute access as a fallback.
 
         By default the keyword argument values are matched by equality,
         but you can override this using :attr:`Action.filter_compare`.
@@ -31,17 +33,20 @@ class Base(Callable):
 
         :param ``**kw``: keyword arguments to match against.
         :return: iterable of ``(action, obj)``.
+
         """
         return Filter(self, **kw)
 
     def attrs(self, *names):
         """Extract attributes from resulting actions.
 
-        The list of attribute names indicates which keys to include
-        in the dictionary. Obeys :attr:`Action.filter_name`.
+        The list of attribute names indicates which keys to include in
+        the dictionary. Obeys :attr:`Action.filter_name` and
+        :attr:`Action.filter_get_value`.
 
         :param: ``*names``: list of names to extract.
         :return: iterable of dictionaries.
+
         """
         return Attrs(self, names)
 
@@ -121,13 +126,6 @@ def get_action_class(app_class, directive_name):
     return action_class
 
 
-class NotFound(object):
-    pass
-
-
-NOT_FOUND = NotFound()
-
-
 def compare_equality(compared, value):
     return compared == value
 
@@ -140,8 +138,7 @@ class Filter(Base):
     def execute(self, configurable):
         for action, obj in self.query.execute(configurable):
             for name, value in self.kw.items():
-                actual_name = action.filter_name.get(name, name)
-                compared = getattr(action, actual_name, NOT_FOUND)
+                compared = action.get_value_for_filter(name)
                 compare_func = action.filter_compare.get(
                     name, compare_equality)
                 if not compare_func(compared, value):
@@ -159,8 +156,7 @@ class Attrs(Callable):
         for action, obj in self.query.execute(configurable):
             attrs = {}
             for name in self.names:
-                actual_name = action.filter_name.get(name, name)
-                attrs[name] = getattr(action, actual_name, NOT_FOUND)
+                attrs[name] = action.get_value_for_filter(name)
             yield attrs
 
 

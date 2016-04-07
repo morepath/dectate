@@ -1,7 +1,7 @@
 import pytest
 
 from dectate import (
-    Query, App, Action, Composite, commit, QueryError)
+    Query, App, Action, Composite, commit, QueryError, NOT_FOUND)
 
 
 def test_query():
@@ -292,6 +292,116 @@ def test_filter_different_attribute_name():
     q = Query(FooAction).filter(name='a').attrs('name')
 
     assert list(q(MyApp)) == [{'name': 'a'}]
+
+
+def test_filter_get_value():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        def filter_get_value(self, name):
+            return self.kw.get(name, NOT_FOUND)
+
+        def __init__(self, **kw):
+            self.kw = kw
+
+        def identifier(self):
+            return tuple(sorted(self.kw.items()))
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo(x='a', y='b')
+    def f():
+        pass
+
+    @MyApp.foo(x='a', y='c')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction).filter(x='a').attrs('x', 'y')
+
+    assert list(q(MyApp)) == [{'x': 'a', 'y': 'b'},
+                              {'x': 'a', 'y': 'c'}]
+
+    q = Query(FooAction).filter(y='b').attrs('x', 'y')
+
+    assert list(q(MyApp)) == [{'x': 'a', 'y': 'b'}]
+
+
+def test_filter_name_and_get_value():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        filter_name = {
+            'name': '_name'
+        }
+
+        def filter_get_value(self, name):
+            return self.kw.get(name, NOT_FOUND)
+
+        def __init__(self, name, **kw):
+            self._name = name
+            self.kw = kw
+
+        def identifier(self):
+            return tuple(sorted(self.kw.items()))
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo(name='hello', x='a', y='b')
+    def f():
+        pass
+
+    @MyApp.foo(name='bye', x='a', y='c')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction).filter(name='hello').attrs('name', 'x', 'y')
+
+    assert list(q(MyApp)) == [{'x': 'a', 'y': 'b', 'name': 'hello'}]
+
+
+def test_filter_get_value_and_default():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        def filter_get_value(self, name):
+            return self.kw.get(name, NOT_FOUND)
+
+        def __init__(self, name, **kw):
+            self.name = name
+            self.kw = kw
+
+        def identifier(self):
+            return tuple(sorted(self.kw.items()))
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo(name='hello', x='a', y='b')
+    def f():
+        pass
+
+    @MyApp.foo(name='bye', x='a', y='c')
+    def g():
+        pass
+
+    commit(MyApp)
+
+    q = Query(FooAction).filter(name='hello').attrs('name', 'x', 'y')
+
+    assert list(q(MyApp)) == [{'x': 'a', 'y': 'b', 'name': 'hello'}]
 
 
 def test_filter_class():
