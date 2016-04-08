@@ -6,4 +6,5 @@ CREDITS
 * Denis Krienbühl (testing and feedback)
 
 * Stefano Taschini (newer with_metaclass)
+
 * Special thanks to CONTACT software.
