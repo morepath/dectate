@@ -125,9 +125,10 @@ def convert_dotted_name(s):
     Takes a dotted name: ``pkg.module.attr`` gets ``attr``
     from module ``module`` which is in package ``pkg``.
 
-    To refer to builtin objects, such as ``int`` or ``object``, prefix
-    with ``__builtin__.``, so ``__builtin__.int`` or
-    ``__builtin__.object``.
+    To refer to builtin objects such as ``int`` or ``object``, in
+    Python 2 prefix with ``__builtin__.``, so ``__builtin__.int`` or
+    ``__builtin__.None``. In Python 3 use ``builtins.`` as the prefix,
+    so ``builtins.int`` and ``builtins.None``.
 
     Raises ``ValueError`` if it cannot be imported.
 

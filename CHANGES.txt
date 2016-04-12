@@ -4,8 +4,7 @@ CHANGES
 0.8 (unreleased)
 ================
 
-- Nothing changed yet.
-
+- Document how to refer to builtins in Python 3.
 
 0.7 (2016-04-11)
 ================
