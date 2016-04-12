@@ -57,7 +57,7 @@ def query_tool(app_classes):
 
 def query_tool_output(app_classes, directive, filters):
     for app_class in app_classes:
-        if not app_class.dectate.commited:
+        if not app_class.is_committed():
             raise ToolError("App %r was not committed." % app_class)
 
         yield "App: %r" % app_class

@@ -1452,3 +1452,14 @@ def test_registry_factory_arguments_depends_complex():
     commit(MyApp)
 
     assert MyApp.config.registry is MyApp.config.predicate_registry.registry
+
+
+def test_is_committed():
+    class MyApp(App):
+        pass
+
+    assert not MyApp.is_committed()
+
+    commit(MyApp)
+
+    assert MyApp.is_committed()

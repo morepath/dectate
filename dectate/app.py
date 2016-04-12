@@ -97,6 +97,12 @@ class App(with_metaclass(AppMeta)):
         cls.dectate.register_action_class(action_class)
         return action_class
 
+    @classmethod
+    def is_committed(cls):
+        """True if this app class was ever committed.
+        """
+        return cls.dectate.committed
+
 
 class DirectiveDirective(object):
     """Implementation of the ``directive`` directive.

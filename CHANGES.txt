@@ -6,6 +6,8 @@ CHANGES
 
 - Document how to refer to builtins in Python 3.
 
+- Expose ``is_committed`` method on ``App`` subclasses.
+
 0.7 (2016-04-11)
 ================
 

@@ -49,7 +49,7 @@ class Configurable(object):
         # directives used with configurable
         self._directives = []
         # have we ever been committed
-        self.commited = False
+        self.committed = False
 
     def register_action_class(self, action_class):
         """Register an action class with this configurable.
@@ -154,7 +154,7 @@ class Configurable(object):
         self.group_actions()
         for action_class in sort_action_classes(self._action_groups.keys()):
             self._action_groups[action_class].execute(self)
-        self.commited = True
+        self.committed = True
 
 
 class ActionGroup(object):
