@@ -7,6 +7,14 @@ from dectate.tool import (parse_app_class, parse_directive, parse_filters,
                           convert_filters,
                           convert_dotted_name, convert_bool,
                           query_tool_output, query_app, ToolError)
+from dectate import compat
+
+
+def builtin_ref(s):
+    if compat.PY3:
+        return 'builtins.%s' % s
+    else:
+        return '__builtin__.%s' % s
 
 
 def test_parse_app_class_main():
@@ -42,14 +50,12 @@ def test_parse_directive_main():
 
 def test_parse_directive_no_attribute():
     from dectate.tests.fixtures import anapp
-    with pytest.raises(ToolError):
-        parse_directive(anapp.AnApp, 'unknown')
+    assert parse_directive(anapp.AnApp, 'unknown') is None
 
 
 def test_parse_directive_not_a_directive():
     from dectate.tests.fixtures import anapp
-    with pytest.raises(ToolError):
-        parse_directive(anapp.AnApp, 'known')
+    assert parse_directive(anapp.AnApp, 'known') is None
 
 
 def test_parse_filters_main():
@@ -217,5 +223,15 @@ def test_convert_bool():
 
 
 def test_convert_dotted_name_builtin():
-    assert convert_dotted_name('__builtin__.int') is int
-    assert convert_dotted_name('__builtin__.object') is object
+    assert convert_dotted_name(builtin_ref('int')) is int
+    assert convert_dotted_name(builtin_ref('object')) is object
+
+
+def test_app_without_directive():
+    class MyApp(App):
+        pass
+
+    commit(MyApp)
+
+    l = list(query_app(MyApp, 'foo', count='1'))
+    assert l == []

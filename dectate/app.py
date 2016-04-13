@@ -4,7 +4,7 @@ import sys
 from .config import Configurable, Directive, commit, create_code_info
 from .compat import with_metaclass
 
-global_configurables = []
+auto_app_classes = []
 
 
 class Config(object):
@@ -28,9 +28,9 @@ class AppMeta(type):
                    if hasattr(base, 'dectate')]
         d['config'] = config = Config()
         d['dectate'] = configurable = Configurable(extends, config)
-        global_configurables.append(configurable)
         result = super(AppMeta, cls).__new__(cls, name, bases, d)
         configurable.app_class = result
+        auto_app_classes.append(result)
         return result
 
 
@@ -41,7 +41,7 @@ def autocommit():
     been imported. You can automatically commit configuration for
     all of them.
     """
-    commit(*global_configurables)
+    commit(*auto_app_classes)
 
 
 class App(with_metaclass(AppMeta)):

@@ -22,6 +22,8 @@ API
 
 .. autofunction:: query_tool
 
+.. autofunction:: auto_query_tool
+
 .. autofunction:: query_app
 
 .. autofunction:: convert_dotted_name

@@ -4,8 +4,15 @@ CHANGES
 0.9 (unreleased)
 ================
 
-- Nothing changed yet.
+- Change the behavior of query_tool so that if it cannot find
+  an action class for the directive name the query result is empty
+  instead of making this an error. This makes ``auto_query_tool``
+  work better.
 
+- Introduce ``auto_query_tool`` which uses the automatically found
+  app classes as the default app classes to query.
+
+- Fix tests that use ``__builtin__`` that were failing on Python 3.
 
 0.8 (2016-04-12)
 ================

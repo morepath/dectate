@@ -4,7 +4,7 @@ import argparse
 import inspect
 from .query import Query, get_action_class
 from .error import QueryError
-from .app import App
+from .app import App, auto_app_classes
 from .compat import text_type
 
 
@@ -55,6 +55,15 @@ def query_tool(app_classes):
         print(line)
 
 
+def auto_query_tool():
+    """Command-line query tool for dectate.
+
+    Like :func:`query_tool`, but automatically uses all found app
+    classes as the default, like :func:`autocommit`.
+    """
+    query_tool(auto_app_classes)
+
+
 def query_tool_output(app_classes, directive, filters):
     for app_class in app_classes:
         if not app_class.is_committed():
@@ -88,16 +97,19 @@ def query_app(app_class, directive, **filters):
     :return: iterable of ``action, obj`` tuples.
     """
     action_class = parse_directive(app_class, directive)
-    filter_kw = convert_filters(action_class, filters)
-    query = Query(action_class).filter(**filter_kw)
+    if action_class is not None:
+        filter_kw = convert_filters(action_class, filters)
+        query = Query(action_class).filter(**filter_kw)
+    else:
+        query = Query()  # empty query
     return query(app_class)
 
 
 def parse_directive(app_class, directive_name):
     try:
         return get_action_class(app_class, directive_name)
-    except QueryError as e:
-        raise ToolError(text_type(e))
+    except QueryError:
+        return None
 
 
 def parse_app_class(s):

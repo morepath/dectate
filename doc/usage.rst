@@ -1016,6 +1016,7 @@ need to configure it for your application. For instance, in the module
   import dectate
 
   def query_tool():
+      # make sure to scan or import everything needed at this point
       dectate.commit(SomeApp)
       dectate.query_tool([SomeApp])
 
@@ -1023,6 +1024,16 @@ In this function you should commit any :class:`dectate.App` subclasses
 your application normally uses, and then provide a list of them to
 :func:`dectate.query_tool`. This is the list of applications that is
 queried by default if you don't specify ``--app``.
+
+You can automate this further by using :func:`dectate.auto_query_tool`,
+which uses the same app classes it found for :func:`dectate.autocommit`::
+
+  import dectate
+
+  def query_tool():
+      # make sure to scan or import everything needed at this point
+      dectate.autocommit)
+      dectate.auto_query_tool()
 
 Then in ``setup.py`` of your project::
 
