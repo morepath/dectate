@@ -1,11 +1,14 @@
 CHANGES
 *******
 
-0.10 (unreleased)
-=================
+0.9.1 (unreleased)
+==================
 
-- Nothing changed yet.
-
+- Fix a subtle bug introduced in the last release. If
+  ``factory_arguments`` were in use with a config name only created in
+  that context, it was not properly cleaned up, which in some cases
+  can make a commit of a subclass get the same config object as that
+  of the base class.
 
 0.9 (2016-04-19)
 ================

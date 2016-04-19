@@ -1360,6 +1360,69 @@ def test_registry_factory_argument_introduces_new_registry():
     assert MyApp.config.my is MyApp.config.other.my
 
 
+def test_registry_factory_argument_introduces_new_registry_subclass():
+    class MyApp(App):
+        pass
+
+    class SubApp(MyApp):
+        pass
+
+    class IsUsedElsewhere(object):
+        poked = False
+
+    class Other(object):
+        factory_arguments = {
+            'my': IsUsedElsewhere
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, other):
+            return self.message
+
+        def perform(self, obj, other):
+            assert not other.my.poked
+            other.my.poked = True
+
+    # @MyApp.directive('bar')
+    # class BarDirective(Action):
+    #     depends = [MyDirective]
+
+    #     config = {
+    #         'elsewhere': IsUsedElsewhere
+    #     }
+
+    #     def __init__(self):
+    #         pass
+
+    #     def identifier(self, elsewhere):
+    #         return ()
+
+    #     def perform(self, obj, elsewhere):
+    #         pass
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.other.my.poked
+    assert MyApp.config.my is MyApp.config.other.my
+
+    commit(SubApp)
+
+
 def test_registry_multiple_factory_arguments():
     class MyApp(App):
         pass

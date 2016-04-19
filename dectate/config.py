@@ -858,9 +858,15 @@ def delete_config(action, configurable):
     """Delete config objects on the ``config`` attribute.
     """
     config = configurable.config
-    for name in action.config.keys():
+    for name, factory in action.config.items():
         if hasattr(config, name):
             delattr(config, name)
+        factory_arguments = getattr(factory, 'factory_arguments', None)
+        if factory_arguments is None:
+            continue
+        for name in factory_arguments.keys():
+            if hasattr(config, name):
+                delattr(config, name)
 
 
 def dotted_name(cls):
