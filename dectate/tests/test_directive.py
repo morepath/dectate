@@ -1394,23 +1394,6 @@ def test_registry_factory_argument_introduces_new_registry_subclass():
             assert not other.my.poked
             other.my.poked = True
 
-    # @MyApp.directive('bar')
-    # class BarDirective(Action):
-    #     depends = [MyDirective]
-
-    #     config = {
-    #         'elsewhere': IsUsedElsewhere
-    #     }
-
-    #     def __init__(self):
-    #         pass
-
-    #     def identifier(self, elsewhere):
-    #         return ()
-
-    #     def perform(self, obj, elsewhere):
-    #         pass
-
     @MyApp.foo('hello')
     def f():
         pass
