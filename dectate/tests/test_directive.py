@@ -1323,7 +1323,44 @@ def test_registry_single_factory_argument():
     assert MyApp.config.other.my == [('hello', f)]
 
 
-def test_registry_mutiple_factory_arguments():
+def test_registry_factory_argument_introduces_new_registry():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, other):
+            return self.message
+
+        def perform(self, obj, other):
+            other.my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.other.my == [('hello', f)]
+    assert MyApp.config.my is MyApp.config.other.my
+
+
+def test_registry_multiple_factory_arguments():
     class MyApp(App):
         pass
 

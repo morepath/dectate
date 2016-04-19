@@ -839,18 +839,16 @@ def setup_config(action, configurable):
     """
     # sort the items in order of creation
     items = topological_sort(action.config.items(), factory_key)
+    # this introduces all dependencies, including those only
+    # mentioned in factory_arguments. we want to create those too
+    # if they weren't already created
 
     config = configurable.config
     for name, factory in items:
-        if name not in action.config:
-            # topological sort introduces all dependencies, but
-            # we only want to construct those we have in actual config
-            continue
         # if we already have this set up, we don't want to create
         # it anew
         configured = getattr(config, name, None)
         if configured is not None:
-            setattr(config, name, configured)
             continue
         kw = get_factory_arguments(action, config, factory)
         setattr(config, name, factory(**kw))

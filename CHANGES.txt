@@ -14,6 +14,9 @@ CHANGES
 
 - Fix tests that use ``__builtin__`` that were failing on Python 3.
 
+- Dependencies only listed in ``factory_arguments`` are also created
+  during config creation.
+
 0.8 (2016-04-12)
 ================
 
