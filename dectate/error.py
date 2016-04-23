@@ -61,9 +61,11 @@ class DirectiveError(ConfigError):
     pass
 
 
-class TopologicalSortError(Exception):
-    pass
+class TopologicalSortError(ValueError):
+    """Raised if dependencies cannot be sorted topologically.
 
+    This is due to circular dependencies.
+    """
 
 class QueryError(Exception):
     pass
