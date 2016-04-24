@@ -67,5 +67,6 @@ class TopologicalSortError(ValueError):
     This is due to circular dependencies.
     """
 
+
 class QueryError(Exception):
     pass
