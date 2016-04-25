@@ -56,6 +56,8 @@ class Configurable(object):
 
         Called during import time when the :meth:`App.directive` directive
         is executed.
+
+        :param action_class: the :class:`dectate.Action` subclass to register.
         """
         self._action_classes.add(action_class)
 
@@ -63,6 +65,11 @@ class Configurable(object):
         """Register a directive with this configurable.
 
         Called during import time when directives are used.
+
+        :param directive: the directive instance, which contains
+          information about the arguments, line number it was invoked, etc.
+        :param obj: the object the directive was invoked on; typically
+          a function or a class it was invoked on as a decorator.
         """
         self._directives.append((directive, obj))
 
@@ -121,11 +128,13 @@ class Configurable(object):
             d[action_class] = ActionGroup(action_class,
                                           self.action_extends(action_class))
 
-    def setup_config(self, action):
+    def setup_config(self, action_class):
         """Set up the config objects on the ``config`` attribute.
+
+        :param action_class: the action subclass to setup config for.
         """
         # sort the items in order of creation
-        items = topological_sort(action.config.items(), factory_key)
+        items = topological_sort(action_class.config.items(), factory_key)
         # this introduces all dependencies, including those only
         # mentioned in factory_arguments. we want to create those too
         # if they weren't already created
@@ -143,14 +152,16 @@ class Configurable(object):
                             (name, seen[name], factory)))
                 continue
             seen[name] = factory
-            kw = get_factory_arguments(action, config, factory)
+            kw = get_factory_arguments(action_class, config, factory)
             setattr(config, name, factory(**kw))
 
-    def delete_config(self, action):
+    def delete_config(self, action_class):
         """Delete config objects on the ``config`` attribute.
+
+        :param action_class: the action class subclass to delete config for.
         """
         config = self.config
-        for name, factory in action.config.items():
+        for name, factory in action_class.config.items():
             if hasattr(config, name):
                 delattr(config, name)
             factory_arguments = getattr(factory, 'factory_arguments', None)
@@ -177,12 +188,19 @@ class Configurable(object):
             d[action_class].add(action, obj)
 
     def get_action_group(self, action_class):
-        """Return ActionGroup for ``action_class`` or None if not found.
+        """Return ActionGroup for ``action_class`` or ``None`` if not found.
+
+        :param action_class: the action class to find the action group of.
+        :return: an ``ActionGroup`` instance.
         """
         return self._action_groups.get(action_class, None)
 
     def action_extends(self, action_class):
-        """Get ActionGroup for all action classes in ``extends``.
+        """Get ActionGroup for action class in ``extends``.
+
+        :param action_class: the action class
+        :return: list of ``ActionGroup`` instances that this action group
+          extends.
         """
         return [
             configurable._action_groups.get(action_class,
@@ -256,6 +274,8 @@ class ActionGroup(object):
 
     def get_actions(self):
         """Get all actions registered for this action group.
+
+        :return: list of action instances in registration order.
         """
         result = list(self._action_map.values())
         result.sort(key=lambda value: value[0].order or 0)
@@ -373,8 +393,9 @@ class Action(object):
         Takes two arguments, action and name. Should return the
         value on the filter.
 
-        This function is called if the name cannot be determined
-        by looking for the attribute directly using filter_name.
+        This function is called if the name cannot be determined by
+        looking for the attribute directly using
+        :attr:`Action.filter_name`.
 
         The function should return :attr:`NOT_FOUND` if no value with that
         name can be found.
@@ -383,6 +404,9 @@ class Action(object):
 
           def filter_get_value(self, name):
               return self.key_dict.get(name, dectate.NOT_FOUND)
+
+        :param name: the name of the filter.
+        :return: the value to filter on.
         """
         return NOT_FOUND
 
@@ -446,10 +470,13 @@ class Action(object):
         self.directive.log(configurable, obj)
 
     def get_value_for_filter(self, name):
-        """Get value, takes into account filter_name, filter_get_value.
+        """Get value. Takes into account ``filter_name``, ``filter_get_value``
 
         Used by the query system. You can override it if your action
         has a different way storing values altogether.
+
+        :param name: the filter name to get the value for.
+        :return: the value to filter on.
         """
         actual_name = self.filter_name.get(name, name)
         value = getattr(self, actual_name, NOT_FOUND)
@@ -465,6 +492,10 @@ class Action(object):
 
         This dict can then be passed as keyword parameters (using ``**``)
         into the relevant methods such as :meth:`Action.perform`.
+
+        :param configurable: the configurable object to get the config
+          dict for.
+        :return: a dict of config values.
         """
         result = {}
         config = configurable.config
@@ -492,11 +523,12 @@ class Action(object):
 
         :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
+        :return: an immutable value uniquely identifying this action.
         """
         raise NotImplementedError()  # pragma: nocoverage
 
     def discriminators(self, **kw):
-        """Returns a list of immutables to detect conflicts.
+        """Returns an iterable of immutables to detect conflicts.
 
         Can be implemented by the :class:`Action` subclass.
 
@@ -504,6 +536,7 @@ class Action(object):
 
         :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
+        :return: an iterable of immutable values.
         """
         return []
 
@@ -609,6 +642,9 @@ class Composite(object):
         is the object to perform the action with.
 
         Needs to be implemented by the :class:`Composite` subclass.
+
+        :param obj: the obj that the composite action was performed on.
+        :return: iterable of ``action, obj`` tuples.
         """
         raise NotImplementedError
 
@@ -648,6 +684,8 @@ class Directive(object):
 
     def action(self):
         """Get the :class:`Action` instance represented by this directive.
+
+        :return: :class:`dectate.Action` instance.
         """
         try:
             result = self.action_factory(*self.args, **self.kw)
@@ -669,6 +707,9 @@ class Directive(object):
         """Call with function or class to decorate.
 
         The decorated object is returned unchanged.
+
+        :param wrapped: the object decorated, typically function or class.
+        :return: the ``wrapped`` argument.
         """
         self.configurable.register_directive(self, wrapped)
         return wrapped
@@ -853,6 +894,12 @@ def create_code_info(frame):
 
 
 def factory_key(item):
+    """Helper for topological sort of factories.
+
+    :param item: a ``name, factory`` tuple to generate the key for.
+    :return: iterable of ``name, factory`` tuples that factory in item
+      depends on for construction.
+    """
     name, factory = item
     arguments = getattr(factory, 'factory_arguments', None)
     if arguments is None:
@@ -860,7 +907,20 @@ def factory_key(item):
     return arguments.items()
 
 
-def get_factory_arguments(action, config, factory):
+def get_factory_arguments(action_class, config, factory):
+    """Get arguments needed to construct factory.
+
+    Factories can define a ``factory_arguments`` attribute to control
+    what other factories are needed to be passed into it to construct
+    it.
+
+    :param action: the :class:`dectate.Action` subclass this factory needs
+      to build a registry for.
+    :param config: the ``config`` attribute to get the configuration items
+      from.
+    :param factory: the factory that is going to be constructed.
+    :return: a dict with arguments to pass to the factory.
+    """
     arguments = getattr(factory, 'factory_arguments', None)
     if arguments is None:
         return {}
@@ -871,10 +931,17 @@ def get_factory_arguments(action, config, factory):
             raise ConfigError(
                 ("Cannot find factory argument %r for "
                  "factory %r in action class %r") %
-                (name, factory, action))
+                (name, factory, action_class))
         result[name] = getattr(config, name, None)
     return result
 
 
 def dotted_name(cls):
+    """Dotted name for a class.
+
+    Example: ``my.module.MyClass``.
+
+    :param cls: the class to generate a dotted name for.
+    :return: a dotted name to the class.
+    """
     return '%s.%s' % (cls.__module__, cls.__name__)

@@ -75,6 +75,9 @@ class App(with_metaclass(AppMeta)):
         make sure you define them in the same module as where you
         define the :class:`App` subclass that has them.
 
+        :param name: the name of the directive to register.
+        :return: a directive that when called installs the directive
+          method on the class.
         """
         return DirectiveDirective(cls, name)
 
@@ -93,6 +96,9 @@ class App(with_metaclass(AppMeta)):
           @App.private_action_class
           class MyActionClass(dectate.Action):
               ...
+
+        :param action_class: the :class:`dectate.Action` subclass to register.
+        :return: the :class`dectate.Action` class that was registered.
         """
         cls.dectate.register_action_class(action_class)
         return action_class
@@ -108,7 +114,6 @@ class App(with_metaclass(AppMeta)):
         classes.
 
         :return: an iterable of committed classes
-
         """
         commit(cls)
         return [cls]
@@ -116,26 +121,39 @@ class App(with_metaclass(AppMeta)):
     @classmethod
     def is_committed(cls):
         """True if this app class was ever committed.
+
+        :return: bool that is ``True`` when the app was committed before.
         """
         return cls.dectate.committed
 
 
 class DirectiveDirective(object):
     """Implementation of the ``directive`` directive.
+
+    :param cls: the class that this directive is registered on.
+    :param name: the name of the directive.
     """
     def __init__(self, cls, name):
         self.cls = cls
         self.name = name
 
     def __call__(self, action_factory):
+        """Register the directive with app class.
+
+        Creates a class method on the app class for the directive.
+
+        :param action_factory: the :class:`dectate.Action` or
+          :class:`dectate.Composite` subclass to register.
+        :return: the action or composite subclass that was registered.
+        """
         directive_name = self.name
 
-        def method(self, *args, **kw):
+        def method(cls, *args, **kw):
             frame = sys._getframe(1)
             code_info = create_code_info(frame)
             logger = logging.getLogger('%s.%s' %
-                                       (self.logger_name, directive_name))
-            return Directive(self, action_factory, args, kw,
+                                       (cls.logger_name, directive_name))
+            return Directive(cls, action_factory, args, kw,
                              code_info, directive_name, logger)
         method.action_factory = action_factory  # to help sphinxext
         update_wrapper(method, action_factory.__init__)
