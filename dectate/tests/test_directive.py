@@ -1,6 +1,6 @@
 from dectate.app import App, autocommit
 from dectate.config import commit, Action, Composite
-from dectate.error import ConflictError
+from dectate.error import ConflictError, ConfigError
 
 import pytest
 
@@ -402,6 +402,7 @@ def test_discriminator_no_conflict():
     commit(MyApp)
 
     assert MyApp.config.my == [('f', f), ('g', g)]
+
 
 def test_discriminator_different_group_no_conflict():
     class MyApp(App):
@@ -1575,3 +1576,113 @@ def test_is_committed():
     commit(MyApp)
 
     assert MyApp.is_committed()
+
+
+def test_registry_config_inconsistent():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    @MyApp.directive('bar')
+    class MyDirective(Action):
+        config = {
+            'my': dict
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my[self.message] = obj
+
+    with pytest.raises(ConfigError):
+        commit(MyApp)
+
+
+def test_registry_factory_argument_inconsistent():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    class YetAnother(object):
+        factory_arguments = {
+            'my': dict
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other,
+            'yetanother': YetAnother
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, other, yetanother):
+            return self.message
+
+        def perform(self, obj, other, yetanother):
+            pass
+
+    with pytest.raises(ConfigError):
+        commit(MyApp)
+
+
+def test_registry_factory_argument_and_config_inconsistent():
+    class MyApp(App):
+        pass
+
+    class Other(object):
+        factory_arguments = {
+            'my': dict
+        }
+
+        def __init__(self, my):
+            self.my = my
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list,
+            'other': Other
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my, other):
+            return self.message
+
+        def perform(self, obj, my, other):
+            my.append((self.message, obj))
+
+    with pytest.raises(ConfigError):
+        commit(MyApp)

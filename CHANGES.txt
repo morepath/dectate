@@ -8,6 +8,11 @@ CHANGES
 
 - A ``commit`` class method on ``App`` classes.
 
+- Report on inconsistent uses of factories between different directives'
+  ``config`` settings as well as ``factory_arguments`` for registries. This
+  prevents bugs where a new directive introduces the wrong factory for
+  an existing directive.
+
 0.9.1 (2016-04-19)
 ==================
 

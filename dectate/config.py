@@ -109,14 +109,56 @@ class Configurable(object):
 
         # delete any old configuration in case we run this a second time
         for action_class in sort_action_classes(action_classes):
-            delete_config(action_class, self)
+            self.delete_config(action_class)
 
         # now we create ActionGroup objects for each action class group
         self._action_groups = d = {}
+        # and we track what config factories we've seen for consistency
+        # checking
+        self._factories_seen = {}
         for action_class in sort_action_classes(action_classes):
-            setup_config(action_class, self)
+            self.setup_config(action_class)
             d[action_class] = ActionGroup(action_class,
                                           self.action_extends(action_class))
+
+    def setup_config(self, action):
+        """Set up the config objects on the ``config`` attribute.
+        """
+        # sort the items in order of creation
+        items = topological_sort(action.config.items(), factory_key)
+        # this introduces all dependencies, including those only
+        # mentioned in factory_arguments. we want to create those too
+        # if they weren't already created
+        seen = self._factories_seen
+
+        config = self.config
+        for name, factory in items:
+            # if we already have this set up, we don't want to create
+            # it anew
+            configured = getattr(config, name, None)
+            if configured is not None:
+                if seen[name] is not factory:
+                    raise ConfigError(
+                        "Inconsistent factories for config %r (%r and %r)" % (
+                            (name, seen[name], factory)))
+                continue
+            seen[name] = factory
+            kw = get_factory_arguments(action, config, factory)
+            setattr(config, name, factory(**kw))
+
+    def delete_config(self, action):
+        """Delete config objects on the ``config`` attribute.
+        """
+        config = self.config
+        for name, factory in action.config.items():
+            if hasattr(config, name):
+                delattr(config, name)
+            factory_arguments = getattr(factory, 'factory_arguments', None)
+            if factory_arguments is None:
+                continue
+            for name in factory_arguments.keys():
+                if hasattr(config, name):
+                    delattr(config, name)
 
     def group_actions(self):
         """Groups actions for this configurable into action groups.
@@ -832,41 +874,6 @@ def get_factory_arguments(action, config, factory):
                 (name, factory, action))
         result[name] = getattr(config, name, None)
     return result
-
-
-def setup_config(action, configurable):
-    """Set up the config objects on the ``config`` attribute.
-    """
-    # sort the items in order of creation
-    items = topological_sort(action.config.items(), factory_key)
-    # this introduces all dependencies, including those only
-    # mentioned in factory_arguments. we want to create those too
-    # if they weren't already created
-
-    config = configurable.config
-    for name, factory in items:
-        # if we already have this set up, we don't want to create
-        # it anew
-        configured = getattr(config, name, None)
-        if configured is not None:
-            continue
-        kw = get_factory_arguments(action, config, factory)
-        setattr(config, name, factory(**kw))
-
-
-def delete_config(action, configurable):
-    """Delete config objects on the ``config`` attribute.
-    """
-    config = configurable.config
-    for name, factory in action.config.items():
-        if hasattr(config, name):
-            delattr(config, name)
-        factory_arguments = getattr(factory, 'factory_arguments', None)
-        if factory_arguments is None:
-            continue
-        for name in factory_arguments.keys():
-            if hasattr(config, name):
-                delattr(config, name)
 
 
 def dotted_name(cls):
