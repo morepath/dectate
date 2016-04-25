@@ -56,6 +56,30 @@ class App(with_metaclass(AppMeta)):
     logger_name = 'dectate.directive'
     """The prefix to use for directive debug logging."""
 
+    dectate = None
+    """A dectate Configurable instance is installed here.
+
+    This is installed when the class object is initialized, so during
+    import-time when you use the ``class`` statement and subclass
+    :class:`dectate.App`.
+
+    This keeps tracks of the registrations done by using directives as long
+    as committed configurations.
+    """
+
+    config = None
+    """Config object that contains the configuration after commit.
+
+    This is installed when the class object is initialized, so during
+    import-time when you use the ``class`` statement and subclass
+    :class:`dectate.App`, but is only filled after you commit the
+    configuration.
+
+    This keeps the final configuration result after commit. It is
+    a very dumb object that has no methods and is just a container for
+    attributes that contain the real configuration.
+    """
+
     @classmethod
     def directive(cls, name):
         """Decorator to register a new directive with this application class.

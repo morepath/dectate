@@ -168,8 +168,9 @@ configuration:
 What are the changes between this and the simple plugins example?
 
 The main difference is that ``plugin`` decorator is associated with a
-class and so its the resulting configuration. The other difference is
-that we provide an ``identifier`` method in the action
+class and so is the resulting configuration, which gets stored as the
+``plugins`` attribute of :attr:`dectate.App.config`. The other
+difference is that we provide an ``identifier`` method in the action
 definition. These differences support configuration *reuse*,
 *conflicts*, *extension*, *overrides* and *isolation*.
 
@@ -425,7 +426,7 @@ programmers to use it.
 
 Directives have absolutely no effect until *commit* is called, which
 we do with ``dectate.commit``. This performs the actions and we can
-then find the result ``MyApp.config``.
+then find the result ``MyApp.config`` (:attr:`dectate.App.config`).
 
 The results are in ``MyApp.config.plugins`` as we set this up with
 ``config`` in our ``PluginAction``.
@@ -1004,7 +1005,7 @@ own comparison function for an attribute using
 
 If you want to allow a query on a :class:`Composite` action you need
 to give it some help by defining
-:attr:`dectate.Composite.query_classes`.
+xs:attr:`dectate.Composite.query_classes`.
 
 .. _query_tool:
 
