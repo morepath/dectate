@@ -103,11 +103,12 @@ class App(with_metaclass(AppMeta)):
 
         This is intended to be overridden by subclasses if committing
         the class also commits other classes automatically, such as in
-        the case when in Morepath one app is mounted into another. In
+        the case in Morepath when one app is mounted into another. In
         such case it should return an iterable of all committed
         classes.
 
         :return: an iterable of committed classes
+
         """
         commit(cls)
         return [cls]
