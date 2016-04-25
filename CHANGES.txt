@@ -13,6 +13,8 @@ CHANGES
   prevents bugs where a new directive introduces the wrong factory for
   an existing directive.
 
+- Expanded internals documentation.
+
 0.9.1 (2016-04-19)
 ==================
 
