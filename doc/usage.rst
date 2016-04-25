@@ -1006,6 +1006,8 @@ If you want to allow a query on a :class:`Composite` action you need
 to give it some help by defining
 :attr:`dectate.Composite.query_classes`.
 
+.. _query_tool:
+
 query tool
 ----------
 
