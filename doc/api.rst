@@ -7,6 +7,8 @@ API
 
 .. autofunction:: autocommit
 
+.. autofunction:: topological_sort
+
 .. autoclass:: App
   :members:
 
@@ -44,4 +46,7 @@ API
   :show-inheritance:
 
 .. autoexception:: DirectiveReportError
+  :show-inheritance:
+
+.. autoexception:: TopologicalSortError
   :show-inheritance:
