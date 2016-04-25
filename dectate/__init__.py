@@ -6,3 +6,4 @@ from .error import (ConfigError, DirectiveError, TopologicalSortError,
 from .query import Query
 from .tool import (query_tool, auto_query_tool,
                    convert_dotted_name, convert_bool, query_app)
+from .toposort import topological_sort
