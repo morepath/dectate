@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import warnings
 from .query import Query, get_action_class
 from .error import QueryError
 from .app import App, auto_app_classes
@@ -60,7 +61,10 @@ def auto_query_tool():
 
     Like :func:`query_tool`, but automatically uses all found app
     classes as the default, like :func:`autocommit`.
+
+    **Deprecated**: use ``query_tool(App.commit()`` instead.
     """
+    warnings.warn("DEPRECATED. Use query_tool(App.commit()) instead.")
     query_tool(auto_app_classes)
 
 

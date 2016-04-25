@@ -1020,23 +1020,14 @@ need to configure it for your application. For instance, in the module
 
   def query_tool():
       # make sure to scan or import everything needed at this point
-      dectate.commit(SomeApp)
-      dectate.query_tool([SomeApp])
+      dectate.query_tool(SomeApp.commit())
 
 In this function you should commit any :class:`dectate.App` subclasses
-your application normally uses, and then provide a list of them to
-:func:`dectate.query_tool`. This is the list of applications that is
-queried by default if you don't specify ``--app``.
-
-You can automate this further by using :func:`dectate.auto_query_tool`,
-which uses the same app classes it found for :func:`dectate.autocommit`::
-
-  import dectate
-
-  def query_tool():
-      # make sure to scan or import everything needed at this point
-      dectate.autocommit)
-      dectate.auto_query_tool()
+your application normally uses, and then provide an iterable of them
+to :func:`dectate.query_tool`. These are the applications that are
+queried by default if you don't specify ``--app``. We do it all in one
+here as we can get the app class that were committed from the result
+of :meth:`App.commit`.
 
 Then in ``setup.py`` of your project::
 

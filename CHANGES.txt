@@ -4,6 +4,16 @@ CHANGES
 0.10 (unreleased)
 =================
 
+- **Deprecated** The ``autocommit`` function is deprecated. Rely on
+  the ``commit`` class method of the ``App`` class instead for a more
+  explicit alternative.
+
+- **Deprecated** The ``auto_query_tool`` function is deprecated. Rely
+  on ``dectate.query_tool(MyApp.commit())`` instead. Since the commit
+  method returns an iterable of ``App`` classes that are required to
+  commit the app class it is invoked on, this returns the right
+  information.
+
 - ``topological_sort`` function is exposed as the public API.
 
 - A ``commit`` class method on ``App`` classes.
