@@ -235,3 +235,40 @@ def test_app_without_directive():
 
     l = list(query_app(MyApp, 'foo', count='1'))
     assert l == []
+
+
+def test_inheritance():
+    class MyApp(App):
+        pass
+
+    class SubApp(MyApp):
+        pass
+
+    @MyApp.directive('foo')
+    class FooAction(Action):
+        filter_convert = {
+            'count': int
+        }
+
+        def __init__(self, count):
+            self.count = count
+
+        def identifier(self):
+            return self.count
+
+        def perform(self, obj):
+            pass
+
+    @MyApp.foo(1)
+    def f():
+        pass
+
+    @MyApp.foo(2)
+    def g():
+        pass
+
+    commit(SubApp)
+
+    l = list(query_app(SubApp, 'foo'))
+
+    assert len(l) == 2
