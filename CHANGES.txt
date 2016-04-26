@@ -1,11 +1,11 @@
 CHANGES
 *******
 
-0.11 (unreleased)
-=================
+0.10.1 (unreleased)
+===================
 
-- Nothing changed yet.
-
+- Create proper deprecation warnings instead of plain warnings for
+  ``autocommit`` and ``auto_query_tool``.
 
 0.10 (2016-04-25)
 =================

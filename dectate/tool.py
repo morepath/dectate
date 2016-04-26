@@ -64,7 +64,8 @@ def auto_query_tool():
 
     **Deprecated**: use ``query_tool(App.commit()`` instead.
     """
-    warnings.warn("DEPRECATED. Use query_tool(App.commit()) instead.")
+    warnings.warn("DEPRECATED. Use query_tool(App.commit()) instead.",
+                  DeprecationWarning)
     query_tool(auto_app_classes)
 
 

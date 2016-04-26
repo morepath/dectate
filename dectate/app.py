@@ -47,8 +47,8 @@ def autocommit():
     dependent applications that are needed this makes it more explicit
     than this one.
     """
-    warnings.warn("""\
-DEPRECATED. Autocommit is deprecated. Use explicit App.commit() instead.""")
+    warnings.warn("DEPRECATED. Autocommit is deprecated. "
+                  "Use explicit App.commit() instead.", DeprecationWarning)
     commit(*auto_app_classes)
 
 

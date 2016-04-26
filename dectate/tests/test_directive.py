@@ -56,7 +56,7 @@ def test_autocommit():
     def f():
         pass
 
-    autocommit()
+    pytest.deprecated_call(autocommit)
 
     assert MyApp.config.my == [('hello', f)]
 
