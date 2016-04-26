@@ -6,7 +6,7 @@ long_description = (
     open('CHANGES.txt').read())
 
 setup(name='dectate',
-      version='0.11.dev0',
+      version='0.10.1.dev0',
       description="A configuration engine for Python frameworks",
       long_description=long_description,
       author="Martijn Faassen",
@@ -21,7 +21,8 @@ setup(name='dectate',
           'License :: OSI Approved :: BSD License',
           'Topic :: Software Development :: Libraries :: Application Frameworks',
           'Programming Language :: Python :: 2.7',
-          'Development Status :: 4 - Beta'
+          'Programming Language :: Python :: 3.4',
+          'Development Status :: 5 - Production/Stable'
       ],
       keywords="configuration",
       install_requires=[
