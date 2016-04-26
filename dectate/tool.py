@@ -74,13 +74,12 @@ def query_tool_output(app_classes, directive, filters):
         if not app_class.is_committed():
             raise ToolError("App %r was not committed." % app_class)
 
-        yield "App: %r" % app_class
-
         actions = list(query_app(app_class, directive, **filters))
 
         if not actions:
-            yield "  Nothing found"
-            return
+            continue
+
+        yield "App: %r" % app_class
 
         for action, obj in actions:
             if action.directive is None:

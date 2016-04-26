@@ -154,6 +154,45 @@ def test_query_tool_output():
     assert l
 
 
+def test_query_tool_output_multiple_apps():
+    class Base(App):
+        pass
+
+    class AlphaApp(Base):
+        pass
+
+    class BetaApp(Base):
+        pass
+
+    class GammaApp(Base):
+        pass
+
+    @Base.directive('foo')
+    class FooAction(Action):
+        def __init__(self, name):
+            self.name = name
+
+        def identifier(self):
+            return self.name
+
+        def perform(self, obj):
+            pass
+
+    @AlphaApp.foo('a')
+    def f():
+        pass
+
+    @GammaApp.foo('b')
+    def g():
+        pass
+
+    commit(AlphaApp, BetaApp, GammaApp)
+
+    l = list(query_tool_output([AlphaApp, BetaApp, GammaApp], 'foo', {}))
+
+    assert len(l) == 8
+
+
 def test_query_app():
     class MyApp(App):
         pass
