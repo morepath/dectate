@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.10.2 (unreleased)
+0.10.2 (2016-04-26)
 ===================
 
 - If nothing is found for an app in the query tool, don't mention it
