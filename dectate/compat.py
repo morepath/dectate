@@ -13,6 +13,7 @@ if PY3:
 else:
     string_types = (basestring,)
 
+
 # Newer versions of flask and six have the following version of
 # with_metaclass, which seems to have a constant number of function
 # calls. Hence, stack frame navigation does not depend on the
