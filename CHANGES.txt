@@ -4,8 +4,8 @@ CHANGES
 0.11 (unreleased)
 =================
 
-- Nothing changed yet.
-
+- **Removed**: ``autocommit`` and ``auto_query_tool`` are
+  both removed from the Dectate API.
 
 0.10.2 (2016-04-26)
 ===================
