@@ -5,8 +5,6 @@ API
 
 .. autofunction:: commit
 
-.. autofunction:: autocommit
-
 .. autofunction:: topological_sort
 
 .. autoclass:: App
@@ -23,8 +21,6 @@ API
   :members:
 
 .. autofunction:: query_tool
-
-.. autofunction:: auto_query_tool
 
 .. autofunction:: query_app
 
