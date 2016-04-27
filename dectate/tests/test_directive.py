@@ -1,4 +1,4 @@
-from dectate.app import App, autocommit
+from dectate.app import App
 from dectate.config import commit, Action, Composite
 from dectate.error import ConflictError, ConfigError
 
@@ -29,34 +29,6 @@ def test_simple():
         pass
 
     commit(MyApp)
-
-    assert MyApp.config.my == [('hello', f)]
-
-
-def test_autocommit():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
-    class MyDirective(Action):
-        config = {
-            'my': list
-        }
-
-        def __init__(self, message):
-            self.message = message
-
-        def identifier(self, my):
-            return self.message
-
-        def perform(self, obj, my):
-            my.append((self.message, obj))
-
-    @MyApp.foo('hello')
-    def f():
-        pass
-
-    pytest.deprecated_call(autocommit)
 
     assert MyApp.config.my == [('hello', f)]
 
@@ -1598,7 +1570,7 @@ def test_registry_config_inconsistent():
             my.append((self.message, obj))
 
     @MyApp.directive('bar')
-    class MyDirective(Action):
+    class MyDirective(Action):  # flake8: noqa
         config = {
             'my': dict
         }

@@ -1,11 +1,8 @@
 from functools import update_wrapper
 import logging
 import sys
-import warnings
 from .config import Configurable, Directive, commit, create_code_info
 from .compat import with_metaclass
-
-auto_app_classes = []
 
 
 class Config(object):
@@ -31,25 +28,7 @@ class AppMeta(type):
         d['dectate'] = configurable = Configurable(extends, config)
         result = super(AppMeta, cls).__new__(cls, name, bases, d)
         configurable.app_class = result
-        auto_app_classes.append(result)
         return result
-
-
-def autocommit():
-    """Automatically commit all :class:`App` subclasses.
-
-    Dectate keeps track of all :class:`App` subclasses that have
-    been imported. You can automatically commit configuration for
-    all of them.
-
-    **Deprecated**: use the explicit :meth:`App.commit` method
-    instead.  Since :meth:`App.commit` is defined to commit all
-    dependent applications that are needed this makes it more explicit
-    than this one.
-    """
-    warnings.warn("DEPRECATED. Autocommit is deprecated. "
-                  "Use explicit App.commit() instead.", DeprecationWarning)
-    commit(*auto_app_classes)
 
 
 class App(with_metaclass(AppMeta)):
