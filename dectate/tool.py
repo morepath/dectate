@@ -2,10 +2,9 @@ from __future__ import print_function
 
 import argparse
 import inspect
-import warnings
 from .query import Query, get_action_class
 from .error import QueryError
-from .app import App, auto_app_classes
+from .app import App
 from .compat import text_type
 
 
@@ -54,19 +53,6 @@ def query_tool(app_classes):
 
     for line in lines:
         print(line)
-
-
-def auto_query_tool():
-    """Command-line query tool for dectate.
-
-    Like :func:`query_tool`, but automatically uses all found app
-    classes as the default, like :func:`autocommit`.
-
-    **Deprecated**: use ``query_tool(App.commit()`` instead.
-    """
-    warnings.warn("DEPRECATED. Use query_tool(App.commit()) instead.",
-                  DeprecationWarning)
-    query_tool(auto_app_classes)
 
 
 def query_tool_output(app_classes, directive, filters):
