@@ -11,6 +11,8 @@ CHANGES
 - **Removed**: ``auto_query_tool`` was removed from the Dectate API.
   Use ``query_tool(App.commit())`` instead.
 
+- Fix ``repr`` of directives so that you can at least see their name.
+
 0.10.2 (2016-04-26)
 ===================
 

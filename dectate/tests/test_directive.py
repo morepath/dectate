@@ -1658,3 +1658,29 @@ def test_registry_factory_argument_and_config_inconsistent():
 
     with pytest.raises(ConfigError):
         commit(MyApp)
+
+
+def test_directive_repr():
+    class MyApp(App):
+        pass
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        """Doc"""
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    assert repr(MyApp.foo) == (
+        "<bound method AppMeta.foo of "
+        "<class 'dectate.tests.test_directive.MyApp'>>")
+
