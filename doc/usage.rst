@@ -402,7 +402,7 @@ What is going on here?
   is a plain dictionary. You provide any factory function you like
   here.
 
-* ``_init_`` specifies the parameters the directive should take and
+* ``__init__`` specifies the parameters the directive should take and
   how to store them on the action object. You can use default
   parameters and such, but otherwise ``__init__`` should be very
   simple and not do any registration or validation. That logic should
