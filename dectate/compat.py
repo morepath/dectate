@@ -1,7 +1,10 @@
 import sys
+import platform
 
 # True if we are running on Python 3.
 PY3 = sys.version_info[0] == 3
+
+PYPY = platform.python_implementation() == 'PyPy'
 
 if PY3:  # pragma: no cover
     text_type = str  # pragma: nocoverage

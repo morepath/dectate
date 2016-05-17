@@ -1,4 +1,5 @@
 from dectate.app import App
+from dectate.compat import PY3, PYPY
 from dectate.config import commit, Action, Composite
 from dectate.error import ConflictError, ConfigError
 
@@ -1680,7 +1681,15 @@ def test_directive_repr():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    assert repr(MyApp.foo) == (
-        "<bound method AppMeta.foo of "
-        "<class 'dectate.tests.test_directive.MyApp'>>")
-
+    if not PY3 or PYPY:
+        # XXX even PYPY 3 produces this on my machine, but it might be
+        # different in newer versions of PYPY 3
+        assert repr(MyApp.foo) == (
+            "<bound method AppMeta.foo of "
+            "<class 'dectate.tests.test_directive.MyApp'>>")
+    else:
+        assert repr(MyApp.foo) == (
+            "<bound method AppMeta.foo of "
+            "<class 'dectate.tests.test_directive.test_directive_repr."
+            "<locals>.MyApp'>>"
+        )
