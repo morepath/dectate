@@ -169,6 +169,10 @@ class DirectiveDirective(object):
         method.action_factory = action_factory  # to help sphinxext
         setattr(self.cls, self.name, classmethod(method))
         method.__name__ = self.name
+        # As of Python 3.5, the repr of bound methods uses __qualname__ instead
+        # of __name__.  See http://bugs.python.org/issue21389#msg217566
+        if hasattr(method, '__qualname__'):
+            method.__qualname__ = type(self.cls).__name__ + '.' + self.name
         method.__doc__ = action_factory.__doc__
         method.__module__ = action_factory.__module__
         self.cls.dectate.register_action_class(action_factory)

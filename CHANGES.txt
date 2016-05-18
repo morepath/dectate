@@ -13,6 +13,8 @@ CHANGES
 
 - Fix ``repr`` of directives so that you can at least see their name.
 
+- Added support for Python 3.5.
+
 0.10.2 (2016-04-26)
 ===================
 
