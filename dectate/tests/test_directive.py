@@ -1,5 +1,4 @@
 from dectate.app import App
-from dectate.compat import PY3, PYPY
 from dectate.config import commit, Action, Composite
 from dectate.error import ConflictError, ConfigError
 
@@ -1661,11 +1660,15 @@ def test_registry_factory_argument_and_config_inconsistent():
         commit(MyApp)
 
 
-def test_directive_repr():
-    class MyApp(App):
-        pass
+# Due to PEP 3155, having this class defined at the module top-level ensures
+# that its repr is the same in both Python 2 and 3.
+class MyAppForRepr(App):
+    pass
 
-    @MyApp.directive('foo')
+
+def test_directive_repr():
+
+    @MyAppForRepr.directive('foo')
     class MyDirective(Action):
         """Doc"""
         config = {
@@ -1681,15 +1684,6 @@ def test_directive_repr():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    if not PY3 or PYPY:
-        # XXX even PYPY 3 produces this on my machine, but it might be
-        # different in newer versions of PYPY 3
-        assert repr(MyApp.foo) == (
-            "<bound method AppMeta.foo of "
-            "<class 'dectate.tests.test_directive.MyApp'>>")
-    else:
-        assert repr(MyApp.foo) == (
-            "<bound method AppMeta.foo of "
-            "<class 'dectate.tests.test_directive.test_directive_repr."
-            "<locals>.MyApp'>>"
-        )
+    assert repr(MyAppForRepr.foo) == (
+        "<bound method AppMeta.foo of "
+        "<class 'dectate.tests.test_directive.MyAppForRepr'>>")
