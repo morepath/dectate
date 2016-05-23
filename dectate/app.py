@@ -1,4 +1,3 @@
-from functools import update_wrapper
 import logging
 import sys
 from .config import Configurable, Directive, commit, create_code_info
