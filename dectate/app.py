@@ -17,8 +17,6 @@ class AppMeta(type):
     """Dectate metaclass.
 
     Sets up ``config`` and ``dectate`` class attributes.
-
-    Keeps track of all :class:`App` subclasses.
     """
     def __new__(cls, name, bases, d):
         extends = [base.dectate for base in bases
