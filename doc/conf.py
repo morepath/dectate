@@ -34,9 +34,9 @@ autoclass_content = 'both'
 autodoc_member_order = 'groupwise'
 
 intersphinx_mapping = {
-    'reg': ('http://reg.readthedocs.org/en/latest', None),
+    'reg': ('http://reg.readthedocs.io/en/latest', None),
     'webob': ('http://docs.webob.org/en/latest', None),
-    'bowerstatic': ('http://bowerstatic.readthedocs.org/en/latest', None),
+    'bowerstatic': ('http://bowerstatic.readthedocs.io/en/latest', None),
     }
 
 # Add any paths that contain templates here, relative to this directory.

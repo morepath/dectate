@@ -51,7 +51,7 @@ particular order.
 Dectate supports such advanced use cases. It was extracted from the
 Morepath_ web framework.
 
-.. _Morepath: http://morepath.readthedocs.org
+.. _Morepath: http://morepath.readthedocs.io
 
 Features
 --------
@@ -949,7 +949,7 @@ like::
 This imports every module in ``my_package``, except for the ``tests``
 sub package.
 
-.. _importscan: http://importscan.readthedocs.org/en/latest/
+.. _importscan: http://importscan.readthedocs.io/en/latest/
 
 logging
 -------

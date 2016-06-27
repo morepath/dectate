@@ -32,7 +32,7 @@ classes, and uses class inheritance to power configuration reuse and
 overrides. This configuration subsystem started to get a bit messy
 as requirements grew.
 
-.. _Morepath: http://morepath.readthedocs.org
+.. _Morepath: http://morepath.readthedocs.io
 
 So in 2016 I extracted the configuration system from Morepath into its
 own library, Dectate. This allowed me to extensively refactor the code

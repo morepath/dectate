@@ -13,7 +13,7 @@ setup(
     long_description=long_description,
     author="Martijn Faassen",
     author_email="faassen@startifact.com",
-    url='http://dectate.readthedocs.org',
+    url='http://dectate.readthedocs.io',
     license="BSD",
     packages=find_packages(),
     include_package_data=True,
