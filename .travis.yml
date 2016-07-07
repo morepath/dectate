@@ -1,8 +1,10 @@
 language: python
 
+python: 3.5
 env:
     - TOXENV=py27
     - TOXENV=py34
+    - TOXENV=py35
     - TOXENV=pypy
     - TOXENV=pypy3
     - TOXENV=coverage
@@ -14,10 +16,3 @@ script:
     - tox -e $TOXENV
 after_success:
     - if [ "$TOXENV" = 'coverage' ]; then coveralls; fi
-
-# Necessary until travis includes python 3.5 by default.
-matrix:
-  include:
-    - python: 3.5
-      env:
-      - TOXENV=py35
