@@ -4,7 +4,7 @@ Developing Dectate
 Install Dectate for development
 -------------------------------
 
-First make sure you have virtualenv_ installed for Python 2.7.
+First make sure you have virtualenv_ installed for Python 3.5.
 
 .. _virtualenv: https://pypi.python.org/pypi/virtualenv
 

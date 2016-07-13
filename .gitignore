@@ -7,5 +7,6 @@ doc/build
 htmlcov
 .tox
 *.egg-info
+eggs
 __pycache__
 *.pyc
