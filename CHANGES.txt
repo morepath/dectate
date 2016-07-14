@@ -13,6 +13,8 @@ CHANGES
 
 - Fix ``repr`` of directives so that you can at least see their name.
 
+- Fix: the execution order of filters is now reproducible.
+
 - Add support for Python 3.3 and 3.5.
 
 - Make Python 3.5 the default testing environment.

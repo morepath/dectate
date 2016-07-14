@@ -137,7 +137,7 @@ class Filter(Base):
 
     def execute(self, configurable):
         for action, obj in self.query.execute(configurable):
-            for name, value in self.kw.items():
+            for name, value in sorted(self.kw.items()):
                 compared = action.get_value_for_filter(name)
                 compare_func = action.filter_compare.get(
                     name, compare_equality)
