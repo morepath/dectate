@@ -6,15 +6,15 @@ PY3 = sys.version_info[0] == 3
 
 PYPY = platform.python_implementation() == 'PyPy'
 
-if PY3:
+try:
+    text_type = unicode
+except NameError:
     text_type = str
-else:  # pragma: no cover
-    text_type = unicode  # noqa
 
-if PY3:
+try:
+    string_types = (basestring,)
+except NameError:
     string_types = (str,)
-else:  # pragma: no cover
-    string_types = (basestring,)  # noqa
 
 
 # Newer versions of flask and six have the following version of
