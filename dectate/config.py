@@ -700,8 +700,7 @@ class Directive(object):
         return DirectiveAbbreviation(self)
 
     def __exit__(self, type, value, tb):
-        if tb is not None:
-            return False
+        pass
 
     def __call__(self, wrapped):
         """Call with function or class to decorate.
