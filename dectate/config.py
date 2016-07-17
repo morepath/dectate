@@ -882,8 +882,8 @@ def create_code_info(frame):
 
     try:
         sourceline = frameinfo.code_context[0].strip()
-    except:  # pragma NO COVER
-        # dont understand circumstance here, 3rdparty code without comment
+    except:
+        # if no source file exists, e.g., due to eval
         sourceline = frameinfo.code_context
 
     return CodeInfo(
