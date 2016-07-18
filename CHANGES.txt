@@ -15,6 +15,17 @@ CHANGES
 
 - Fix: the execution order of filters is now reproducible.
 
+- Using abstract base classes from the standard library for the Action
+  and Composite classes.
+
+- Using feature detection instead of version detection to ensure
+  Python 2/3 compatibility.
+
+- Increased test coverage.
+
+- Set up Travis CI and Coverall as continuous integration services for
+  quality assurance purposes.
+
 - Add support for Python 3.3 and 3.5.
 
 - Make Python 3.5 the default testing environment.
