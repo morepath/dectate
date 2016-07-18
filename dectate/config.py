@@ -1,8 +1,10 @@
+import abc
 import sys
 import inspect
 from .error import (
     ConflictError, ConfigError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
+from .compat import with_metaclass
 
 
 class NotFound(object):
@@ -322,7 +324,7 @@ class ActionGroup(object):
         self.action_class.after(**kw)
 
 
-class Action(object):
+class Action(with_metaclass(abc.ABCMeta)):
     """A configuration action.
 
     Base class of configuration actions.
@@ -506,6 +508,7 @@ class Action(object):
             result[name] = getattr(config, name)
         return result
 
+    @abc.abstractmethod
     def identifier(self, **kw):
         """Returns an immutable that uniquely identifies this config.
 
@@ -525,7 +528,6 @@ class Action(object):
           by the ``config`` class attribute.
         :return: an immutable value uniquely identifying this action.
         """
-        raise NotImplementedError()  # pragma: nocoverage
 
     def discriminators(self, **kw):
         """Returns an iterable of immutables to detect conflicts.
@@ -540,6 +542,7 @@ class Action(object):
         """
         return []
 
+    @abc.abstractmethod
     def perform(self, obj, **kw):
         """Do whatever configuration is needed for ``obj``.
 
@@ -553,7 +556,6 @@ class Action(object):
         :param ``**kw``: a dictionary of configuration objects as specified
           by the ``config`` class attribute.
         """
-        raise NotImplementedError()
 
     @staticmethod
     def before(**kw):
@@ -580,7 +582,7 @@ class Action(object):
         pass
 
 
-class Composite(object):
+class Composite(with_metaclass(abc.ABCMeta)):
     """A composite configuration action.
 
     Base class of composite actions.
@@ -633,6 +635,7 @@ class Composite(object):
             return None
         return self.directive.code_info
 
+    @abc.abstractmethod
     def actions(self, obj):
         """Specify a iterable of actions to perform for ``obj``.
 
@@ -646,7 +649,6 @@ class Composite(object):
         :param obj: the obj that the composite action was performed on.
         :return: iterable of ``action, obj`` tuples.
         """
-        raise NotImplementedError
 
 
 class Directive(object):
