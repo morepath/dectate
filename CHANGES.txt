@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.11 (unreleased)
+0.11 (2016-07-18)
 =================
 
 - **Removed**: ``autocommit`` was removed from the Dectate API. Rely
