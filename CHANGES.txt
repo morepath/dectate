@@ -19,8 +19,8 @@ CHANGES
 
 - Fix ``repr`` of directives so that you can at least see their name.
 
-- he execution order of filters is now reproducible, to ensure
-  consistent test covearge reports.
+- the execution order of filters is now reproducible, to ensure
+  consistent test coverage reports.
 
 - Use abstract base classes from the standard library for the ``Action``
   and ``Composite`` classes.
