@@ -1777,6 +1777,45 @@ def test_app_class_passed_into_factory():
     assert MyApp.touched
 
 
+def test_app_class_passed_into_factory_no_factory_arguments():
+    class MyApp(App):
+        touched = False
+
+    class Other(object):
+        app_class_arg = True
+
+        def __init__(self, app_class):
+            self.app_class = app_class
+
+        def touch(self):
+            self.app_class.touched = True
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        def __init__(self):
+            pass
+
+        def identifier(self, other):
+            return ()
+
+        def perform(self, obj, other):
+            other.touch()
+
+    @MyApp.foo()
+    def f():
+        pass
+
+    assert not MyApp.touched
+
+    commit(MyApp)
+
+    assert MyApp.touched
+
+
 def test_app_class_passed_into_factory_separation():
     class MyApp(App):
         touched = False

@@ -943,11 +943,13 @@ def get_factory_arguments(action_class, config, factory, app_class):
     arguments = getattr(factory, 'factory_arguments', None)
     app_class_arg = getattr(factory, 'app_class_arg', False)
 
-    if arguments is None:
-        return {}
     result = {}
     if app_class_arg:
         result['app_class'] = app_class
+
+    if arguments is None:
+        return result
+
     for name in arguments.keys():
         value = getattr(config, name, None)
         if value is None:
