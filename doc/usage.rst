@@ -614,6 +614,51 @@ we get the same result as before:
   >>> ConfigDependsApp.config.bar.l
   [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
 
+app_class_arg
+-------------
+
+In some cases what you want to configure is not on in the config
+object (``app_class.config``), but is associated with the app class in
+another way. You can get the app class passed in as an argument to
+:meth:`dectate.Action.perform`, :meth:`dectate.Action.identifier`, and
+so on by setting the special ``app_class_arg`` class attribute:
+
+.. testcode::
+
+  @MyApp.directive('plugin_with_app_class')
+  class PluginAction(dectate.Action):
+      config = {
+         'plugins': dict
+      }
+      app_class_arg = True
+
+      def __init__(self, name):
+          self.name = name
+
+      def identifier(self, plugins, app_class):
+          return self.name
+
+      def perform(self, obj, plugins, app_class):
+          plugins[self.name] = obj
+          app_class.touched = True
+
+When we now perform this directive:
+
+.. testcode::
+
+  @MyApp.plugin_with_app_class('a')
+  def f():
+      pass # do something interesting
+
+  dectate.commit(MyApp)
+
+We can see the app class was indeed affected:
+
+.. doctest::
+
+  >>> MyApp.touched
+  True
+
 before and after
 ----------------
 

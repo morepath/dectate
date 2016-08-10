@@ -6,6 +6,11 @@ CHANGES
 
 - Use the same Git ignore file used in other Morepath projects.
 
+- If you set the ``app_class_arg`` class attribute to ``True`` on an
+  action, then an ``app_class`` is passed along to ``perform``,
+  ``identifier``, etc. This way you can affect the app class directly
+  instead of just its underlying configuration in the ``config``
+  attribute.
 
 0.11 (2016-07-18)
 =================

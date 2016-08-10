@@ -351,7 +351,18 @@ class Action(with_metaclass(abc.ABCMeta)):
     as attributes on :class:`App.config`.
     """
 
+    app_class_arg = False
+    """Pass in app class as argument.
+
+    In addition to the arguments defined in :attr:`Action.config`,
+    pass in the app class itself as an argument into
+    :meth:`Action.identifier`, :meth:`Action.discriminators`,
+    :meth:`Action.perform`, and :meth:`Action.before` and
+    :meth:`Action.after`.
+    """
+
     depends = []
+
     """List of other action classes to be executed before this one.
 
     The ``depends`` class attribute contains a list of other action
@@ -504,6 +515,10 @@ class Action(with_metaclass(abc.ABCMeta)):
         group_class = cls.group_class
         if group_class is None:
             group_class = cls
+        # check if we want to have an app_class argument
+        if group_class.app_class_arg:
+            result['app_class'] = configurable.app_class
+        # add the config items themselves
         for name, factory in group_class.config.items():
             result[name] = getattr(config, name)
         return result

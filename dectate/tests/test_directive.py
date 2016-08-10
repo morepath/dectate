@@ -1687,3 +1687,46 @@ def test_directive_repr():
     assert repr(MyAppForRepr.foo) == (
         "<bound method AppMeta.foo of "
         "<class 'dectate.tests.test_directive.MyAppForRepr'>>")
+
+
+def test_app_class_passed_in():
+    class MyApp(App):
+        touched = []
+
+    class SubApp(MyApp):
+        touched = []
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        app_class_arg = True
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, app_class, my):
+            return self.message
+
+        def perform(self, obj, app_class, my):
+            app_class.touched.append(None)
+            my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    assert not MyApp.touched
+
+    commit(MyApp)
+
+    assert MyApp.touched == [None]
+
+    # the subclass is not affected until we commit for it too
+    assert not SubApp.touched
+
+    commit(SubApp)
+
+    assert SubApp.touched == [None]
