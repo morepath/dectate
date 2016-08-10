@@ -659,6 +659,9 @@ We can see the app class was indeed affected:
   >>> MyApp.touched
   True
 
+You can also use ``app_class_arg`` on a factory so that Dectate passes
+in the ``app_class`` factory argument.
+
 before and after
 ----------------
 

@@ -154,7 +154,8 @@ class Configurable(object):
                             (name, seen[name], factory)))
                 continue
             seen[name] = factory
-            kw = get_factory_arguments(action_class, config, factory)
+            kw = get_factory_arguments(action_class, config, factory,
+                                       self.app_class)
             setattr(config, name, factory(**kw))
 
     def delete_config(self, action_class):
@@ -923,7 +924,7 @@ def factory_key(item):
     return arguments.items()
 
 
-def get_factory_arguments(action_class, config, factory):
+def get_factory_arguments(action_class, config, factory, app_class):
     """Get arguments needed to construct factory.
 
     Factories can define a ``factory_arguments`` attribute to control
@@ -934,13 +935,19 @@ def get_factory_arguments(action_class, config, factory):
       to build a registry for.
     :param config: the ``config`` attribute to get the configuration items
       from.
-    :param factory: the factory that is going to be constructed.
+    :param factory: the factory for the object that is going to be constructed.
+    :param app_class: the application class that the object constructed
+      is stored in.
     :return: a dict with arguments to pass to the factory.
     """
     arguments = getattr(factory, 'factory_arguments', None)
+    app_class_arg = getattr(factory, 'app_class_arg', False)
+
     if arguments is None:
         return {}
     result = {}
+    if app_class_arg:
+        result['app_class'] = app_class
     for name in arguments.keys():
         value = getattr(config, name, None)
         if value is None:

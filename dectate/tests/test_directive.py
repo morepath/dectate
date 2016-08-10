@@ -1689,7 +1689,7 @@ def test_directive_repr():
         "<class 'dectate.tests.test_directive.MyAppForRepr'>>")
 
 
-def test_app_class_passed_in():
+def test_app_class_passed_into_action():
     class MyApp(App):
         touched = []
 
@@ -1730,3 +1730,102 @@ def test_app_class_passed_in():
     commit(SubApp)
 
     assert SubApp.touched == [None]
+
+
+
+def test_app_class_passed_into_factory():
+    class MyApp(App):
+        touched = False
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        app_class_arg = True
+
+        def __init__(self, my, app_class):
+            self.my = my
+            self.app_class = app_class
+
+        def touch(self):
+            self.app_class.touched = True
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        def __init__(self):
+            pass
+
+        def identifier(self, other):
+            return ()
+
+        def perform(self, obj, other):
+            other.touch()
+
+    @MyApp.foo()
+    def f():
+        pass
+
+    assert not MyApp.touched
+
+    commit(MyApp)
+
+    assert MyApp.touched
+
+
+def test_app_class_passed_into_factory_separation():
+    class MyApp(App):
+        touched = False
+
+    class SubApp(MyApp):
+        touched = False
+
+    class Other(object):
+        factory_arguments = {
+            'my': list
+        }
+
+        app_class_arg = True
+
+        def __init__(self, my, app_class):
+            self.my = my
+            self.app_class = app_class
+
+        def touch(self):
+            self.app_class.touched = True
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+            'other': Other
+        }
+
+        def __init__(self):
+            pass
+
+        def identifier(self, other):
+            return ()
+
+        def perform(self, obj, other):
+            other.touch()
+
+    @MyApp.foo()
+    def f():
+        pass
+
+    assert not MyApp.touched
+
+    commit(MyApp)
+
+    assert MyApp.touched
+
+    assert not SubApp.touched
+
+    commit(SubApp)
+
+    assert SubApp.touched
+

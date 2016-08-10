@@ -12,6 +12,9 @@ CHANGES
   instead of just its underlying configuration in the ``config``
   attribute.
 
+- Similarly if you set the ``app_class_arg`` attribute ``True`` on a
+  factory class, it is passed in.
+
 0.11 (2016-07-18)
 =================
 
