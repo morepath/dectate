@@ -213,6 +213,7 @@ class Configurable(object):
     def execute(self):
         """Execute actions for configurable.
         """
+        self.app_class.clean()
         self.setup()
         self.group_actions()
         for action_class in sort_action_classes(self._action_groups.keys()):

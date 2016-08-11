@@ -1868,3 +1868,42 @@ def test_app_class_passed_into_factory_separation():
 
     assert SubApp.touched
 
+
+
+def test_app_class_cleanup():
+    class MyApp(App):
+        touched = []
+
+        @classmethod
+        def clean(cls):
+            cls.touched = []
+
+    @MyApp.directive('foo')
+    class MyDirective(Action):
+        config = {
+        }
+
+        app_class_arg = True
+
+        def __init__(self):
+            pass
+
+        def identifier(self, app_class):
+            return ()
+
+        def perform(self, obj, app_class):
+            app_class.touched.append(None)
+
+    @MyApp.foo()
+    def f():
+        pass
+
+    assert not MyApp.touched
+
+    commit(MyApp)
+
+    assert MyApp.touched == [None]
+
+    commit(MyApp)
+
+    assert MyApp.touched == [None]

@@ -134,6 +134,17 @@ class App(with_metaclass(AppMeta)):
         """
         return cls.dectate.committed
 
+    @classmethod
+    def clean(cls):
+        """A method that sets or restores the state of the class.
+
+        Normally Dectate only sets up configuration into the ``config``
+        attribute, but in some cases you may touch other aspects of the
+        class during configuration time. You can override this classmethod
+        to set up the state of the class in its pristine condition.
+        """
+        pass
+
 
 class DirectiveDirective(object):
     """Implementation of the ``directive`` directive.

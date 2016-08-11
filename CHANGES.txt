@@ -15,6 +15,10 @@ CHANGES
 - Similarly if you set the ``app_class_arg`` attribute ``True`` on a
   factory class, it is passed in.
 
+- Add a ``clean`` method to the ``App`` class. You can override this
+  to introduce your own cleanup policy for aspects of the class that are
+  not contained in the ``config`` attribute.
+
 0.11 (2016-07-18)
 =================
 
