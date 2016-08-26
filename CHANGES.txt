@@ -23,6 +23,8 @@ CHANGES
   development environment. The development documentation has been
   updated accordingly.
 
+- Include doctests in Tox and Travis.
+
 0.11 (2016-07-18)
 =================
 
