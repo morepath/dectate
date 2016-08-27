@@ -685,11 +685,11 @@ using ``before`` (:meth:`dectate.Action.before`) and ``after``
 
       @staticmethod
       def before(foos):
-          print "before:", foos
+          print("before:", foos)
 
       @staticmethod
       def after(foos):
-          print "after:", foos
+          print("after:", foos)
 
       def identifier(self, foos):
           return self.name

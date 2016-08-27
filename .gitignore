@@ -1,10 +1,6 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized
 __pycache__/
-*.py[cod]
-*$py.class
-
-# OS metadata
-.DS_STORE
+*.py[co]
 
 # Distribution / packaging
 *.egg-info/
@@ -13,15 +9,7 @@ __pycache__/
 
 # Virtualenv
 /env/
-
-# Buildout
-/bin/
-/develop-eggs/
-/eggs/
 /src/
-/parts/
-/.installed.cfg
-/.mr.developer.cfg
 
 # Unit test / coverage reports
 .cache/

@@ -19,6 +19,12 @@ CHANGES
   to introduce your own cleanup policy for aspects of the class that are
   not contained in the ``config`` attribute.
 
+- We now use virtualenv and pip instead of buildout to set up the
+  development environment. The development documentation has been
+  updated accordingly.
+
+- Include doctests in Tox and Travis.
+
 0.11 (2016-07-18)
 =================
 
