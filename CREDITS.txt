@@ -3,9 +3,11 @@ CREDITS
 
 * Martijn Faassen (creator and main developer)
 
-* Denis Krienbühl (testing and feedback)
-
 * Stefano Taschini (newer ``with_metaclass``, ``topological_sort`` now
   public)
+
+* Denis Krienbühl (testing and feedback)
+
+* Henri Hulksi (build environment)
 
 * Special thanks to CONTACT software.
