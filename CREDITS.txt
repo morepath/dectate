@@ -8,6 +8,6 @@ CREDITS
 
 * Denis Krienbühl (testing and feedback)
 
-* Henri Hulksi (build environment)
+* Henri Hulski (build environment)
 
 * Special thanks to CONTACT software.
