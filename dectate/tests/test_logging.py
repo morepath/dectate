@@ -1,5 +1,5 @@
 import logging
-from dectate.app import App
+from dectate.app import App, directive
 from dectate.config import Action, commit
 
 
@@ -35,10 +35,6 @@ def test_simple_config_logging():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -52,6 +48,9 @@ def test_simple_config_logging():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -76,10 +75,6 @@ def test_subclass_config_logging():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -93,6 +88,9 @@ def test_subclass_config_logging():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     class SubApp(MyApp):
         pass
@@ -127,10 +125,6 @@ def test_override_logger_name():
     log.addHandler(test_handler)
     log.setLevel(logging.DEBUG)
 
-    class MyApp(App):
-        logger_name = 'morepath.directive'
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -144,6 +138,11 @@ def test_override_logger_name():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        logger_name = 'morepath.directive'
+
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():

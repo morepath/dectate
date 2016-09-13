@@ -1,4 +1,5 @@
 import abc
+import logging
 import sys
 import inspect
 from .error import (
@@ -47,21 +48,22 @@ class Configurable(object):
         self.extends = extends
         self.config = config
         # all action classes known
-        self._action_classes = set()
+        self._action_classes = {}
         # directives used with configurable
         self._directives = []
         # have we ever been committed
         self.committed = False
 
-    def register_action_class(self, action_class):
-        """Register an action class with this configurable.
+    def register_action_class(self, name, action_class):
+        """Register an action class with this configurable under a name.
 
-        Called during import time when the :meth:`App.directive` directive
-        is executed.
+        Called during commit time for all directive methods found on the
+        app class.
 
         :param action_class: the :class:`dectate.Action` subclass to register.
+        :param name: the name under which it is attached to the app class.
         """
-        self._action_classes.add(action_class)
+        self._action_classes[action_class] = name
 
     def register_directive(self, directive, obj):
         """Register a directive with this configurable.
@@ -85,13 +87,13 @@ class Configurable(object):
         # add any action classes defined by base classes
         s = self._action_classes
         for configurable in self.extends:
-            for action_class in configurable._action_classes:
+            for action_class, name in configurable._action_classes.items():
                 if action_class not in s:
-                    s.add(action_class)
+                    s[action_class] = name
 
         # we want to have use group_class for each true Action class
         action_classes = set()
-        for action_class in s:
+        for action_class in s.keys():
             if not issubclass(action_class, Action):
                 continue
             group_class = action_class.group_class
@@ -678,28 +680,23 @@ class Directive(object):
     When used as a decorator this tracks where in the source code
     the directive was used for the purposes of error reporting.
     """
-    def __init__(self, app_class, action_factory, args, kw,
-                 code_info, directive_name, logger):
+    def __init__(self, action_factory, code_info, app_class, args, kw):
         """
-        :param app_class: the :class:`dectate.App` subclass that this
-          directive is used on.
         :param action_factory: function that constructs an action instance.
-        :args: the positional arguments passed into the directive.
-        :kw: the keyword arguments passed into the directive.
         :code_info: a :class:`CodeInfo` instance describing where this
           directive was invoked.
-        :directive_name: the name of this directive.
-        :logger: the logger object to use.
+        :param app_class: the :class:`dectate.App` subclass that this
+          directive is used on.
+        :args: the positional arguments passed into the directive.
+        :kw: the keyword arguments passed into the directive.
         """
+        self.action_factory = action_factory
+        self.code_info = code_info
         self.app_class = app_class
         self.configurable = app_class.dectate
-        self.action_factory = action_factory
         self.args = args
         self.kw = kw
-        self.code_info = code_info
-        self.directive_name = directive_name
         self.argument_info = (args, kw)
-        self.logger = logger
 
     def action(self):
         """Get the :class:`Action` instance represented by this directive.
@@ -739,8 +736,10 @@ class Directive(object):
         :obj: the function or class object to that this directive is used
           on.
         """
-        if self.logger is None:
-            return
+        directive_name = configurable._action_classes[self.action_factory]
+        logger = logging.getLogger('%s.%s' % (
+            configurable.app_class.logger_name,
+            directive_name))
 
         target_dotted_name = dotted_name(configurable.app_class)
         is_same = self.app_class is configurable.app_class
@@ -761,13 +760,13 @@ class Directive(object):
                  sorted(kw.items())])
 
         message = '@%s.%s(%s) on %s' % (
-            target_dotted_name, self.directive_name, arguments,
+            target_dotted_name, directive_name, arguments,
             func_dotted_name)
 
         if not is_same:
             message += ' (from %s)' % dotted_name(self.app_class)
 
-        self.logger.debug(message)
+        logger.debug(message)
 
 
 class DirectiveAbbreviation(object):
@@ -787,13 +786,11 @@ class DirectiveAbbreviation(object):
         combined_kw = directive.kw.copy()
         combined_kw.update(kw)
         return Directive(
-            app_class=directive.app_class,
             action_factory=directive.action_factory,
-            args=combined_args,
-            kw=combined_kw,
             code_info=code_info,
-            directive_name=directive.directive_name,
-            logger=directive.logger)
+            app_class=directive.app_class,
+            args=combined_args,
+            kw=combined_kw)
 
 
 def commit(*apps):
@@ -827,7 +824,7 @@ def commit(*apps):
             # See http://bugs.python.org/issue21389#msg217566
             if hasattr(func, '__qualname__'):
                 func.__qualname__ = type(c).__name__ + '.' + name
-            configurable.register_action_class(func.action_factory)
+            configurable.register_action_class(name, func.action_factory)
         configurable.execute()
 
 

@@ -1,4 +1,3 @@
-import logging
 import sys
 from .config import Configurable, Directive, commit, create_code_info
 from .compat import with_metaclass
@@ -108,7 +107,9 @@ class App(with_metaclass(AppMeta)):
         :param action_class: the :class:`dectate.Action` subclass to register.
         :return: the :class`dectate.Action` class that was registered.
         """
-        cls.dectate.register_action_class(action_class)
+        # XXX this isn't right and should go away
+        cls.dectate.register_action_class(
+            action_class.__class__.__name__, action_class)
         return action_class
 
     @classmethod
@@ -180,14 +181,11 @@ def directive(action_factory):
     :param action_factory: an action class to use as the directive.
     :return: a class method that represents the directive.
     """
+
     def method(cls, *args, **kw):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
-        # XXX disabled logging behavior
-        # logger = logging.getLogger('%s.%s' %
-        # (cls.logger_name, self.name))
-        return Directive(cls, action_factory, args, kw,
-                         code_info, None, None)
+        return Directive(action_factory, code_info, cls, args, kw)
     # sphinxext and App.get_action_classes need to recognize this
     method.action_factory = action_factory
     method.__doc__ = action_factory.__doc__
@@ -214,15 +212,10 @@ class DirectiveDirective(object):
           :class:`dectate.Composite` subclass to register.
         :return: the action or composite subclass that was registered.
         """
-        directive_name = self.name
-
         def method(cls, *args, **kw):
             frame = sys._getframe(1)
             code_info = create_code_info(frame)
-            logger = logging.getLogger('%s.%s' %
-                                       (cls.logger_name, directive_name))
-            return Directive(cls, action_factory, args, kw,
-                             code_info, directive_name, logger)
+            return Directive(action_factory, code_info, cls, args, kw)
         method.action_factory = action_factory  # to help sphinxext
         setattr(self.cls, self.name, classmethod(method))
         method.__name__ = self.name
@@ -232,5 +225,5 @@ class DirectiveDirective(object):
             method.__qualname__ = type(self.cls).__name__ + '.' + self.name
         method.__doc__ = action_factory.__doc__
         method.__module__ = action_factory.__module__
-        self.cls.dectate.register_action_class(action_factory)
+        self.cls.dectate.register_action_class(self.name, action_factory)
         return action_factory
