@@ -1,19 +1,6 @@
 import dectate
 
 
-class AnApp(dectate.App):
-    known = "definitely not a directive"
-
-
-def other():
-    pass
-
-
-class OtherClass(object):
-    pass
-
-
-@AnApp.directive('foo')
 class FooAction(dectate.Action):
     def __init__(self, name):
         self.name = name
@@ -23,3 +10,17 @@ class FooAction(dectate.Action):
 
     def perform(self, obj):
         pass
+
+
+class AnApp(dectate.App):
+    known = "definitely not a directive"
+
+    foo = dectate.directive(FooAction)
+
+
+def other():
+    pass
+
+
+class OtherClass(object):
+    pass
