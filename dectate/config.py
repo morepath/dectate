@@ -815,6 +815,8 @@ def commit(*apps):
         if isinstance(c, Configurable):
             configurables.append(c)
         else:
+            for name, method in c.get_directive_methods():
+                method.__func__.__name__ = name
             for action_class in c.get_action_classes():
                 c.dectate.register_action_class(action_class)
             configurables.append(c.dectate)

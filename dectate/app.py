@@ -112,16 +112,19 @@ class App(with_metaclass(AppMeta)):
         return action_class
 
     @classmethod
-    def get_action_classes(cls):
+    def get_directive_methods(cls):
         for name in dir(cls):
             attr = getattr(cls, name)
             im_func = getattr(attr, '__func__', None)
             if im_func is None:
                 continue
-            action_factory = getattr(im_func, 'action_factory', None)
-            if action_factory is None:
-                continue
-            yield action_factory
+            if hasattr(im_func, 'action_factory'):
+                yield name, attr
+
+    @classmethod
+    def get_action_classes(cls):
+        for name, method in cls.get_directive_methods():
+            yield method.__func__.action_factory
 
     @classmethod
     def commit(cls):
@@ -158,7 +161,7 @@ class App(with_metaclass(AppMeta)):
         pass
 
 
-def directive(action_factory, private=False):
+def directive(action_factory):
     def method(cls, *args, **kw):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
