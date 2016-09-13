@@ -122,11 +122,6 @@ class App(with_metaclass(AppMeta)):
                 yield name, attr
 
     @classmethod
-    def get_action_classes(cls):
-        for name, method in cls.get_directive_methods():
-            yield method.__func__.action_factory
-
-    @classmethod
     def commit(cls):
         """Commit this class and any depending on it.
 
@@ -162,6 +157,29 @@ class App(with_metaclass(AppMeta)):
 
 
 def directive(action_factory):
+    """Create a classmethod to hook action to application class.
+
+    You pass in a :class:`dectate.Action` or a
+    :class:`dectate.Composite` subclass and can attach the result as a
+    class method to an :class:`dectate.App` subclass::
+
+      class FooAction(dectate.Action):
+          ...
+
+      class MyApp(dectate.App):
+          my_directive = dectate.directive(MyAction)
+
+    Alternatively you can also define the direction inline using
+    this as a decorator::
+
+      class MyApp(dectate.App):
+          @directive
+          class my_directive(dectate.Action):
+              ...
+
+    :param action_factory: an action class to use as the directive.
+    :return: a class method that represents the directive.
+    """
     def method(cls, *args, **kw):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
