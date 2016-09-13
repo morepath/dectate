@@ -32,6 +32,33 @@ def test_simple():
     assert MyApp.config.my == [('hello', f)]
 
 
+def test_decorator():
+
+    class MyApp(App):
+        @directive
+        class foo(Action):
+            config = {
+                'my': list
+            }
+
+            def __init__(self, message):
+                self.message = message
+
+            def identifier(self, my):
+                return self.message
+
+            def perform(self, obj, my):
+                my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.my == [('hello', f)]
+
+
 def test_commit_method():
     class MyDirective(Action):
         config = {
