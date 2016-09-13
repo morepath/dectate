@@ -815,19 +815,19 @@ def commit(*apps):
         if isinstance(c, Configurable):
             configurables.append(c)
         else:
-            for name, method in c.get_directive_methods():
-                func = method.__func__
-                func.__name__ = name
-                # As of Python 3.5, the repr of bound methods uses
-                # __qualname__ instead of __name__.
-                # See http://bugs.python.org/issue21389#msg217566
-                if hasattr(func, '__qualname__'):
-                    func.__qualname__ = type(c).__name__ + '.' + name
-            for action_class in c.get_action_classes():
-                c.dectate.register_action_class(action_class)
             configurables.append(c.dectate)
 
     for configurable in sort_configurables(configurables):
+        app_class = configurable.app_class
+        for name, method in app_class.get_directive_methods():
+            func = method.__func__
+            func.__name__ = name
+            # As of Python 3.5, the repr of bound methods uses
+            # __qualname__ instead of __name__.
+            # See http://bugs.python.org/issue21389#msg217566
+            if hasattr(func, '__qualname__'):
+                func.__qualname__ = type(c).__name__ + '.' + name
+            configurable.register_action_class(func.action_factory)
         configurable.execute()
 
 
