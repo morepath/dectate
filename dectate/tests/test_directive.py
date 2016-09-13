@@ -1318,7 +1318,6 @@ def test_registry_factory_argument_introduces_new_registry():
     class MyApp(App):
         foo = directive(MyDirective)
 
-
     @MyApp.foo('hello')
     def f():
         pass

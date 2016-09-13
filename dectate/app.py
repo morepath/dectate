@@ -166,7 +166,7 @@ def directive(action_factory):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
         # XXX disabled logging behavior
-        #logger = logging.getLogger('%s.%s' %
+        # logger = logging.getLogger('%s.%s' %
         # (cls.logger_name, self.name))
         return Directive(cls, action_factory, args, kw,
                          code_info, None, None)
