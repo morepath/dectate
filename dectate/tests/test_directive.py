@@ -1,4 +1,4 @@
-from dectate.app import App
+from dectate.app import App, directive
 from dectate.config import commit, Action, Composite
 from dectate.error import ConflictError, ConfigError
 
@@ -23,6 +23,33 @@ def test_simple():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.my == [('hello', f)]
+
+
+def test_simple_direct():
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():

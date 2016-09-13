@@ -112,6 +112,18 @@ class App(with_metaclass(AppMeta)):
         return action_class
 
     @classmethod
+    def get_action_classes(cls):
+        for name in dir(cls):
+            attr = getattr(cls, name)
+            im_func = getattr(attr, '__func__', None)
+            if im_func is None:
+                continue
+            action_factory = getattr(im_func, 'action_factory', None)
+            if action_factory is None:
+                continue
+            yield action_factory
+
+    @classmethod
     def commit(cls):
         """Commit this class and any depending on it.
 
@@ -144,6 +156,22 @@ class App(with_metaclass(AppMeta)):
         to set up the state of the class in its pristine condition.
         """
         pass
+
+
+def directive(action_factory, private=False):
+    def method(cls, *args, **kw):
+        frame = sys._getframe(1)
+        code_info = create_code_info(frame)
+        # XXX disabled logging behavior
+        #logger = logging.getLogger('%s.%s' %
+        # (cls.logger_name, self.name))
+        return Directive(cls, action_factory, args, kw,
+                         code_info, None, None)
+    # sphinxext and App.get_action_classes need to recognize this
+    method.action_factory = action_factory
+    method.__doc__ = action_factory.__doc__
+    method.__module__ = action_factory.__module__
+    return classmethod(method)
 
 
 class DirectiveDirective(object):
