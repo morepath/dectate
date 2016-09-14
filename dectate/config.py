@@ -66,9 +66,14 @@ class Configurable(object):
         """
         self._directives.append((directive, obj))
 
-    def setup_action_classes(self):
-        # register all directives found on this app class
-        self._action_classes = action_classes = {}
+    def get_action_classes(self):
+        """Get all action classes registered for this app.
+
+        This includes action classes registered for its base class.
+
+        :return: a dict with action class keys and name values.
+        """
+        result = {}
         app_class = self.app_class
         for name, method in app_class.get_directive_methods():
             func = method.__func__
@@ -78,14 +83,14 @@ class Configurable(object):
             # See http://bugs.python.org/issue21389#msg217566
             if hasattr(func, '__qualname__'):
                 func.__qualname__ = type(c).__name__ + '.' + name
-            action_classes[func.action_factory] = name
+            result[func.action_factory] = name
 
         # add any action classes defined by base classes
         for configurable in self.extends:
             for action_class, name in configurable._action_classes.items():
-                if action_class not in action_classes:
-                    action_classses[action_class] = name
-        return action_classes
+                if action_class not in result:
+                    result[action_class] = name
+        return result
 
     def setup(self):
         """Set up config object and action groups.
@@ -94,11 +99,11 @@ class Configurable(object):
 
         Takes inheritance of apps into account.
         """
-        registered_action_classes = self.setup_action_classes().keys()
+        self._action_classes = self.get_action_classes()
 
         # we want to have use group_class for each true Action class
         action_classes = set()
-        for action_class in registered_action_classes:
+        for action_class in self._action_classes.keys():
             if not issubclass(action_class, Action):
                 continue
             group_class = action_class.group_class
