@@ -54,17 +54,6 @@ class Configurable(object):
         # have we ever been committed
         self.committed = False
 
-    def register_action_class(self, name, action_class):
-        """Register an action class with this configurable under a name.
-
-        Called during commit time for all directive methods found on the
-        app class.
-
-        :param action_class: the :class:`dectate.Action` subclass to register.
-        :param name: the name under which it is attached to the app class.
-        """
-        self._action_classes[action_class] = name
-
     def register_directive(self, directive, obj):
         """Register a directive with this configurable.
 
@@ -85,6 +74,7 @@ class Configurable(object):
         Takes inheritance of apps into account.
         """
         # register all directives found on this app class
+        self._action_classes = action_class_map = {}
         app_class = self.app_class
         for name, method in app_class.get_directive_methods():
             func = method.__func__
@@ -94,18 +84,17 @@ class Configurable(object):
             # See http://bugs.python.org/issue21389#msg217566
             if hasattr(func, '__qualname__'):
                 func.__qualname__ = type(c).__name__ + '.' + name
-            self.register_action_class(name, func.action_factory)
+            action_class_map[func.action_factory] = name
 
         # add any action classes defined by base classes
-        s = self._action_classes
         for configurable in self.extends:
             for action_class, name in configurable._action_classes.items():
-                if action_class not in s:
-                    s[action_class] = name
+                if action_class not in action_class_map:
+                    action_class_map[action_class] = name
 
         # we want to have use group_class for each true Action class
         action_classes = set()
-        for action_class in s.keys():
+        for action_class in action_class_map.keys():
             if not issubclass(action_class, Action):
                 continue
             group_class = action_class.group_class
