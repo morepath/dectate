@@ -66,15 +66,9 @@ class Configurable(object):
         """
         self._directives.append((directive, obj))
 
-    def setup(self):
-        """Set up config object and action groups.
-
-        This happens during the start of the commit phase.
-
-        Takes inheritance of apps into account.
-        """
+    def setup_action_classes(self):
         # register all directives found on this app class
-        self._action_classes = action_class_map = {}
+        self._action_classes = action_classes = {}
         app_class = self.app_class
         for name, method in app_class.get_directive_methods():
             func = method.__func__
@@ -84,17 +78,27 @@ class Configurable(object):
             # See http://bugs.python.org/issue21389#msg217566
             if hasattr(func, '__qualname__'):
                 func.__qualname__ = type(c).__name__ + '.' + name
-            action_class_map[func.action_factory] = name
+            action_classes[func.action_factory] = name
 
         # add any action classes defined by base classes
         for configurable in self.extends:
             for action_class, name in configurable._action_classes.items():
-                if action_class not in action_class_map:
-                    action_class_map[action_class] = name
+                if action_class not in action_classes:
+                    action_classses[action_class] = name
+        return action_classes
+
+    def setup(self):
+        """Set up config object and action groups.
+
+        This happens during the start of the commit phase.
+
+        Takes inheritance of apps into account.
+        """
+        registered_action_classes = self.setup_action_classes().keys()
 
         # we want to have use group_class for each true Action class
         action_classes = set()
-        for action_class in action_class_map.keys():
+        for action_class in registered_action_classes:
             if not issubclass(action_class, Action):
                 continue
             group_class = action_class.group_class
