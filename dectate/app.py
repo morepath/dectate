@@ -62,6 +62,7 @@ class App(with_metaclass(AppMeta)):
     a very dumb object that has no methods and is just a container for
     attributes that contain the real configuration.
     """
+
     @classmethod
     def get_directive_methods(cls):
         for name in dir(cls):
@@ -131,7 +132,6 @@ def directive(action_factory):
     :param action_factory: an action class to use as the directive.
     :return: a class method that represents the directive.
     """
-
     def method(cls, *args, **kw):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
