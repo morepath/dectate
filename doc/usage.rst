@@ -100,29 +100,15 @@ Here are some features of Dectate:
   provides the infrastructure to easily construct command-line tools
   for querying configuration.
 
-App classes
------------
+Actions
+-------
 
-Configuration in Dectate is associated with special *classes* which
-derive from :class:`dectate.App`:
+In Dectate, the simple `plugins` example above looks like this:
 
 .. testcode::
 
   import dectate
 
-  class MyApp(dectate.App):
-      pass
-
-Creating a directive
---------------------
-
-We can now use the :meth:`dectate.App.directive` decorator to declare
-a *directive* which executes a special configuration action. Let's
-replicate the simple `plugins` example above using Dectate:
-
-.. testcode::
-
-  @MyApp.directive('plugin')
   class PluginAction(dectate.Action):
       config = {
          'plugins': dict
@@ -136,38 +122,53 @@ replicate the simple `plugins` example above using Dectate:
       def perform(self, obj, plugins):
           plugins[self.name] = obj
 
+We have formulated a configuration action that affects a ``plugins``
+dict.
+
+App classes
+-----------
+
+Configuration in Dectate is associated with special *classes* which
+derive from :class:`dectate.App`. We also associate the action with
+it as a directive:
+
+.. testcode::
+
+  class PluginApp(dectate.App):
+      plugin = dectate.directive(PluginAction)
+
 Let's use it now:
 
 .. testcode::
 
-  @MyApp.plugin('a')
+  @PluginApp.plugin('a')
   def f():
       pass # do something interesting
 
-  @MyApp.plugin('b')
+  @PluginApp.plugin('b')
   def g():
       pass # something else interesting
 
-We have registered the function ``f`` on ``MyApp``. The ``name``
+We have registered the function ``f`` on ``PluginApp``. The ``name``
 argument is ``'a'``. We've registered ``g`` under ``'b'``.
 
-We can now commit the configuration for ``MyApp``:
+We can now commit the configuration for ``PluginApp``:
 
 .. testcode::
 
-  dectate.commit(MyApp)
+  dectate.commit(PluginApp)
 
 Once the commit has successfully completed, we can take a look at the
 configuration:
 
 .. doctest::
 
-  >>> sorted(MyApp.config.plugins.items())
+  >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
 
 What are the changes between this and the simple plugins example?
 
-The main difference is that ``plugin`` decorator is associated with a
+The main difference is that the ``plugin`` decorator is associated with a
 class and so is the resulting configuration, which gets stored as the
 ``plugins`` attribute of :attr:`dectate.App.config`. The other
 difference is that we provide an ``identifier`` method in the action
@@ -177,20 +178,20 @@ definition. These differences support configuration *reuse*,
 Reuse
 ~~~~~
 
-You can reuse configuration by simply subclassing ``MyApp``:
+You can reuse configuration by simply subclassing ``PluginApp``:
 
 .. testcode::
 
-  class SubApp(MyApp):
+  class SubApp(PluginApp):
      pass
 
 We commit both classes:
 
 .. testcode::
 
-  dectate.commit(MyApp, SubApp)
+  dectate.commit(PluginApp, SubApp)
 
-``SubClass`` now contains all the configuration declared for ``MyApp``:
+``SubClass`` now contains all the configuration declared for ``PluginApp``:
 
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
@@ -205,7 +206,7 @@ Consider this example:
 
 .. testcode::
 
-   class ConflictingApp(MyApp):
+   class ConflictingApp(PluginApp):
        pass
 
    @ConflictingApp.plugin('foo')
@@ -256,7 +257,7 @@ additional configuration actions:
   def h():
       pass # do something interesting
 
-  dectate.commit(MyApp, SubApp)
+  dectate.commit(PluginApp, SubApp)
 
 ``SubApp`` now has the additional plugin ``c``:
 
@@ -265,11 +266,11 @@ additional configuration actions:
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
 
-But ``MyApp`` is unaffected:
+But ``PluginApp`` is unaffected:
 
 .. doctest::
 
-  >>> sorted(MyApp.config.plugins.items())
+  >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
 
 Overrides
@@ -284,7 +285,7 @@ this in ``SubApp`` by simply reusing the same ``name``:
   def x():
       pass
 
-  dectate.commit(MyApp, SubApp)
+  dectate.commit(PluginApp, SubApp)
 
 In ``SubApp`` we now have changed the configuration for ``a`` to
 register the function ``x`` instead of ``f``. If we had done this for
@@ -296,16 +297,16 @@ lets you override configuration instead:
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function x at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
 
-But ``MyApp`` still uses ``f``:
+But ``PluginApp`` still uses ``f``:
 
-  >>> sorted(MyApp.config.plugins.items())
+  >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
 
 Isolation
 ~~~~~~~~~
 
 We have already seen in the inheritance and override examples that
-``MyApp`` is isolated from configuration extension and overrides done
+``PluginApp`` is isolated from configuration extension and overrides done
 for ``SubApp``. We can in fact entirely isolate configuration from
 each other.
 
@@ -314,10 +315,6 @@ from everything before:
 
 .. testcode::
 
-  class BaseApp(dectate.App):
-      pass
-
-  @BaseApp.directive('plugin')
   class PluginAction2(dectate.Action):
       config = {
          'plugins': dict
@@ -330,6 +327,9 @@ from everything before:
 
       def perform(self, obj, plugins):
           plugins[self.name] = obj
+
+  class BaseApp(dectate.App):
+      plugin = dectate.directive(PluginAction2)
 
 We don't set up any configuration for ``BaseApp``; it's intended to be
 part of our framework. Now we create two subclasses:
@@ -369,12 +369,11 @@ This won't affect ``TwoApp`` in any way:
 ``OneApp`` and ``TwoApp`` are isolated, so configurations are
 independent, and cannot conflict or override.
 
-The Anatomy of a Directive
---------------------------
+The Anatomy of an Action
+------------------------
 
-Let's consider the directive registration again in detail::
+Let's consider the plugin action in detail::
 
-  @MyApp.directive('plugin')
   class PluginAction(dectate.Action):
       config = {
          'plugins': dict
@@ -390,11 +389,8 @@ Let's consider the directive registration again in detail::
 
 What is going on here?
 
-* We create a new directive called ``plugin`` on ``MyApp``. It also
-  exists for its subclasses.
-
-* The directive is implemented with a custom class called
-  ``PluginAction`` that inherits from :class:`dectate.Action`.
+* We implement a custom class called ``PluginAction`` that inherits
+  from :class:`dectate.Action`.
 
 * ``config`` (:attr:`dectate.Action.config`) specifies that this
   directive has a configuration effect on ``plugins``. We declare that
@@ -421,14 +417,20 @@ What is going on here?
   this case we store ``obj`` under the key ``self.name`` in the
   ``plugins`` dict.
 
+We then associate the action with a class as a directive::
+
+  class PluginApp(dectate.App):
+      plugin = dectate.directive(PluginAction)
+
 Once we have declared the directive for our framework we can tell
 programmers to use it.
 
 Directives have absolutely no effect until *commit* is called, which
 we do with ``dectate.commit``. This performs the actions and we can
-then find the result ``MyApp.config`` (:attr:`dectate.App.config`).
+then find the result ``PluginApp.config``
+(:attr:`dectate.App.config`).
 
-The results are in ``MyApp.config.plugins`` as we set this up with
+The results are in ``PluginApp.config.plugins`` as we set this up with
 ``config`` in our ``PluginAction``.
 
 Depends
@@ -440,15 +442,11 @@ of directive depends on the former. You can make sure this happens by
 using the ``depends`` (:attr:`dectate.Action.depends`) class
 attribute.
 
-First we set up a ``foo`` directive that registers into a ``foos``
+First we set up a ``FooAction`` that registers into a ``foos``
 dict:
 
 .. testcode::
 
-  class DependsApp(dectate.App):
-      pass
-
-  @DependsApp.directive('foo')
   class FooAction(dectate.Action):
       config = {
          'foos': dict
@@ -462,13 +460,12 @@ dict:
       def perform(self, obj, foos):
           foos[self.name] = obj
 
-Now we create a ``bar`` directive that depends on ``FooDirective`` and
-uses information in the ``foos`` dict:
+Now we create a ``BarAction`` directive that depends on ``FooAction``
+and uses information in the ``foos`` dict:
 
 .. testcode::
 
-   @DependsApp.directive('bar')
-   class BarAction(dectate.Action):
+  class BarAction(dectate.Action):
       depends = [FooAction]
 
       config = {
@@ -485,8 +482,19 @@ uses information in the ``foos`` dict:
           in_foo = self.name in foos
           bars.append((self.name, obj, in_foo))
 
-We have now ensured that ``BarAction`` actions are performed after
-``FooAction`` action, no matter what order we use them:
+In order to use them we need to hook up the actions as directives
+onto an app class:
+
+.. testcode::
+
+  class DependsApp(dectate.App):
+      foo = dectate.directive(FooAction)
+      bar = dectate.directive(BarAction)
+
+
+Using ``depends`` we have ensured that ``BarAction`` actions are
+performed after ``FooAction`` action, no matter what order we use
+them:
 
 .. testcode::
 
@@ -515,11 +523,12 @@ We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
 config dependencies
 -------------------
 
-In the example above, the items in ``bars`` depend on the items in ``foos``
-and we've implemented this dependency in the ``perform`` of ``BarDirective``.
+In the example above, the items in ``bars`` depend on the items in
+``foos`` and we've implemented this dependency in the ``perform`` of
+``BarAction``.
 
-We can instead make the configuration object for the ``BarDirective``
-depend on ``foos``. This way ``BarDirective`` does not need to know
+We can instead make the configuration object for the ``BarAction``
+depend on ``foos``. This way ``BarAction`` does not need to know
 about ``foos``. You can declare a dependency between config objects
 with the ``factory_arguments`` attribute of the config factory. Any
 config object that is created in earlier dependencies of this action,
@@ -527,15 +536,11 @@ or in the action itself, can be listed in ``factory_arguments``. The
 key and value in ``factory_arguments`` have to match the key and value
 in ``config`` of that earlier action.
 
-First we create an app with a ``FooAction`` that sets up a ``foos``
-config item as before:
+First we create a ``FooAction`` that sets up a ``foos`` config item as
+before:
 
 .. testcode::
 
-  class ConfigDependsApp(dectate.App):
-      pass
-
-  @ConfigDependsApp.directive('foo')
   class FooAction(dectate.Action):
       config = {
          'foos': dict
@@ -572,7 +577,6 @@ We create a ``BarAction`` that depends on the ``FooAction`` (so that
 
 .. testcode::
 
-   @ConfigDependsApp.directive('bar')
    class BarAction(dectate.Action):
       depends = [FooAction]
 
@@ -588,6 +592,15 @@ We create a ``BarAction`` that depends on the ``FooAction`` (so that
 
       def perform(self, obj, bar):
           bar.add(self.name, obj)
+
+
+And we set them up as directives:
+
+.. testcode::
+
+  class ConfigDependsApp(dectate.App):
+      foo = dectate.directive(FooAction)
+      bar = dectate.directive(BarAction)
 
 When we use our directives:
 
@@ -625,7 +638,6 @@ so on by setting the special ``app_class_arg`` class attribute:
 
 .. testcode::
 
-  @MyApp.directive('plugin_with_app_class')
   class PluginAction(dectate.Action):
       config = {
          'plugins': dict
@@ -641,6 +653,9 @@ so on by setting the special ``app_class_arg`` class attribute:
       def perform(self, obj, plugins, app_class):
           plugins[self.name] = obj
           app_class.touched = True
+
+  class MyApp(dectate.App):
+     plugin_with_app_class = dectate.directive(PluginAction)
 
 When we now perform this directive:
 
@@ -672,10 +687,6 @@ using ``before`` (:meth:`dectate.Action.before`) and ``after``
 
 .. testcode::
 
-  class BeforeAfterApp(dectate.App):
-      pass
-
-  @BeforeAfterApp.directive('foo')
   class FooAction(dectate.Action):
       config = {
          'foos': list
@@ -696,6 +707,9 @@ using ``before`` (:meth:`dectate.Action.before`) and ``after``
 
       def perform(self, obj, foos):
           foos.append((self.name, obj))
+
+  class BeforeAfterApp(dectate.App):
+      foo = dectate.directive(FooAction)
 
   @BeforeAfterApp.foo('a')
   def f():
@@ -725,10 +739,6 @@ share their ``config`` and their ``before`` and ``after`` methods.
 
 .. testcode::
 
-  class GroupApp(dectate.App):
-      pass
-
-  @GroupApp.directive('foo')
   class FooAction(dectate.Action):
       config = {
          'foos': list
@@ -742,49 +752,49 @@ share their ``config`` and their ``before`` and ``after`` methods.
       def perform(self, obj, foos):
           foos.append((self.name, obj))
 
-We now create a ``BarDirective`` that groups with ``FooAction``:
+We now create a ``BarAction`` that groups with ``FooAction``:
 
 .. testcode::
 
-  @GroupApp.directive('bar')
   class BarAction(dectate.Action):
-     group_class = FooAction
+      group_class = FooAction
 
-     def __init__(self, name):
-         self.name = name
+      def __init__(self, name):
+          self.name = name
 
-     def identifier(self, foos):
-         return self.name
+      def identifier(self, foos):
+          return self.name
 
-     def perform(self, obj, foos):
-         foos.append((self.name, obj))
+      def perform(self, obj, foos):
+          foos.append((self.name, obj))
+
+  class GroupApp(dectate.App):
+      foo = dectate.directive(FooAction)
+      bar = dectate.directive(BarAction)
 
 It reuses the ``config`` from ``FooAction``. This means that ``foo``
 and ``bar`` can be in conflict:
 
 .. testcode::
 
-  class GroupConflictApp(GroupApp):
-      pass
-
-  @GroupConflictApp.foo('a')
+  @GroupApp.foo('a')
   def f():
       pass
 
-  @GroupConflictApp.bar('a')
+  @GroupApp.bar('a')
   def g():
       pass
 
 .. doctest::
 
-  >>> dectate.commit(GroupConflictApp)
+  >>> dectate.commit(GroupApp)
   Traceback (most recent call last):
     ...
   ConflictError: Conflict between:
     File "...", line 4
-      @GroupConflictApp.foo('a')
+      @GroupApp.foo('a')
     File "...", line 8
-      @GroupConflictApp.bar('a')
+      @GroupApp.bar('a')
 
 Additional discriminators
 -------------------------
@@ -795,10 +805,6 @@ all at once. You can take care of this with the ``discriminators``
 
 .. testcode::
 
-  class DiscriminatorsApp(dectate.App):
-      pass
-
-  @DiscriminatorsApp.directive('foo')
   class FooAction(dectate.Action):
       config = {
          'foos': dict
@@ -815,6 +821,10 @@ all at once. You can take care of this with the ``discriminators``
 
       def perform(self, obj, foos):
           foos[self.name] = obj
+
+
+  class DiscriminatorsApp(dectate.App):
+      foo = dectate.directive(FooAction)
 
 An action now conflicts with an action of the same name *and* with
 any action that is in the ``extra`` list:
@@ -849,15 +859,11 @@ Composite actions
 When you can define an action entirely in terms of other actions, you
 can subclass :class:`dectate.Composite`.
 
-First we define a normal ``sub`` directive to use in the composite action
+First we define a normal ``SubAction`` to use in the composite action
 later:
 
 .. testcode::
 
-  class CompositeApp(dectate.App):
-      pass
-
-  @CompositeApp.directive('sub')
   class SubAction(dectate.Action):
       config = {
           'my': list
@@ -878,13 +884,20 @@ uses ``SubAction`` in an ``actions``
 
 .. testcode::
 
-  @CompositeApp.directive('composite')
   class CompositeAction(dectate.Composite):
       def __init__(self, names):
           self.names = names
 
       def actions(self, obj):
           return [(SubAction(name), obj) for name in self.names]
+
+  class CompositeApp(dectate.App):
+      _sub = dectate.directive(SubAction)
+      composite = dectate.directive(CompositeAction)
+
+Note that even though ``_sub`` is not intended to be a public part of
+the API we still need to include it in our :class:`dectate.App`
+subclass, as Dectate does need to know it exists.
 
 We can now use it:
 
@@ -911,11 +924,7 @@ use the ``with`` statement to do so with less repetition:
 
 .. testcode::
 
-  class WithApp(dectate.App):
-      pass
-
-  @WithApp.directive('foo')
-  class SubAction(dectate.Action):
+  class FooAction(dectate.Action):
       config = {
           'my': list
       }
@@ -929,6 +938,10 @@ use the ``with`` statement to do so with less repetition:
 
       def perform(self, obj, my):
           my.append((self.a, self.b, obj))
+
+
+  class WithApp(dectate.App):
+      foo = dectate.directive(FooAction)
 
 Instead of this:
 
@@ -1020,7 +1033,7 @@ querying
 Dectate keeps a database of committed actions that can be queried by
 using :class:`dectate.Query`.
 
-Here is an example of a query for all the plugin actions on ``MyApp``:
+Here is an example of a query for all the plugin actions on ``PluginApp``:
 
 .. testcode::
 
@@ -1031,7 +1044,7 @@ We can now run the query:
 .. doctest::
   :options: +NORMALIZE_WHITESPACE
 
-  >>> list(q(MyApp))
+  >>> list(q(PluginApp))
   [(<PluginAction ...>, <function f ...>),
    (<PluginAction ...>, <function g ...>)]
 
@@ -1039,7 +1052,7 @@ We can also filter the query for attributes of the action:
 
 .. doctest::
 
-  >>> list(q.filter(name='a')(MyApp))
+  >>> list(q.filter(name='a')(PluginApp))
   [(<PluginAction object ...>, <function f ...>)]
 
 Sometimes the attribute on the action is not the same as the name you
