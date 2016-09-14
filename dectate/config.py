@@ -82,7 +82,7 @@ class Configurable(object):
             # __qualname__ instead of __name__.
             # See http://bugs.python.org/issue21389#msg217566
             if hasattr(func, '__qualname__'):
-                func.__qualname__ = type(c).__name__ + '.' + name
+                func.__qualname__ = type(app_class).__name__ + '.' + name
             result[func.action_factory] = name
 
         # add any action classes defined by base classes
