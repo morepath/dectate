@@ -84,6 +84,18 @@ class Configurable(object):
 
         Takes inheritance of apps into account.
         """
+        # register all directives found on this app class
+        app_class = self.app_class
+        for name, method in app_class.get_directive_methods():
+            func = method.__func__
+            func.__name__ = name
+            # As of Python 3.5, the repr of bound methods uses
+            # __qualname__ instead of __name__.
+            # See http://bugs.python.org/issue21389#msg217566
+            if hasattr(func, '__qualname__'):
+                func.__qualname__ = type(c).__name__ + '.' + name
+            self.register_action_class(name, func.action_factory)
+
         # add any action classes defined by base classes
         s = self._action_classes
         for configurable in self.extends:
@@ -815,16 +827,6 @@ def commit(*apps):
             configurables.append(c.dectate)
 
     for configurable in sort_configurables(configurables):
-        app_class = configurable.app_class
-        for name, method in app_class.get_directive_methods():
-            func = method.__func__
-            func.__name__ = name
-            # As of Python 3.5, the repr of bound methods uses
-            # __qualname__ instead of __name__.
-            # See http://bugs.python.org/issue21389#msg217566
-            if hasattr(func, '__qualname__'):
-                func.__qualname__ = type(c).__name__ + '.' + name
-            configurable.register_action_class(name, func.action_factory)
         configurable.execute()
 
 
