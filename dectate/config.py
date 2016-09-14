@@ -92,35 +92,6 @@ class Configurable(object):
                     result[action_class] = name
         return result
 
-    def get_grouped_action_classes(self):
-        # we want to have use group_class for each true Action class
-        result = set()
-        for action_class in self._action_classes.keys():
-            if not issubclass(action_class, Action):
-                continue
-            group_class = action_class.group_class
-            if group_class is None:
-                group_class = action_class
-            else:
-                if group_class.group_class is not None:
-                    raise ConfigError(
-                        "Cannot use group_class on another action class "
-                        "that uses group_class: %r" % action_class)
-                if 'config' in action_class.__dict__:
-                    raise ConfigError(
-                        "Cannot use config class attribute when you use "
-                        "group_class: %r" % action_class)
-                if 'before' in action_class.__dict__:
-                    raise ConfigError(
-                        "Cannot define before method when you use "
-                        "group_class: %r" % action_class)
-                if 'after' in action_class.__dict__:
-                    raise ConfigError(
-                        "Cannot define after method when you use "
-                        "group_class: %r" % action_class)
-            result.add(group_class)
-        return result
-
     def setup(self):
         """Set up config object and action groups.
 
@@ -130,10 +101,11 @@ class Configurable(object):
         """
         self._action_classes = self.get_action_classes()
 
-        action_classes = sort_action_classes(self.get_grouped_action_classes())
+        grouped_action_classes = sort_action_classes(
+            group_action_classes(self._action_classes.keys()))
 
         # delete any old configuration in case we run this a second time
-        for action_class in action_classes:
+        for action_class in grouped_action_classes:
             self.delete_config(action_class)
 
         # now we create ActionGroup objects for each action class group
@@ -141,7 +113,7 @@ class Configurable(object):
         # and we track what config factories we've seen for consistency
         # checking
         self._factories_seen = {}
-        for action_class in action_classes:
+        for action_class in grouped_action_classes:
             self.setup_config(action_class)
             d[action_class] = ActionGroup(action_class,
                                           self.action_extends(action_class))
@@ -850,6 +822,40 @@ def sort_action_classes(action_classes):
     """
     return topological_sort(action_classes, lambda c: c.depends)
 
+
+def group_action_classes(action_classes):
+    """Group action classes by ``group_class``.
+
+    :param action_classes: iterable of action classes
+    :return: set of action classes grouped together.
+    """
+    # we want to have use group_class for each true Action class
+    result = set()
+    for action_class in action_classes:
+        if not issubclass(action_class, Action):
+            continue
+        group_class = action_class.group_class
+        if group_class is None:
+            group_class = action_class
+        else:
+            if group_class.group_class is not None:
+                raise ConfigError(
+                    "Cannot use group_class on another action class "
+                    "that uses group_class: %r" % action_class)
+            if 'config' in action_class.__dict__:
+                raise ConfigError(
+                    "Cannot use config class attribute when you use "
+                    "group_class: %r" % action_class)
+            if 'before' in action_class.__dict__:
+                raise ConfigError(
+                    "Cannot define before method when you use "
+                    "group_class: %r" % action_class)
+            if 'after' in action_class.__dict__:
+                raise ConfigError(
+                    "Cannot define after method when you use "
+                    "group_class: %r" % action_class)
+        result.add(group_class)
+    return result
 
 def expand_actions(actions):
     """Expand any :class:`Composite` instances into :class:`Action` instances.
