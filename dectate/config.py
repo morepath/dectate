@@ -66,6 +66,19 @@ class Configurable(object):
         """
         self._directives.append((directive, obj))
 
+    def _fixup_directive_names(self):
+        """Set up correct name for directives.
+        """
+        app_class = self.app_class
+        for name, method in app_class.get_directive_methods():
+            func = method.__func__
+            func.__name__ = name
+            # As of Python 3.5, the repr of bound methods uses
+            # __qualname__ instead of __name__.
+            # See http://bugs.python.org/issue21389#msg217566
+            if hasattr(func, '__qualname__'):
+                func.__qualname__ = type(app_class).__name__ + '.' + name
+
     def get_action_classes(self):
         """Get all action classes registered for this app.
 
@@ -76,14 +89,7 @@ class Configurable(object):
         result = {}
         app_class = self.app_class
         for name, method in app_class.get_directive_methods():
-            func = method.__func__
-            func.__name__ = name
-            # As of Python 3.5, the repr of bound methods uses
-            # __qualname__ instead of __name__.
-            # See http://bugs.python.org/issue21389#msg217566
-            if hasattr(func, '__qualname__'):
-                func.__qualname__ = type(app_class).__name__ + '.' + name
-            result[func.action_factory] = name
+            result[method.__func__.action_factory] = name
 
         # add any action classes defined by base classes
         for configurable in self.extends:
@@ -99,6 +105,7 @@ class Configurable(object):
 
         Takes inheritance of apps into account.
         """
+        self._fixup_directive_names()
         self._action_classes = self.get_action_classes()
 
         grouped_action_classes = sort_action_classes(
@@ -856,6 +863,7 @@ def group_action_classes(action_classes):
                     "group_class: %r" % action_class)
         result.add(group_class)
     return result
+
 
 def expand_actions(actions):
     """Expand any :class:`Composite` instances into :class:`Action` instances.
