@@ -219,7 +219,7 @@ def test_type_error_too_many_arguments():
     class MyApp(App):
         foo = directive(MyDirective)
 
-    # not enough arguments
+    # too many arguments
     @MyApp.foo('a', 'b')
     def f():
         pass
