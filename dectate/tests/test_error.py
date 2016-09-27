@@ -1,4 +1,4 @@
-from dectate.app import App
+from dectate.app import App, directive
 from dectate.config import commit, Action, Composite
 
 from dectate.error import (ConflictError, ConfigError, DirectiveError,
@@ -9,10 +9,6 @@ import pytest
 
 
 def test_directive_error_in_action():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         def __init__(self, name):
             self.name = name
@@ -22,6 +18,9 @@ def test_directive_error_in_action():
 
         def perform(self, obj):
             raise DirectiveError("A real problem")
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -37,16 +36,15 @@ def test_directive_error_in_action():
 
 
 def test_directive_error_in_composite():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Composite):
         def __init__(self, name):
             self.name = name
 
         def actions(self, obj):
             raise DirectiveError("Something went wrong")
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -62,10 +60,6 @@ def test_directive_error_in_composite():
 
 
 def test_conflict_error():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         def __init__(self, name):
             self.name = name
@@ -75,6 +69,9 @@ def test_conflict_error():
 
         def perform(self, obj):
             raise DirectiveError("A real problem")
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -95,10 +92,6 @@ def test_conflict_error():
 
 
 def test_with_statement_error():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         def __init__(self, model, name):
             self.model = model
@@ -109,6 +102,9 @@ def test_with_statement_error():
 
         def perform(self, obj):
             raise DirectiveError("A real problem")
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     class Dummy(object):
         pass
@@ -133,10 +129,6 @@ def test_with_statement_error():
 
 
 def test_composite_codeinfo_propagation():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -151,13 +143,16 @@ def test_composite_codeinfo_propagation():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
 
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in self.messages]
+
+    class MyApp(App):
+        _sub = directive(SubDirective)
+        composite = directive(CompositeDirective)
 
     @MyApp.composite(['a'])
     def f():
@@ -177,10 +172,6 @@ def test_composite_codeinfo_propagation():
 
 
 def test_type_error_not_enough_arguments():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -194,6 +185,9 @@ def test_type_error_not_enough_arguments():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     # not enough arguments
     @MyApp.foo()
@@ -208,10 +202,6 @@ def test_type_error_not_enough_arguments():
 
 
 def test_type_error_too_many_arguments():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -226,7 +216,10 @@ def test_type_error_too_many_arguments():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    # not enough arguments
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    # too many arguments
     @MyApp.foo('a', 'b')
     def f():
         pass
@@ -239,10 +232,6 @@ def test_type_error_too_many_arguments():
 
 
 def test_cannot_group_class_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -257,29 +246,28 @@ def test_cannot_group_class_group_class():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
         def __init__(self, message):
             pass
 
-    @MyApp.directive('qux')
     class QuxDirective(Action):
         group_class = BarDirective  # should go to FooDirective instead
 
         def __init__(self, message):
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+        qux = directive(QuxDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_cannot_use_config_with_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -294,7 +282,6 @@ def test_cannot_use_config_with_group_class():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         config = {
             'bar': list
@@ -305,15 +292,15 @@ def test_cannot_use_config_with_group_class():
         def __init__(self, message):
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_cann_inherit_config_with_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -328,21 +315,20 @@ def test_cann_inherit_config_with_group_class():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         group_class = FooDirective
 
         def __init__(self, message):
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     commit(MyApp)
 
 
 def test_cannot_use_before_with_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -357,7 +343,6 @@ def test_cannot_use_before_with_group_class():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
@@ -365,15 +350,15 @@ def test_cannot_use_before_with_group_class():
         def before():
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_can_inherit_before_with_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -392,18 +377,17 @@ def test_can_inherit_before_with_group_class():
         def before(foo):
             pass
 
-    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         group_class = FooDirective
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     commit(MyApp)
 
 
 def test_cannot_use_after_with_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -418,7 +402,6 @@ def test_cannot_use_after_with_group_class():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
@@ -426,15 +409,15 @@ def test_cannot_use_after_with_group_class():
         def after():
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_action_without_init():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -446,6 +429,9 @@ def test_action_without_init():
         def perform(self, obj, foo):
             foo.append(obj)
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+
     @MyApp.foo()
     def f():
         pass
@@ -456,10 +442,6 @@ def test_action_without_init():
 
 
 def test_composite_without_init():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -474,10 +456,13 @@ def test_composite_without_init():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in ['a', 'b']]
+
+    class MyApp(App):
+        _sub = directive(SubDirective)
+        composite = directive(CompositeDirective)
 
     commit(MyApp)
 

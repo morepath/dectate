@@ -1,14 +1,10 @@
 import pytest
 
 from dectate import (
-    Query, App, Action, Composite, commit, QueryError, NOT_FOUND)
+    Query, App, Action, Composite, directive, commit, QueryError, NOT_FOUND)
 
 
 def test_query():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -22,6 +18,9 @@ def test_query():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -42,10 +41,6 @@ def test_query():
 
 
 def test_query_directive_name():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -59,6 +54,9 @@ def test_query_directive_name():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -79,10 +77,6 @@ def test_query_directive_name():
 
 
 def test_multi_action_query():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -97,7 +91,6 @@ def test_multi_action_query():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('bar')
     class BarAction(Action):
         config = {
             'registry': list
@@ -111,6 +104,10 @@ def test_multi_action_query():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
+        bar = directive(BarAction)
 
     @MyApp.foo('a')
     def f():
@@ -131,10 +128,6 @@ def test_multi_action_query():
 
 
 def test_filter():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -148,6 +141,9 @@ def test_filter():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -167,10 +163,6 @@ def test_filter():
 
 
 def test_filter_multiple_fields():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -189,6 +181,9 @@ def test_filter_multiple_fields():
 
         def perform(self, obj, registry):
             registry.append((self.model, self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     class Alpha(object):
         pass
@@ -223,10 +218,6 @@ def test_filter_multiple_fields():
 
 
 def test_filter_not_found():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -240,6 +231,9 @@ def test_filter_not_found():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -257,10 +251,6 @@ def test_filter_not_found():
 
 
 def test_filter_different_attribute_name():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -279,6 +269,9 @@ def test_filter_different_attribute_name():
         def perform(self, obj, registry):
             registry.append((self._name, obj))
 
+    class MyApp(App):
+        foo = directive(FooAction)
+
     @MyApp.foo('a')
     def f():
         pass
@@ -295,10 +288,6 @@ def test_filter_different_attribute_name():
 
 
 def test_filter_get_value():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         def filter_get_value(self, name):
             return self.kw.get(name, NOT_FOUND)
@@ -311,6 +300,9 @@ def test_filter_get_value():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo(x='a', y='b')
     def f():
@@ -333,10 +325,6 @@ def test_filter_get_value():
 
 
 def test_filter_name_and_get_value():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         filter_name = {
             'name': '_name'
@@ -355,6 +343,9 @@ def test_filter_name_and_get_value():
         def perform(self, obj):
             pass
 
+    class MyApp(App):
+        foo = directive(FooAction)
+
     @MyApp.foo(name='hello', x='a', y='b')
     def f():
         pass
@@ -371,10 +362,6 @@ def test_filter_name_and_get_value():
 
 
 def test_filter_get_value_and_default():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         def filter_get_value(self, name):
             return self.kw.get(name, NOT_FOUND)
@@ -388,6 +375,9 @@ def test_filter_get_value_and_default():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo(name='hello', x='a', y='b')
     def f():
@@ -405,10 +395,6 @@ def test_filter_get_value_and_default():
 
 
 def test_filter_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('view')
     class ViewAction(Action):
         config = {
             'registry': list
@@ -426,6 +412,9 @@ def test_filter_class():
 
         def perform(self, obj, registry):
             registry.append((self.model, obj))
+
+    class MyApp(App):
+        view = directive(ViewAction)
 
     class Alpha(object):
         pass
@@ -467,10 +456,6 @@ def test_filter_class():
 
 
 def test_query_group_class():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -485,9 +470,12 @@ def test_query_group_class():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('bar')
     class BarAction(FooAction):
         group_class = FooAction
+
+    class MyApp(App):
+        foo = directive(FooAction)
+        bar = directive(BarAction)
 
     @MyApp.foo('a')
     def f():
@@ -508,10 +496,6 @@ def test_query_group_class():
 
 
 def test_query_on_group_class_action():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -526,9 +510,12 @@ def test_query_on_group_class_action():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('bar')
     class BarAction(FooAction):
         group_class = FooAction
+
+    class MyApp(App):
+        foo = directive(FooAction)
+        bar = directive(BarAction)
 
     @MyApp.foo('a')
     def f():
@@ -549,10 +536,6 @@ def test_query_on_group_class_action():
 
 
 def test_multi_query_on_group_class_action():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -567,9 +550,12 @@ def test_multi_query_on_group_class_action():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('bar')
     class BarAction(FooAction):
         group_class = FooAction
+
+    class MyApp(App):
+        foo = directive(FooAction)
+        bar = directive(BarAction)
 
     @MyApp.foo('a')
     def f():
@@ -590,13 +576,6 @@ def test_multi_query_on_group_class_action():
 
 
 def test_inheritance():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -610,6 +589,12 @@ def test_inheritance():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    class SubApp(MyApp):
+        pass
 
     @MyApp.foo('a')
     def f():
@@ -630,10 +615,6 @@ def test_inheritance():
 
 
 def test_composite_action():
-    class MyApp(App):
-        pass
-
-    @MyApp.private_action_class
     class SubAction(Action):
         config = {
             'registry': list
@@ -648,7 +629,6 @@ def test_composite_action():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('composite')
     class CompositeAction(Composite):
         query_classes = [
             SubAction
@@ -659,6 +639,10 @@ def test_composite_action():
 
         def actions(self, obj):
             return [(SubAction(name), obj) for name in self.names]
+
+    class MyApp(App):
+        _sub = directive(SubAction)
+        composite = directive(CompositeAction)
 
     @MyApp.composite(['a', 'b'])
     def f():
@@ -675,10 +659,6 @@ def test_composite_action():
 
 
 def test_composite_action_without_query_classes():
-    class MyApp(App):
-        pass
-
-    @MyApp.private_action_class
     class SubAction(Action):
         config = {
             'registry': list
@@ -693,13 +673,16 @@ def test_composite_action_without_query_classes():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.directive('composite')
     class CompositeAction(Composite):
         def __init__(self, names):
             self.names = names
 
         def actions(self, obj):
             return [(SubAction(name), obj) for name in self.names]
+
+    class MyApp(App):
+        _sub = directive(SubAction)
+        composite = directive(CompositeAction)
 
     @MyApp.composite(['a', 'b'])
     def f():
@@ -714,10 +697,6 @@ def test_composite_action_without_query_classes():
 
 
 def test_nested_composite_action():
-    class MyApp(App):
-        pass
-
-    @MyApp.private_action_class
     class SubSubAction(Action):
         config = {
             'registry': list
@@ -732,7 +711,6 @@ def test_nested_composite_action():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @MyApp.private_action_class
     class SubAction(Composite):
         query_classes = [
             SubSubAction
@@ -744,7 +722,6 @@ def test_nested_composite_action():
         def actions(self, obj):
             return [(SubSubAction(name), obj) for name in self.names]
 
-    @MyApp.directive('composite')
     class CompositeAction(Composite):
         query_classes = [
             SubAction
@@ -756,6 +733,11 @@ def test_nested_composite_action():
         def actions(self, obj):
             for i in range(self.amount):
                 yield SubAction(['a%s' % i, 'b%s' % i]), obj
+
+    class MyApp(App):
+        _subsub = directive(SubSubAction)
+        _sub = directive(SubAction)
+        composite = directive(CompositeAction)
 
     @MyApp.composite(2)
     def f():
@@ -774,13 +756,6 @@ def test_nested_composite_action():
 
 
 def test_query_action_for_other_app():
-    class MyApp(App):
-        pass
-
-    class OtherApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         config = {
             'registry': list
@@ -795,7 +770,6 @@ def test_query_action_for_other_app():
         def perform(self, obj, registry):
             registry.append((self.name, obj))
 
-    @OtherApp.directive('foo')
     class BarAction(Action):
         config = {
             'registry': list
@@ -809,6 +783,12 @@ def test_query_action_for_other_app():
 
         def perform(self, obj, registry):
             registry.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    class OtherApp(App):
+        bar = directive(BarAction)
 
     @MyApp.foo('a')
     def f():

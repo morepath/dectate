@@ -1,4 +1,4 @@
-from dectate.app import App
+from dectate.app import App, directive
 from dectate.config import commit, Action, Composite
 from dectate.error import ConflictError, ConfigError
 
@@ -6,10 +6,6 @@ import pytest
 
 
 def test_simple():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -23,6 +19,36 @@ def test_simple():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    commit(MyApp)
+
+    assert MyApp.config.my == [('hello', f)]
+
+
+def test_decorator():
+
+    class MyApp(App):
+        @directive
+        class foo(Action):
+            config = {
+                'my': list
+            }
+
+            def __init__(self, message):
+                self.message = message
+
+            def identifier(self, my):
+                return self.message
+
+            def perform(self, obj, my):
+                my.append((self.message, obj))
 
     @MyApp.foo('hello')
     def f():
@@ -34,10 +60,6 @@ def test_simple():
 
 
 def test_commit_method():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -51,6 +73,9 @@ def test_commit_method():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -63,10 +88,6 @@ def test_commit_method():
 
 
 def test_conflict_same_directive():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -80,6 +101,9 @@ def test_conflict_same_directive():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -97,13 +121,6 @@ def test_app_inherit():
     class Registry(object):
         pass
 
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': Registry
@@ -118,6 +135,12 @@ def test_app_inherit():
         def perform(self, obj, my):
             my.message = self.message
             my.obj = obj
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        pass
 
     @MyApp.foo('hello')
     def f():
@@ -135,13 +158,6 @@ def test_app_override():
     class Registry(object):
         pass
 
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': Registry
@@ -156,6 +172,12 @@ def test_app_override():
         def perform(self, obj, my):
             my.message = self.message
             my.obj = obj
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        pass
 
     @MyApp.foo('hello')
     def f():
@@ -174,10 +196,6 @@ def test_app_override():
 
 
 def test_different_group_no_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -192,7 +210,6 @@ def test_different_group_no_conflict():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         config = {
             'bar': list
@@ -206,6 +223,10 @@ def test_different_group_no_conflict():
 
         def perform(self, obj, bar):
             bar.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -222,10 +243,6 @@ def test_different_group_no_conflict():
 
 
 def test_same_group_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'foo': list
@@ -240,7 +257,6 @@ def test_same_group_conflict():
         def perform(self, obj, foo):
             foo.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         # should now conflict
         group_class = FooDirective
@@ -253,6 +269,10 @@ def test_same_group_conflict():
 
         def perform(self, obj, foo):
             foo.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -267,10 +287,6 @@ def test_same_group_conflict():
 
 
 def test_discriminator_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -288,6 +304,9 @@ def test_discriminator_conflict():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -302,10 +321,6 @@ def test_discriminator_conflict():
 
 
 def test_discriminator_same_group_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -324,9 +339,12 @@ def test_discriminator_same_group_conflict():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         group_class = FooDirective
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -341,10 +359,6 @@ def test_discriminator_same_group_conflict():
 
 
 def test_discriminator_no_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -362,6 +376,9 @@ def test_discriminator_no_conflict():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -377,10 +394,6 @@ def test_discriminator_no_conflict():
 
 
 def test_discriminator_different_group_no_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -399,10 +412,13 @@ def test_discriminator_different_group_no_conflict():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(FooDirective):
         # will have its own group key so in a different group
         depends = [FooDirective]
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.foo('f', ['a'])
     def f():
@@ -418,10 +434,6 @@ def test_discriminator_different_group_no_conflict():
 
 
 def test_depends():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -436,7 +448,6 @@ def test_depends():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         depends = [FooDirective]
 
@@ -452,6 +463,10 @@ def test_depends():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.bar('a')
     def g():
@@ -468,10 +483,6 @@ def test_depends():
 
 
 def test_composite():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -486,13 +497,16 @@ def test_composite():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
 
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in self.messages]
+
+    class MyApp(App):
+        _sub = directive(SubDirective)
+        composite = directive(CompositeDirective)
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
@@ -504,10 +518,6 @@ def test_composite():
 
 
 def test_composite_change_object():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -525,7 +535,6 @@ def test_composite_change_object():
     def other():
         pass
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
@@ -533,6 +542,10 @@ def test_composite_change_object():
         def actions(self, obj):
             return [(SubDirective(message),
                      other) for message in self.messages]
+
+    class MyApp(App):
+        _sub = directive(SubDirective)
+        composite = directive(CompositeDirective)
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
@@ -544,10 +557,6 @@ def test_composite_change_object():
 
 
 def test_composite_private_sub():
-    class MyApp(App):
-        pass
-
-    @MyApp.private_action_class
     class SubDirective(Action):
         config = {
             'my': list
@@ -562,13 +571,17 @@ def test_composite_private_sub():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
 
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in self.messages]
+
+    class MyApp(App):
+        # mark sub as private by using the underscore
+        _sub = directive(SubDirective)
+        composite = directive(CompositeDirective)
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
@@ -580,10 +593,6 @@ def test_composite_private_sub():
 
 
 def test_composite_private_composite():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -598,13 +607,16 @@ def test_composite_private_composite():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.private_action_class
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
 
         def actions(self, obj):
             return [(SubDirective(message), obj) for message in self.messages]
+
+    class MyApp(App):
+        sub = directive(SubDirective)
+        _composite = directive(CompositeDirective)
 
     @MyApp.sub('a')
     def f():
@@ -616,10 +628,6 @@ def test_composite_private_composite():
 
 
 def test_nested_composite():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('sub')
     class SubDirective(Action):
         config = {
             'my': list
@@ -634,7 +642,6 @@ def test_nested_composite():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('subcomposite')
     class SubCompositeDirective(Composite):
         def __init__(self, message):
             self.message = message
@@ -643,7 +650,6 @@ def test_nested_composite():
             yield SubDirective(self.message + '_0'), obj
             yield SubDirective(self.message + '_1'), obj
 
-    @MyApp.directive('composite')
     class CompositeDirective(Composite):
         def __init__(self, messages):
             self.messages = messages
@@ -651,6 +657,11 @@ def test_nested_composite():
         def actions(self, obj):
             return [(SubCompositeDirective(message), obj)
                     for message in self.messages]
+
+    class MyApp(App):
+        sub = directive(SubDirective)
+        subcomposite = directive(SubCompositeDirective)
+        composite = directive(CompositeDirective)
 
     @MyApp.composite(['a', 'b', 'c'])
     def f():
@@ -666,10 +677,6 @@ def test_nested_composite():
 
 
 def test_with_statement_kw():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -687,6 +694,9 @@ def test_with_statement_kw():
 
     class Dummy(object):
         pass
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     with MyApp.foo(model=Dummy) as foo:
 
@@ -707,10 +717,6 @@ def test_with_statement_kw():
 
 
 def test_with_statement_args():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -725,6 +731,9 @@ def test_with_statement_args():
 
         def perform(self, obj, my):
             my.append((self.model, self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     class Dummy(object):
         pass
@@ -757,10 +766,6 @@ def test_before():
             assert self.before
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -778,6 +783,9 @@ def test_before():
         @staticmethod
         def before(my):
             my.before = True
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo(name='hello')
     def f():
@@ -801,10 +809,6 @@ def test_before_without_use():
             assert self.before
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -822,6 +826,9 @@ def test_before_without_use():
         @staticmethod
         def before(my):
             my.before = True
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     commit(MyApp)
 
@@ -839,10 +846,6 @@ def test_before_group():
             assert self.before
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -861,7 +864,6 @@ def test_before_group():
         def before(my):
             my.before = True
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
@@ -873,6 +875,10 @@ def test_before_group():
 
         def perform(self, obj, my):
             pass
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.bar(name='bye')
     def f():
@@ -891,10 +897,6 @@ def test_before_group():
 
 
 def test_config_group():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -909,7 +911,6 @@ def test_config_group():
         def perform(self, obj, my):
             my.append((self.name, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
@@ -921,6 +922,10 @@ def test_config_group():
 
         def perform(self, obj, my):
             my.append((self.name, obj))
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     @MyApp.bar(name='bye')
     def f():
@@ -947,10 +952,6 @@ def test_before_group_without_use():
             assert self.before
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -969,7 +970,6 @@ def test_before_group_without_use():
         def before(my):
             my.before = True
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         group_class = FooDirective
 
@@ -981,6 +981,10 @@ def test_before_group_without_use():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
 
     commit(MyApp)
 
@@ -998,10 +1002,6 @@ def test_after():
             assert not self.after
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -1019,6 +1019,9 @@ def test_after():
         @staticmethod
         def after(my):
             my.after = True
+
+    class MyApp(App):
+        foo = directive(FooDirective)
 
     @MyApp.foo(name='hello')
     def f():
@@ -1042,10 +1045,6 @@ def test_after_without_use():
             assert not self.after
             self.l.append((name, obj))
 
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': Registry
@@ -1064,6 +1063,9 @@ def test_after_without_use():
         def after(my):
             my.after = True
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+
     commit(MyApp)
 
     assert MyApp.config.my.after
@@ -1071,10 +1073,6 @@ def test_after_without_use():
 
 
 def test_action_loop_should_conflict():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1089,6 +1087,9 @@ def test_action_loop_should_conflict():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     for i in range(2):
         @MyApp.foo('hello')
         def f():
@@ -1099,12 +1100,8 @@ def test_action_loop_should_conflict():
 
 
 def test_action_init_only_during_commit():
-    class MyApp(App):
-        pass
-
     init_called = []
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1120,6 +1117,9 @@ def test_action_init_only_during_commit():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1132,10 +1132,6 @@ def test_action_init_only_during_commit():
 
 
 def test_registry_should_exist_even_without_directive_use():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1149,6 +1145,9 @@ def test_registry_should_exist_even_without_directive_use():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     commit(MyApp)
 
@@ -1156,13 +1155,6 @@ def test_registry_should_exist_even_without_directive_use():
 
 
 def test_registry_should_exist_even_without_directive_use_subclass():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1176,6 +1168,12 @@ def test_registry_should_exist_even_without_directive_use_subclass():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        pass
 
     commit(MyApp, SubApp)
 
@@ -1184,10 +1182,6 @@ def test_registry_should_exist_even_without_directive_use_subclass():
 
 
 def test_rerun_commit():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1201,6 +1195,9 @@ def test_rerun_commit():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -1215,10 +1212,6 @@ def test_rerun_commit():
 
 
 def test_rerun_commit_add_directive():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1232,6 +1225,9 @@ def test_rerun_commit_add_directive():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
 
     @MyApp.foo('hello')
     def f():
@@ -1250,13 +1246,6 @@ def test_rerun_commit_add_directive():
 
 
 def test_order_subclass():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1270,6 +1259,12 @@ def test_order_subclass():
 
         def perform(self, obj, my):
             my.append((self.message, obj))
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        pass
 
     @SubApp.foo('c')
     def h():
@@ -1289,9 +1284,6 @@ def test_order_subclass():
 
 
 def test_registry_single_factory_argument():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1300,7 +1292,6 @@ def test_registry_single_factory_argument():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list,
@@ -1316,6 +1307,9 @@ def test_registry_single_factory_argument():
         def perform(self, obj, my, other):
             my.append((self.message, obj))
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1326,9 +1320,6 @@ def test_registry_single_factory_argument():
 
 
 def test_registry_factory_argument_introduces_new_registry():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1337,7 +1328,6 @@ def test_registry_factory_argument_introduces_new_registry():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other
@@ -1352,6 +1342,9 @@ def test_registry_factory_argument_introduces_new_registry():
         def perform(self, obj, other):
             other.my.append((self.message, obj))
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1363,12 +1356,6 @@ def test_registry_factory_argument_introduces_new_registry():
 
 
 def test_registry_factory_argument_introduces_new_registry_subclass():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
     class IsUsedElsewhere(object):
         poked = False
 
@@ -1380,7 +1367,6 @@ def test_registry_factory_argument_introduces_new_registry_subclass():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other
@@ -1396,6 +1382,12 @@ def test_registry_factory_argument_introduces_new_registry_subclass():
             assert not other.my.poked
             other.my.poked = True
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        pass
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1409,9 +1401,6 @@ def test_registry_factory_argument_introduces_new_registry_subclass():
 
 
 def test_registry_multiple_factory_arguments():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': list,
@@ -1422,7 +1411,6 @@ def test_registry_multiple_factory_arguments():
             self.my = my
             self.my2 = my2
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list,
@@ -1440,6 +1428,9 @@ def test_registry_multiple_factory_arguments():
             my.append((self.message, obj))
             my2.append('blah')
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1451,9 +1442,6 @@ def test_registry_multiple_factory_arguments():
 
 
 def test_registry_factory_arguments_depends():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1462,7 +1450,6 @@ def test_registry_factory_arguments_depends():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class FooDirective(Action):
         config = {
             'my': list
@@ -1477,7 +1464,6 @@ def test_registry_factory_arguments_depends():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('bar')
     class BarDirective(Action):
         config = {
             'other': Other
@@ -1494,6 +1480,10 @@ def test_registry_factory_arguments_depends():
         def perform(self, obj, other):
             pass
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     @MyApp.foo('hello')
     def f():
         pass
@@ -1504,9 +1494,6 @@ def test_registry_factory_arguments_depends():
 
 
 def test_registry_factory_arguments_depends_complex():
-    class MyApp(App):
-        pass
-
     class Registry(object):
         pass
 
@@ -1518,21 +1505,23 @@ def test_registry_factory_arguments_depends_complex():
         def __init__(self, registry):
             self.registry = registry
 
-    @MyApp.directive('setting')
     class SettingAction(Action):
         config = {'registry': Registry}
 
-    @MyApp.directive('predicate')
     class PredicateAction(Action):
         config = {'predicate_registry': PredicateRegistry}
 
         depends = [SettingAction]
 
-    @MyApp.directive('view')
     class ViewAction(Action):
         config = {'registry': Registry}
 
         depends = [PredicateAction]
+
+    class MyApp(App):
+        setting = directive(SettingAction)
+        predicate = directive(PredicateAction)
+        view = directive(ViewAction)
 
     commit(MyApp)
 
@@ -1551,11 +1540,7 @@ def test_is_committed():
 
 
 def test_registry_config_inconsistent():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
-    class MyDirective(Action):
+    class FooDirective(Action):
         config = {
             'my': list
         }
@@ -1569,8 +1554,7 @@ def test_registry_config_inconsistent():
         def perform(self, obj, my):
             my.append((self.message, obj))
 
-    @MyApp.directive('bar')
-    class MyDirective(Action):  # flake8: noqa
+    class BarDirective(Action):
         config = {
             'my': dict
         }
@@ -1584,14 +1568,15 @@ def test_registry_config_inconsistent():
         def perform(self, obj, my):
             my[self.message] = obj
 
+    class MyApp(App):
+        foo = directive(FooDirective)
+        bar = directive(BarDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_registry_factory_argument_inconsistent():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1608,7 +1593,6 @@ def test_registry_factory_argument_inconsistent():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other,
@@ -1624,14 +1608,14 @@ def test_registry_factory_argument_inconsistent():
         def perform(self, obj, other, yetanother):
             pass
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
 def test_registry_factory_argument_and_config_inconsistent():
-    class MyApp(App):
-        pass
-
     class Other(object):
         factory_arguments = {
             'my': dict
@@ -1640,7 +1624,6 @@ def test_registry_factory_argument_and_config_inconsistent():
         def __init__(self, my):
             self.my = my
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list,
@@ -1656,33 +1639,37 @@ def test_registry_factory_argument_and_config_inconsistent():
         def perform(self, obj, my, other):
             my.append((self.message, obj))
 
+    class MyApp(App):
+        foo = directive(MyDirective)
+
     with pytest.raises(ConfigError):
         commit(MyApp)
 
 
-# Due to PEP 3155, having this class defined at the module top-level ensures
-# that its repr is the same in both Python 2 and 3.
+# making this global to ensure the repr is the same
+# on Python 3.5 and earlier versions (see PEP 3155)
+class ReprDirective(Action):
+    """Doc"""
+    config = {
+        'my': list
+    }
+
+    def __init__(self, message):
+        self.message = message
+
+    def identifier(self, my):
+        return self.message
+
+    def perform(self, obj, my):
+        my.append((self.message, obj))
+
+
 class MyAppForRepr(App):
-    pass
+    foo = directive(ReprDirective)
 
 
 def test_directive_repr():
-
-    @MyAppForRepr.directive('foo')
-    class MyDirective(Action):
-        """Doc"""
-        config = {
-            'my': list
-        }
-
-        def __init__(self, message):
-            self.message = message
-
-        def identifier(self, my):
-            return self.message
-
-        def perform(self, obj, my):
-            my.append((self.message, obj))
+    MyAppForRepr.commit()
 
     assert repr(MyAppForRepr.foo) == (
         "<bound method AppMeta.foo of "
@@ -1690,13 +1677,6 @@ def test_directive_repr():
 
 
 def test_app_class_passed_into_action():
-    class MyApp(App):
-        touched = []
-
-    class SubApp(MyApp):
-        touched = []
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'my': list
@@ -1713,6 +1693,14 @@ def test_app_class_passed_into_action():
         def perform(self, obj, app_class, my):
             app_class.touched.append(None)
             my.append((self.message, obj))
+
+    class MyApp(App):
+        touched = []
+
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        touched = []
 
     @MyApp.foo('hello')
     def f():
@@ -1732,11 +1720,7 @@ def test_app_class_passed_into_action():
     assert SubApp.touched == [None]
 
 
-
 def test_app_class_passed_into_factory():
-    class MyApp(App):
-        touched = False
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1751,7 +1735,6 @@ def test_app_class_passed_into_factory():
         def touch(self):
             self.app_class.touched = True
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other
@@ -1765,6 +1748,11 @@ def test_app_class_passed_into_factory():
 
         def perform(self, obj, other):
             other.touch()
+
+    class MyApp(App):
+        touched = False
+
+        foo = directive(MyDirective)
 
     @MyApp.foo()
     def f():
@@ -1778,9 +1766,6 @@ def test_app_class_passed_into_factory():
 
 
 def test_app_class_passed_into_factory_no_factory_arguments():
-    class MyApp(App):
-        touched = False
-
     class Other(object):
         app_class_arg = True
 
@@ -1790,7 +1775,6 @@ def test_app_class_passed_into_factory_no_factory_arguments():
         def touch(self):
             self.app_class.touched = True
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other
@@ -1805,6 +1789,11 @@ def test_app_class_passed_into_factory_no_factory_arguments():
         def perform(self, obj, other):
             other.touch()
 
+    class MyApp(App):
+        touched = False
+
+        foo = directive(MyDirective)
+
     @MyApp.foo()
     def f():
         pass
@@ -1817,12 +1806,6 @@ def test_app_class_passed_into_factory_no_factory_arguments():
 
 
 def test_app_class_passed_into_factory_separation():
-    class MyApp(App):
-        touched = False
-
-    class SubApp(MyApp):
-        touched = False
-
     class Other(object):
         factory_arguments = {
             'my': list
@@ -1837,7 +1820,6 @@ def test_app_class_passed_into_factory_separation():
         def touch(self):
             self.app_class.touched = True
 
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
             'other': Other
@@ -1851,6 +1833,13 @@ def test_app_class_passed_into_factory_separation():
 
         def perform(self, obj, other):
             other.touch()
+
+    class MyApp(App):
+        touched = False
+        foo = directive(MyDirective)
+
+    class SubApp(MyApp):
+        touched = False
 
     @MyApp.foo()
     def f():
@@ -1869,16 +1858,7 @@ def test_app_class_passed_into_factory_separation():
     assert SubApp.touched
 
 
-
 def test_app_class_cleanup():
-    class MyApp(App):
-        touched = []
-
-        @classmethod
-        def clean(cls):
-            cls.touched = []
-
-    @MyApp.directive('foo')
     class MyDirective(Action):
         config = {
         }
@@ -1893,6 +1873,15 @@ def test_app_class_cleanup():
 
         def perform(self, obj, app_class):
             app_class.touched.append(None)
+
+    class MyApp(App):
+        touched = []
+
+        @classmethod
+        def clean(cls):
+            cls.touched = []
+
+        foo = directive(MyDirective)
 
     @MyApp.foo()
     def f():

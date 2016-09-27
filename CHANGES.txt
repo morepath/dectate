@@ -4,6 +4,38 @@ CHANGES
 0.12 (unreleased)
 =================
 
+- **Breaking changes**: previously you defined new directives using the
+  ``App.directive`` directive. This would lead to import confusion: you
+  *have* to import the modules that define directives before you can actually
+  use them, even though you've already imported your app class.
+
+  In this version of Dectate we've changed the way you define directives.
+  Instead of::
+
+     class MyApp(dectate.App):
+         pass
+
+     @MyApp.directive('foo')
+     class FooAction(dectate.Action):
+        ...
+
+  You now write this::
+
+     class FooAction(directive.Action)
+         ...
+
+     class MyApp(dectate.App):
+         foo = directive(FooAction)
+
+  So, you define the directives directly on the app class that needs
+  them.
+
+  Uses of ``private_action_class`` should be replaced by an underscored
+  directive definition::
+
+     class MyApp(dectate.App):
+        _my_private_thing = directive(PrivateAction)
+
 - Use the same Git ignore file used in other Morepath projects.
 
 - If you set the ``app_class_arg`` class attribute to ``True`` on an

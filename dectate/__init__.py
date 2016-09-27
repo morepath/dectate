@@ -1,5 +1,5 @@
 # flake8: noqa
-from .app import App
+from .app import App, directive
 from .config import commit, Action, Composite, CodeInfo, NOT_FOUND
 from .error import (ConfigError, DirectiveError, TopologicalSortError,
                     DirectiveReportError, ConflictError, QueryError)

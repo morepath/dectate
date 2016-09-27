@@ -2,7 +2,7 @@ import pytest
 from argparse import ArgumentTypeError
 
 from dectate.config import Action, commit
-from dectate.app import App
+from dectate.app import App, directive
 from dectate.tool import (parse_app_class, parse_directive, parse_filters,
                           convert_filters,
                           convert_dotted_name, convert_bool,
@@ -122,10 +122,6 @@ def test_convert_filters_value_error():
 
 
 def test_query_tool_output():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         def __init__(self, name):
             self.name = name
@@ -135,6 +131,9 @@ def test_query_tool_output():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -155,19 +154,6 @@ def test_query_tool_output():
 
 
 def test_query_tool_output_multiple_apps():
-    class Base(App):
-        pass
-
-    class AlphaApp(Base):
-        pass
-
-    class BetaApp(Base):
-        pass
-
-    class GammaApp(Base):
-        pass
-
-    @Base.directive('foo')
     class FooAction(Action):
         def __init__(self, name):
             self.name = name
@@ -177,6 +163,18 @@ def test_query_tool_output_multiple_apps():
 
         def perform(self, obj):
             pass
+
+    class Base(App):
+        foo = directive(FooAction)
+
+    class AlphaApp(Base):
+        pass
+
+    class BetaApp(Base):
+        pass
+
+    class GammaApp(Base):
+        pass
 
     @AlphaApp.foo('a')
     def f():
@@ -194,10 +192,6 @@ def test_query_tool_output_multiple_apps():
 
 
 def test_query_app():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         filter_convert = {
             'count': int
@@ -211,6 +205,9 @@ def test_query_app():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo(1)
     def f():
@@ -228,10 +225,6 @@ def test_query_app():
 
 
 def test_query_tool_uncommitted():
-    class MyApp(App):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         def __init__(self, name):
             self.name = name
@@ -241,6 +234,9 @@ def test_query_tool_uncommitted():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
 
     @MyApp.foo('a')
     def f():
@@ -277,13 +273,6 @@ def test_app_without_directive():
 
 
 def test_inheritance():
-    class MyApp(App):
-        pass
-
-    class SubApp(MyApp):
-        pass
-
-    @MyApp.directive('foo')
     class FooAction(Action):
         filter_convert = {
             'count': int
@@ -297,6 +286,12 @@ def test_inheritance():
 
         def perform(self, obj):
             pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    class SubApp(MyApp):
+        pass
 
     @MyApp.foo(1)
     def f():

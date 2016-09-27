@@ -20,6 +20,8 @@ API
   :inherited-members:
   :members:
 
+.. autofunction:: directive
+
 .. autofunction:: query_tool
 
 .. autofunction:: query_app
