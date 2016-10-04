@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.12 (unreleased)
+0.12 (2016-10-04)
 =================
 
 - **Breaking changes**: previously you defined new directives using the
