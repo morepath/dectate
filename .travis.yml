@@ -12,6 +12,7 @@ env:
     - TOXENV=pep8
     - TOXENV=docs
 install:
+    - pip install --upgrade pip setuptools
     - pip install tox
     - if [ "$TOXENV" = 'coverage' ]; then pip install coveralls; fi
 script:
