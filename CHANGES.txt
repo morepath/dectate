@@ -4,6 +4,8 @@ CHANGES
 0.13 (unreleased)
 =================
 
+- Add a Sentinel class, used for the NOT_FOUND object.
+
 - Upload universal wheels to pypi during release.
 
 

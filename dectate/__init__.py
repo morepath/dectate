@@ -1,6 +1,7 @@
 # flake8: noqa
 from .app import App, directive
-from .config import commit, Action, Composite, CodeInfo, NOT_FOUND
+from .sentinel import Sentinel, NOT_FOUND
+from .config import commit, Action, Composite, CodeInfo
 from .error import (ConfigError, DirectiveError, TopologicalSortError,
                     DirectiveReportError, ConflictError, QueryError)
 from .query import Query

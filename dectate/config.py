@@ -6,14 +6,8 @@ from .error import (
     ConflictError, ConfigError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
 from .compat import with_metaclass
+from .sentinel import NOT_FOUND
 
-
-class NotFound(object):
-    pass
-
-
-NOT_FOUND = NotFound()
-"""Sentinel value returned if filter value cannot be found on action."""
 
 order_count = 0
 
