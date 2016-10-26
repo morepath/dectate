@@ -87,6 +87,33 @@ def test_commit_method():
     assert list(result) == [MyApp]
 
 
+def test_directive_name():
+    class MyDirective(Action):
+        config = {
+            'my': list
+        }
+
+        def __init__(self, message):
+            self.message = message
+
+        def identifier(self, my):
+            return self.message
+
+        def perform(self, obj, my):
+            my.append(self)
+
+    class MyApp(App):
+        foo = directive(MyDirective)
+
+    @MyApp.foo('hello')
+    def f():
+        pass
+
+    MyApp.commit()
+
+    MyApp.config.my[0].directive.directive_name == 'foo'
+
+
 def test_conflict_same_directive():
     class MyDirective(Action):
         config = {

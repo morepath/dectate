@@ -4,10 +4,11 @@ CHANGES
 0.13 (unreleased)
 =================
 
-- Add a Sentinel class, used for the NOT_FOUND object.
+- Add a Sentinel class, used for the ``NOT_FOUND`` object.
 
 - Upload universal wheels to pypi during release.
 
+- make ``directive_name`` property available on ``Directive`` instances.
 
 0.12 (2016-10-04)
 =================

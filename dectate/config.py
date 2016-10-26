@@ -685,6 +685,10 @@ class Directive(object):
         self.kw = kw
         self.argument_info = (args, kw)
 
+    @property
+    def directive_name(self):
+        return self.configurable._action_classes[self.action_factory]
+
     def action(self):
         """Get the :class:`Action` instance represented by this directive.
 
@@ -723,7 +727,7 @@ class Directive(object):
         :obj: the function or class object to that this directive is used
           on.
         """
-        directive_name = configurable._action_classes[self.action_factory]
+        directive_name = self.directive_name
         logger = logging.getLogger('%s.%s' % (
             configurable.app_class.logger_name,
             directive_name))
