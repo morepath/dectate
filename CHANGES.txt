@@ -1,7 +1,7 @@
 CHANGES
 *******
 
-0.13 (unreleased)
+0.13 (2016-12-23)
 =================
 
 - Add a Sentinel class, used for the ``NOT_FOUND`` object.
