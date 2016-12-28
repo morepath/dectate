@@ -4,7 +4,7 @@ CHANGES
 0.14 (unreleased)
 =================
 
-- Nothing changed yet.
+- Remove pypy3 target.
 
 
 0.13 (2016-12-23)
