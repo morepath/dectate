@@ -732,6 +732,9 @@ class Directive(object):
             configurable.app_class.logger_name,
             directive_name))
 
+        if not logger.isEnabledFor(logging.DEBUG):
+            return
+
         target_dotted_name = dotted_name(configurable.app_class)
         is_same = self.app_class is configurable.app_class
 
