@@ -4,6 +4,8 @@ CHANGES
 0.14 (unreleased)
 =================
 
+- Don't compute expensive logging information if logging is disabled.
+
 - Remove pypy3 target.
 
 

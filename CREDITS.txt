@@ -10,4 +10,6 @@ CREDITS
 
 * Henri Hulski (build environment)
 
+* Jan Stürtz
+
 * Special thanks to CONTACT software.
