@@ -5,7 +5,6 @@ import inspect
 from .error import (
     ConflictError, ConfigError, DirectiveError, DirectiveReportError)
 from .toposort import topological_sort
-from .compat import with_metaclass
 from .sentinel import NOT_FOUND
 
 
@@ -315,7 +314,7 @@ class ActionGroup(object):
         self.action_class.after(**kw)
 
 
-class Action(with_metaclass(abc.ABCMeta)):
+class Action(metaclass=abc.ABCMeta):
     """A configuration action.
 
     Base class of configuration actions.
@@ -588,7 +587,7 @@ class Action(with_metaclass(abc.ABCMeta)):
         pass
 
 
-class Composite(with_metaclass(abc.ABCMeta)):
+class Composite(metaclass=abc.ABCMeta):
     """A composite configuration action.
 
     Base class of composite actions.

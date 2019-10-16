@@ -7,14 +7,6 @@ from dectate.tool import (parse_app_class, parse_directive, parse_filters,
                           convert_filters,
                           convert_dotted_name, convert_bool,
                           query_tool_output, query_app, ToolError)
-from dectate import compat
-
-
-def builtin_ref(s):
-    if compat.PY3:
-        return 'builtins.%s' % s
-    else:
-        return '__builtin__.%s' % s
 
 
 def test_parse_app_class_main():
@@ -258,8 +250,8 @@ def test_convert_bool():
 
 
 def test_convert_dotted_name_builtin():
-    assert convert_dotted_name(builtin_ref('int')) is int
-    assert convert_dotted_name(builtin_ref('object')) is object
+    assert convert_dotted_name('builtins.int') is int
+    assert convert_dotted_name('builtins.object') is object
 
 
 def test_app_without_directive():

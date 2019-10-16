@@ -1,6 +1,5 @@
 from .config import Composite
 from .error import QueryError
-from .compat import string_types
 
 
 class Callable(object):
@@ -78,7 +77,7 @@ class Query(Base):
         app_class = configurable.app_class
         action_classes = []
         for action_class in self.action_classes:
-            if isinstance(action_class, string_types):
+            if isinstance(action_class, str):
                 action_class = get_action_class(app_class, action_class)
             action_classes.append(action_class)
         return query_action_classes(configurable, action_classes)
