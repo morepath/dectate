@@ -137,12 +137,12 @@ def test_query_tool_output():
 
     commit(MyApp)
 
-    l = list(query_tool_output([MyApp], 'foo', {'name': 'a'}))
+    li = list(query_tool_output([MyApp], 'foo', {'name': 'a'}))
 
     # we are not going to assert too much about the content of things
     # here as we probably want to tweak for a while, just assert that
     # we successfully produce output
-    assert l
+    assert li
 
 
 def test_query_tool_output_multiple_apps():
@@ -178,9 +178,9 @@ def test_query_tool_output_multiple_apps():
 
     commit(AlphaApp, BetaApp, GammaApp)
 
-    l = list(query_tool_output([AlphaApp, BetaApp, GammaApp], 'foo', {}))
+    li = list(query_tool_output([AlphaApp, BetaApp, GammaApp], 'foo', {}))
 
-    assert len(l) == 8
+    assert len(li) == 8
 
 
 def test_query_app():
@@ -211,9 +211,9 @@ def test_query_app():
 
     commit(MyApp)
 
-    l = list(query_app(MyApp, 'foo', count='1'))
-    assert len(l) == 1
-    assert l[0][0].count == 1
+    li = list(query_app(MyApp, 'foo', count='1'))
+    assert len(li) == 1
+    assert li[0][0].count == 1
 
 
 def test_query_tool_uncommitted():
@@ -260,8 +260,8 @@ def test_app_without_directive():
 
     commit(MyApp)
 
-    l = list(query_app(MyApp, 'foo', count='1'))
-    assert l == []
+    li = list(query_app(MyApp, 'foo', count='1'))
+    assert li == []
 
 
 def test_inheritance():
@@ -295,6 +295,6 @@ def test_inheritance():
 
     commit(SubApp)
 
-    l = list(query_app(SubApp, 'foo'))
+    li = list(query_app(SubApp, 'foo'))
 
-    assert len(l) == 2
+    assert len(li) == 2

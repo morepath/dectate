@@ -926,7 +926,7 @@ def create_code_info(frame):
 
     try:
         sourceline = frameinfo.code_context[0].strip()
-    except:
+    except Exception:
         # if no source file exists, e.g., due to eval
         sourceline = frameinfo.code_context
 
