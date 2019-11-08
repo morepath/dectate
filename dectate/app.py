@@ -1,6 +1,5 @@
 import sys
 from .config import Configurable, Directive, commit, create_code_info
-from .compat import with_metaclass
 
 
 class Config(object):
@@ -27,7 +26,7 @@ class AppMeta(type):
         return result
 
 
-class App(with_metaclass(AppMeta)):
+class App(metaclass=AppMeta):
     """A configurable application object.
 
     Subclass this in your framework and add directives using

@@ -3,7 +3,6 @@ from dectate.config import commit, Action, Composite
 
 from dectate.error import (ConflictError, ConfigError, DirectiveError,
                            DirectiveReportError)
-from dectate.compat import text_type
 
 import pytest
 
@@ -29,7 +28,7 @@ def test_directive_error_in_action():
     with pytest.raises(DirectiveReportError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
     assert value.startswith("A real problem")
     assert value.endswith(" @MyApp.foo('hello')")
     assert '/test_error.py' in value
@@ -53,7 +52,7 @@ def test_directive_error_in_composite():
     with pytest.raises(DirectiveReportError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
     assert value.startswith("Something went wrong")
     assert value.endswith(" @MyApp.foo('hello')")
     assert '/test_error.py' in value
@@ -84,7 +83,7 @@ def test_conflict_error():
     with pytest.raises(ConflictError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
     assert value.startswith("Conflict between:")
     assert ', line ' in value
     assert "@MyApp.foo('hello')" in value
@@ -121,7 +120,7 @@ def test_with_statement_error():
     with pytest.raises(DirectiveReportError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
 
     assert value.startswith("A real problem")
     assert value.endswith(" @foo(name='a')")
@@ -165,7 +164,7 @@ def test_composite_codeinfo_propagation():
     with pytest.raises(ConflictError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
 
     assert "@MyApp.composite(['a'])" in value
     assert '/test_error.py' in value
@@ -197,7 +196,7 @@ def test_type_error_not_enough_arguments():
     with pytest.raises(DirectiveReportError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
     assert "@MyApp.foo()" in value
 
 
@@ -227,7 +226,7 @@ def test_type_error_too_many_arguments():
     with pytest.raises(DirectiveReportError) as e:
         commit(MyApp)
 
-    value = text_type(e.value)
+    value = str(e.value)
     assert "@MyApp.foo('a', 'b')" in value
 
 

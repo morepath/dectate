@@ -1,11 +1,8 @@
-from __future__ import print_function
-
 import argparse
 import inspect
 from .query import Query, get_action_class
 from .error import QueryError
 from .app import App
-from .compat import text_type
 
 
 class ToolError(Exception):
@@ -49,7 +46,7 @@ def query_tool(app_classes):
         lines = list(query_tool_output(app_classes, args.directive,
                                        filters))
     except ToolError as e:
-        parser.error(text_type(e))
+        parser.error(str(e))
 
     for line in lines:
         print(line)
@@ -127,10 +124,9 @@ def convert_dotted_name(s):
     Takes a dotted name: ``pkg.module.attr`` gets ``attr``
     from module ``module`` which is in package ``pkg``.
 
-    To refer to builtin objects such as ``int`` or ``object``, in
-    Python 2 prefix with ``__builtin__.``, so ``__builtin__.int`` or
-    ``__builtin__.None``. In Python 3 use ``builtins.`` as the prefix,
-    so ``builtins.int`` and ``builtins.None``.
+    To refer to builtin objects such as ``int`` or ``object``
+    prefix them with ``builtins.``, so ``builtins.int`` or
+    ``builtins.None``.
 
     Raises ``ValueError`` if it cannot be imported.
 
@@ -176,7 +172,7 @@ def convert_filters(action_class, filters):
         try:
             result[key] = parse(value.strip())
         except ValueError as e:
-            raise ToolError(text_type(e))
+            raise ToolError(str(e))
 
     return result
 

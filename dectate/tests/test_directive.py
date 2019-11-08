@@ -786,12 +786,12 @@ def test_with_statement_args():
 def test_before():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.before = False
 
         def add(self, name, obj):
             assert self.before
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -821,7 +821,7 @@ def test_before():
     commit(MyApp)
 
     assert MyApp.config.my.before
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my.li == [
         ('hello', f),
     ]
 
@@ -829,12 +829,12 @@ def test_before():
 def test_before_without_use():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.before = False
 
         def add(self, name, obj):
             assert self.before
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -860,18 +860,18 @@ def test_before_without_use():
     commit(MyApp)
 
     assert MyApp.config.my.before
-    assert MyApp.config.my.l == []
+    assert MyApp.config.my.li == []
 
 
 def test_before_group():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.before = False
 
         def add(self, name, obj):
             assert self.before
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -918,7 +918,7 @@ def test_before_group():
     commit(MyApp)
 
     assert MyApp.config.my.before
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my.li == [
         ('hello', g),
     ]
 
@@ -972,12 +972,12 @@ def test_config_group():
 def test_before_group_without_use():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.before = False
 
         def add(self, name, obj):
             assert self.before
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -1016,18 +1016,18 @@ def test_before_group_without_use():
     commit(MyApp)
 
     assert MyApp.config.my.before
-    assert MyApp.config.my.l == []
+    assert MyApp.config.my.li == []
 
 
 def test_after():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.after = False
 
         def add(self, name, obj):
             assert not self.after
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -1057,7 +1057,7 @@ def test_after():
     commit(MyApp)
 
     assert MyApp.config.my.after
-    assert MyApp.config.my.l == [
+    assert MyApp.config.my.li == [
         ('hello', f),
     ]
 
@@ -1065,12 +1065,12 @@ def test_after():
 def test_after_without_use():
     class Registry(object):
         def __init__(self):
-            self.l = []
+            self.li = []
             self.after = False
 
         def add(self, name, obj):
             assert not self.after
-            self.l.append((name, obj))
+            self.li.append((name, obj))
 
     class FooDirective(Action):
         config = {
@@ -1096,7 +1096,7 @@ def test_after_without_use():
     commit(MyApp)
 
     assert MyApp.config.my.after
-    assert MyApp.config.my.l == []
+    assert MyApp.config.my.li == []
 
 
 def test_action_loop_should_conflict():
