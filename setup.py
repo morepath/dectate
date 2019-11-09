@@ -44,6 +44,7 @@ setup(
         ],
         pep8=[
             'flake8',
+            'black',
         ],
         docs=[
             'sphinx',
