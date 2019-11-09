@@ -31,9 +31,13 @@ def query_tool(app_classes):
     :param app_classes: a list of :class:`App` subclasses to query by default.
     """
     parser = argparse.ArgumentParser(description="Query Dectate actions")
-    parser.add_argument('--app', help="Dotted name for App subclass.",
-                        type=parse_app_class, action='append')
-    parser.add_argument('directive', help="Name of the directive.")
+    parser.add_argument(
+        "--app",
+        help="Dotted name for App subclass.",
+        type=parse_app_class,
+        action="append",
+    )
+    parser.add_argument("directive", help="Name of the directive.")
 
     args, filters = parser.parse_known_args()
 
@@ -43,8 +47,7 @@ def query_tool(app_classes):
     filters = parse_filters(filters)
 
     try:
-        lines = list(query_tool_output(app_classes, args.directive,
-                                       filters))
+        lines = list(query_tool_output(app_classes, args.directive, filters))
     except ToolError as e:
         parser.error(str(e))
 
@@ -103,14 +106,13 @@ def parse_app_class(s):
     try:
         app_class = resolve_dotted_name(s)
     except ImportError:
-        raise argparse.ArgumentTypeError(
-            "Cannot resolve dotted name: %r" % s)
+        raise argparse.ArgumentTypeError("Cannot resolve dotted name: %r" % s)
     if not inspect.isclass(app_class):
-        raise argparse.ArgumentTypeError(
-            "%r is not a class" % s)
+        raise argparse.ArgumentTypeError("%r is not a class" % s)
     if not issubclass(app_class, App):
         raise argparse.ArgumentTypeError(
-            "%r is not a subclass of dectate.App" % s)
+            "%r is not a subclass of dectate.App" % s
+        )
     return app_class
 
 
@@ -142,9 +144,9 @@ def convert_bool(s):
 
     Input string must either be ``True`` or ``False``.
     """
-    if s == 'True':
+    if s == "True":
         return True
-    elif s == 'False':
+    elif s == "False":
         return False
     else:
         raise ValueError("Cannot convert bool: %r" % s)
@@ -180,11 +182,11 @@ def convert_filters(action_class, filters):
 def resolve_dotted_name(name, module=None):
     """Adapted from zope.dottedname
     """
-    name = name.split('.')
+    name = name.split(".")
     if not name[0]:
         if module is None:
             raise ValueError("relative name without base module")
-        module = module.split('.')
+        module = module.split(".")
         name.pop(0)
         while not name[0]:
             module.pop()
@@ -194,7 +196,7 @@ def resolve_dotted_name(name, module=None):
     used = name.pop(0)
     found = __import__(used)
     for n in name:
-        used += '.' + n
+        used += "." + n
         try:
             found = getattr(found, n)
         except AttributeError:

@@ -13,7 +13,7 @@ class R(object):
     pass
 
 
-@App.directive('foo')
+@App.directive("foo")
 class FooAction(dectate.Action):
     def __init__(self, name):
         self.name = name
@@ -25,7 +25,7 @@ class FooAction(dectate.Action):
         pass
 
 
-@Other.directive('foo')
+@Other.directive("foo")
 class OtherFooAction(dectate.Action):
     def __init__(self, name):
         self.name = name

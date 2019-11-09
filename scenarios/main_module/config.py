@@ -5,9 +5,9 @@ class App(dectate.App):
     pass
 
 
-@App.directive('foo')
+@App.directive("foo")
 class FooAction(dectate.Action):
-    config = {'my': list}
+    config = {"my": list}
 
     def __init__(self, name):
         self.name = name

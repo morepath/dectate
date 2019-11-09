@@ -1,5 +1,5 @@
 import dectate
-from . import a, b, c
+from . import a, b, c  # noqa F401
 
 
 def query_tool():

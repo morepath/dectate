@@ -70,6 +70,7 @@ class Query(Base):
       also be strings indicating directive names, in which case they
       are looked up on the app class before execution.
     """
+
     def __init__(self, *action_classes):
         self.action_classes = action_classes
 
@@ -91,7 +92,8 @@ def expand_action_classes(action_classes):
             if not query_classes:
                 raise QueryError(
                     "Query of composite action %r but no "
-                    "query_classes defined." % action_class)
+                    "query_classes defined." % action_class
+                )
             for query_class in expand_action_classes(query_classes):
                 result.add(query_class)
         else:
@@ -107,8 +109,10 @@ def query_action_classes(configurable, action_classes):
     for action_class in expand_action_classes(action_classes):
         action_group = configurable.get_action_group(action_class)
         if action_group is None:
-            raise QueryError("%r is not an action of %r" %
-                             (action_class, configurable.app_class))
+            raise QueryError(
+                "%r is not an action of %r"
+                % (action_class, configurable.app_class)
+            )
         for action, obj in action_group.get_actions():
             yield action, obj
 
@@ -116,12 +120,15 @@ def query_action_classes(configurable, action_classes):
 def get_action_class(app_class, directive_name):
     directive_method = getattr(app_class, directive_name, None)
     if directive_method is None:
-        raise QueryError("No directive exists on %r with name: %s" %
-                         (app_class, directive_name))
-    action_class = getattr(directive_method, 'action_factory', None)
+        raise QueryError(
+            "No directive exists on %r with name: %s"
+            % (app_class, directive_name)
+        )
+    action_class = getattr(directive_method, "action_factory", None)
     if action_class is None:
-        raise QueryError("%r on %r is not a directive" %
-                         (directive_name, app_class))
+        raise QueryError(
+            "%r on %r is not a directive" % (directive_name, app_class)
+        )
     return action_class
 
 
@@ -138,8 +145,7 @@ class Filter(Base):
         for action, obj in self.query.execute(configurable):
             for name, value in sorted(self.kw.items()):
                 compared = action.get_value_for_filter(name)
-                compare_func = action.filter_compare.get(
-                    name, compare_equality)
+                compare_func = action.filter_compare.get(name, compare_equality)
                 if not compare_func(compared, value):
                     break
             else:
