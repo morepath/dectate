@@ -8,6 +8,7 @@ class Config(object):
     The configurations are specified by the :attr:`Action.config`
     class attribute of :class:`Action`.
     """
+
     pass
 
 
@@ -16,11 +17,11 @@ class AppMeta(type):
 
     Sets up ``config`` and ``dectate`` class attributes.
     """
+
     def __new__(cls, name, bases, d):
-        extends = [base.dectate for base in bases
-                   if hasattr(base, 'dectate')]
-        d['config'] = config = Config()
-        d['dectate'] = configurable = Configurable(extends, config)
+        extends = [base.dectate for base in bases if hasattr(base, "dectate")]
+        d["config"] = config = Config()
+        d["dectate"] = configurable = Configurable(extends, config)
         result = super(AppMeta, cls).__new__(cls, name, bases, d)
         configurable.app_class = result
         return result
@@ -35,7 +36,8 @@ class App(metaclass=AppMeta):
     Set the ``logger_name`` class attribute to the logging prefix
     that Dectate should log to. By default it is ``"dectate.directive"``.
     """
-    logger_name = 'dectate.directive'
+
+    logger_name = "dectate.directive"
     """The prefix to use for directive debug logging."""
 
     dectate = None
@@ -66,10 +68,10 @@ class App(metaclass=AppMeta):
     def get_directive_methods(cls):
         for name in dir(cls):
             attr = getattr(cls, name)
-            im_func = getattr(attr, '__func__', None)
+            im_func = getattr(attr, "__func__", None)
             if im_func is None:
                 continue
-            if hasattr(im_func, 'action_factory'):
+            if hasattr(im_func, "action_factory"):
                 yield name, attr
 
     @classmethod
@@ -131,10 +133,12 @@ def directive(action_factory):
     :param action_factory: an action class to use as the directive.
     :return: a class method that represents the directive.
     """
+
     def method(cls, *args, **kw):
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
         return Directive(action_factory, code_info, cls, args, kw)
+
     # sphinxext and App.get_action_classes need to recognize this
     method.action_factory = action_factory
     method.__doc__ = action_factory.__doc__

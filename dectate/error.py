@@ -18,18 +18,18 @@ class ConflictError(ConfigError):
 
     Describes where in the code directives are in conflict.
     """
+
     def __init__(self, actions):
         actions.sort(key=conflict_keyfunc)
         self.actions = actions
-        result = [
-            'Conflict between:']
+        result = ["Conflict between:"]
         for action in actions:
             code_info = action.code_info
             if code_info is None:
                 continue
-            result.append('  %s' % code_info.filelineno())
-            result.append('    %s' % code_info.sourceline)
-        msg = '\n'.join(result)
+            result.append("  %s" % code_info.filelineno())
+            result.append("    %s" % code_info.sourceline)
+        msg = "\n".join(result)
         super(ConflictError, self).__init__(msg)
 
 
@@ -38,12 +38,13 @@ class DirectiveReportError(ConfigError):
 
     Describes where in the code the problem occurred.
     """
+
     def __init__(self, message, code_info):
         result = [message]
         if code_info is not None:
-            result.append('  %s' % code_info.filelineno())
-            result.append('    %s' % code_info.sourceline)
-        msg = '\n'.join(result)
+            result.append("  %s" % code_info.filelineno())
+            result.append("    %s" % code_info.sourceline)
+        msg = "\n".join(result)
         super(DirectiveReportError, self).__init__(msg)
 
 
@@ -58,6 +59,7 @@ class DirectiveError(ConfigError):
     This is automatically converted by Dectate to a
     :exc:`DirectiveReportError`.
     """
+
     pass
 
 

@@ -16,6 +16,8 @@ CHANGES
 
 - Don't compute expensive logging information if logging is disabled.
 
+- Add integration for the Black code formatter.
+
 
 0.13 (2016-12-23)
 =================

@@ -13,7 +13,7 @@ class Handler(logging.Handler):
 
 
 def test_intercept_logging():
-    log = logging.getLogger('my_logger')
+    log = logging.getLogger("my_logger")
 
     test_handler = Handler()
 
@@ -24,11 +24,11 @@ def test_intercept_logging():
     log.debug("This is a log message")
 
     assert len(test_handler.records) == 1
-    assert test_handler.records[0].getMessage() == 'This is a log message'
+    assert test_handler.records[0].getMessage() == "This is a log message"
 
 
 def test_simple_config_logging():
-    log = logging.getLogger('dectate.directive.foo')
+    log = logging.getLogger("dectate.directive.foo")
 
     test_handler = Handler()
 
@@ -36,9 +36,7 @@ def test_simple_config_logging():
     log.setLevel(logging.DEBUG)
 
     class MyDirective(Action):
-        config = {
-            'my': list
-        }
+        config = {"my": list}
 
         def __init__(self, message):
             self.message = message
@@ -52,7 +50,7 @@ def test_simple_config_logging():
     class MyApp(App):
         foo = directive(MyDirective)
 
-    @MyApp.foo('hello')
+    @MyApp.foo("hello")
     def f():
         pass
 
@@ -62,13 +60,14 @@ def test_simple_config_logging():
     assert len(messages) == 1
     expected = (
         "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f")
+        "on dectate.tests.test_logging.f"
+    )
 
     assert messages[0] == expected
 
 
 def test_subclass_config_logging():
-    log = logging.getLogger('dectate.directive.foo')
+    log = logging.getLogger("dectate.directive.foo")
 
     test_handler = Handler()
 
@@ -76,9 +75,7 @@ def test_subclass_config_logging():
     log.setLevel(logging.DEBUG)
 
     class MyDirective(Action):
-        config = {
-            'my': list
-        }
+        config = {"my": list}
 
         def __init__(self, message):
             self.message = message
@@ -95,7 +92,7 @@ def test_subclass_config_logging():
     class SubApp(MyApp):
         pass
 
-    @MyApp.foo('hello')
+    @MyApp.foo("hello")
     def f():
         pass
 
@@ -105,20 +102,22 @@ def test_subclass_config_logging():
     assert len(messages) == 2
     expected = (
         "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f")
+        "on dectate.tests.test_logging.f"
+    )
 
     assert messages[0] == expected
 
     expected = (
         "@dectate.tests.test_logging.SubApp.foo('hello') "
         "on dectate.tests.test_logging.f "
-        "(from dectate.tests.test_logging.MyApp)")
+        "(from dectate.tests.test_logging.MyApp)"
+    )
 
     assert messages[1] == expected
 
 
 def test_override_logger_name():
-    log = logging.getLogger('morepath.directive.foo')
+    log = logging.getLogger("morepath.directive.foo")
 
     test_handler = Handler()
 
@@ -126,9 +125,7 @@ def test_override_logger_name():
     log.setLevel(logging.DEBUG)
 
     class MyDirective(Action):
-        config = {
-            'my': list
-        }
+        config = {"my": list}
 
         def __init__(self, message):
             self.message = message
@@ -140,11 +137,11 @@ def test_override_logger_name():
             my.append((self.message, obj))
 
     class MyApp(App):
-        logger_name = 'morepath.directive'
+        logger_name = "morepath.directive"
 
         foo = directive(MyDirective)
 
-    @MyApp.foo('hello')
+    @MyApp.foo("hello")
     def f():
         pass
 
@@ -154,6 +151,7 @@ def test_override_logger_name():
     assert len(messages) == 1
     expected = (
         "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f")
+        "on dectate.tests.test_logging.f"
+    )
 
     assert messages[0] == expected

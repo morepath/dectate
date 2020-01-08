@@ -3,7 +3,11 @@ import logging
 import sys
 import inspect
 from .error import (
-    ConflictError, ConfigError, DirectiveError, DirectiveReportError)
+    ConflictError,
+    ConfigError,
+    DirectiveError,
+    DirectiveReportError,
+)
 from .toposort import topological_sort
 from .sentinel import NOT_FOUND
 
@@ -26,6 +30,7 @@ class Configurable(object):
     them by depends so that they are executed in the correct order,
     and then executes each action group, which performs them.
     """
+
     app_class = None
 
     def __init__(self, extends, config):
@@ -69,8 +74,8 @@ class Configurable(object):
             # As of Python 3.5, the repr of bound methods uses
             # __qualname__ instead of __name__.
             # See http://bugs.python.org/issue21389#msg217566
-            if hasattr(func, '__qualname__'):
-                func.__qualname__ = type(app_class).__name__ + '.' + name
+            if hasattr(func, "__qualname__"):
+                func.__qualname__ = type(app_class).__name__ + "." + name
 
     def get_action_classes(self):
         """Get all action classes registered for this app.
@@ -102,7 +107,8 @@ class Configurable(object):
         self._action_classes = self.get_action_classes()
 
         grouped_action_classes = sort_action_classes(
-            group_action_classes(self._action_classes.keys()))
+            group_action_classes(self._action_classes.keys())
+        )
 
         # delete any old configuration in case we run this a second time
         for action_class in grouped_action_classes:
@@ -115,8 +121,9 @@ class Configurable(object):
         self._factories_seen = {}
         for action_class in grouped_action_classes:
             self.setup_config(action_class)
-            d[action_class] = ActionGroup(action_class,
-                                          self.action_extends(action_class))
+            d[action_class] = ActionGroup(
+                action_class, self.action_extends(action_class)
+            )
 
     def setup_config(self, action_class):
         """Set up the config objects on the ``config`` attribute.
@@ -138,12 +145,14 @@ class Configurable(object):
             if configured is not None:
                 if seen[name] is not factory:
                     raise ConfigError(
-                        "Inconsistent factories for config %r (%r and %r)" % (
-                            (name, seen[name], factory)))
+                        "Inconsistent factories for config %r (%r and %r)"
+                        % ((name, seen[name], factory))
+                    )
                 continue
             seen[name] = factory
-            kw = get_factory_arguments(action_class, config, factory,
-                                       self.app_class)
+            kw = get_factory_arguments(
+                action_class, config, factory, self.app_class
+            )
             setattr(config, name, factory(**kw))
 
     def delete_config(self, action_class):
@@ -155,7 +164,7 @@ class Configurable(object):
         for name, factory in action_class.config.items():
             if hasattr(config, name):
                 delattr(config, name)
-            factory_arguments = getattr(factory, 'factory_arguments', None)
+            factory_arguments = getattr(factory, "factory_arguments", None)
             if factory_arguments is None:
                 continue
             for name in factory_arguments.keys():
@@ -166,8 +175,9 @@ class Configurable(object):
         """Groups actions for this configurable into action groups.
         """
         # turn directives into actions
-        actions = [(directive.action(), obj)
-                   for (directive, obj) in self._directives]
+        actions = [
+            (directive.action(), obj) for (directive, obj) in self._directives
+        ]
 
         # add the actions for this configurable to the action group
         d = self._action_groups
@@ -194,9 +204,11 @@ class Configurable(object):
           extends.
         """
         return [
-            configurable._action_groups.get(action_class,
-                                            ActionGroup(action_class, []))
-            for configurable in self.extends]
+            configurable._action_groups.get(
+                action_class, ActionGroup(action_class, [])
+            )
+            for configurable in self.extends
+        ]
 
     def execute(self):
         """Execute actions for configurable.
@@ -217,6 +229,7 @@ class ActionGroup(object):
     Normally actions are grouped by their class, but actions can also
     indicate another action class to group with using ``group_class``.
     """
+
     def __init__(self, action_class, extends):
         """
         :param action_class:
@@ -307,8 +320,7 @@ class ActionGroup(object):
                 action._log(configurable, obj)
                 action.perform(obj, **kw)
             except DirectiveError as e:
-                raise DirectiveReportError(u"{}".format(e),
-                                           action.code_info)
+                raise DirectiveReportError("{}".format(e), action.code_info)
 
         # run the group class after operation
         self.action_class.after(**kw)
@@ -328,6 +340,7 @@ class Action(metaclass=abc.ABCMeta):
     identifier. Actions can only be in conflict with actions of the
     same action class or actions with the same ``action_group``.
     """
+
     config = {}
     """Describe configuration.
 
@@ -507,7 +520,7 @@ class Action(metaclass=abc.ABCMeta):
             group_class = cls
         # check if we want to have an app_class argument
         if group_class.app_class_arg:
-            result['app_class'] = configurable.app_class
+            result["app_class"] = configurable.app_class
         # add the config items themselves
         for name, factory in group_class.config.items():
             result[name] = getattr(config, name)
@@ -666,6 +679,7 @@ class Directive(object):
     When used as a decorator this tracks where in the source code
     the directive was used for the purposes of error reporting.
     """
+
     def __init__(self, action_factory, code_info, app_class, args, kw):
         """
         :param action_factory: function that constructs an action instance.
@@ -696,7 +710,7 @@ class Directive(object):
         try:
             result = self.action_factory(*self.args, **self.kw)
         except TypeError as e:
-            raise DirectiveReportError(u"{}".format(e), self.code_info)
+            raise DirectiveReportError("{}".format(e), self.code_info)
 
         # store the directive used on the action, useful for error reporting
         result.directive = self
@@ -727,9 +741,9 @@ class Directive(object):
           on.
         """
         directive_name = self.directive_name
-        logger = logging.getLogger('%s.%s' % (
-            configurable.app_class.logger_name,
-            directive_name))
+        logger = logging.getLogger(
+            "%s.%s" % (configurable.app_class.logger_name, directive_name)
+        )
 
         if not logger.isEnabledFor(logging.DEBUG):
             return
@@ -738,26 +752,29 @@ class Directive(object):
         is_same = self.app_class is configurable.app_class
 
         if inspect.isfunction(obj):
-            func_dotted_name = '%s.%s' % (obj.__module__, obj.__name__)
+            func_dotted_name = "%s.%s" % (obj.__module__, obj.__name__)
         else:
             func_dotted_name = repr(obj)
 
         args, kw = self.argument_info
-        arguments = ', '.join([repr(arg) for arg in args])
+        arguments = ", ".join([repr(arg) for arg in args])
 
         if kw:
             if arguments:
-                arguments += ', '
-            arguments += ', '.join(
-                ['%s=%r' % (key, value) for key, value in
-                 sorted(kw.items())])
+                arguments += ", "
+            arguments += ", ".join(
+                ["%s=%r" % (key, value) for key, value in sorted(kw.items())]
+            )
 
-        message = '@%s.%s(%s) on %s' % (
-            target_dotted_name, directive_name, arguments,
-            func_dotted_name)
+        message = "@%s.%s(%s) on %s" % (
+            target_dotted_name,
+            directive_name,
+            arguments,
+            func_dotted_name,
+        )
 
         if not is_same:
-            message += ' (from %s)' % dotted_name(self.app_class)
+            message += " (from %s)" % dotted_name(self.app_class)
 
         logger.debug(message)
 
@@ -765,6 +782,7 @@ class Directive(object):
 class DirectiveAbbreviation(object):
     """An abbreviated directive to be used with the ``with`` statement.
     """
+
     def __init__(self, directive):
         self.directive = directive
 
@@ -783,7 +801,8 @@ class DirectiveAbbreviation(object):
             code_info=code_info,
             app_class=directive.app_class,
             args=combined_args,
-            kw=combined_kw)
+            kw=combined_kw,
+        )
 
 
 def commit(*apps):
@@ -848,19 +867,23 @@ def group_action_classes(action_classes):
             if group_class.group_class is not None:
                 raise ConfigError(
                     "Cannot use group_class on another action class "
-                    "that uses group_class: %r" % action_class)
-            if 'config' in action_class.__dict__:
+                    "that uses group_class: %r" % action_class
+                )
+            if "config" in action_class.__dict__:
                 raise ConfigError(
                     "Cannot use config class attribute when you use "
-                    "group_class: %r" % action_class)
-            if 'before' in action_class.__dict__:
+                    "group_class: %r" % action_class
+                )
+            if "before" in action_class.__dict__:
                 raise ConfigError(
                     "Cannot define before method when you use "
-                    "group_class: %r" % action_class)
-            if 'after' in action_class.__dict__:
+                    "group_class: %r" % action_class
+                )
+            if "after" in action_class.__dict__:
                 raise ConfigError(
                     "Cannot define after method when you use "
-                    "group_class: %r" % action_class)
+                    "group_class: %r" % action_class
+                )
         result.add(group_class)
     return result
 
@@ -885,12 +908,11 @@ def expand_actions(actions):
                     sub_action.directive = action.directive
                     sub_actions.append((sub_action, sub_obj))
             except DirectiveError as e:
-                raise DirectiveReportError(u"{}".format(e),
-                                           action.code_info)
+                raise DirectiveReportError("{}".format(e), action.code_info)
             for sub_action, sub_obj in expand_actions(sub_actions):
                 yield sub_action, sub_obj
         else:
-            if not hasattr(action, 'order'):
+            if not hasattr(action, "order"):
                 global order_count
                 action.order = order_count
                 order_count += 1
@@ -908,6 +930,7 @@ class CodeInfo(object):
     The ``sourceline`` attribute contains the actual source line that
     did the invocation.
     """
+
     def __init__(self, path, lineno, sourceline):
         self.path = path
         self.lineno = lineno
@@ -931,9 +954,8 @@ def create_code_info(frame):
         sourceline = frameinfo.code_context
 
     return CodeInfo(
-        path=frameinfo.filename,
-        lineno=frameinfo.lineno,
-        sourceline=sourceline)
+        path=frameinfo.filename, lineno=frameinfo.lineno, sourceline=sourceline
+    )
 
 
 def factory_key(item):
@@ -944,7 +966,7 @@ def factory_key(item):
       depends on for construction.
     """
     name, factory = item
-    arguments = getattr(factory, 'factory_arguments', None)
+    arguments = getattr(factory, "factory_arguments", None)
     if arguments is None:
         return []
     return arguments.items()
@@ -966,12 +988,12 @@ def get_factory_arguments(action_class, config, factory, app_class):
       is stored in.
     :return: a dict with arguments to pass to the factory.
     """
-    arguments = getattr(factory, 'factory_arguments', None)
-    app_class_arg = getattr(factory, 'app_class_arg', False)
+    arguments = getattr(factory, "factory_arguments", None)
+    app_class_arg = getattr(factory, "app_class_arg", False)
 
     result = {}
     if app_class_arg:
-        result['app_class'] = app_class
+        result["app_class"] = app_class
 
     if arguments is None:
         return result
@@ -980,9 +1002,12 @@ def get_factory_arguments(action_class, config, factory, app_class):
         value = getattr(config, name, None)
         if value is None:
             raise ConfigError(
-                ("Cannot find factory argument %r for "
-                 "factory %r in action class %r") %
-                (name, factory, action_class))
+                (
+                    "Cannot find factory argument %r for "
+                    "factory %r in action class %r"
+                )
+                % (name, factory, action_class)
+            )
         result[name] = getattr(config, name, None)
     return result
 
@@ -995,4 +1020,4 @@ def dotted_name(cls):
     :param cls: the class to generate a dotted name for.
     :return: a dotted name to the class.
     """
-    return '%s.%s' % (cls.__module__, cls.__name__)
+    return "%s.%s" % (cls.__module__, cls.__name__)

@@ -33,6 +33,7 @@ def topological_sort(l, get_depends):
             visit(m)
         marked.add(n)
         result.append(n)
+
     for n in l:
         visit(n)
     return result

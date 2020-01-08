@@ -1,21 +1,21 @@
 from .a import App, Other
 
 
-@App.foo(name='alpha')
+@App.foo(name="alpha")
 def f():
     pass
 
 
-@App.foo(name='beta')
+@App.foo(name="beta")
 def g():
     pass
 
 
-@App.foo(name='gamma')
+@App.foo(name="gamma")
 def h():
     pass
 
 
-@Other.foo(name='alpha')
+@Other.foo(name="alpha")
 def i():
     pass
