@@ -10,7 +10,7 @@ long_description = "\n".join(
 
 setup(
     name="dectate",
-    version="0.14.dev0",
+    version="0.14",
     description="A configuration engine for Python frameworks",
     long_description=long_description,
     author="Martijn Faassen",
