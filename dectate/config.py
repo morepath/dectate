@@ -15,7 +15,7 @@ from .sentinel import NOT_FOUND
 order_count = 0
 
 
-class Configurable(object):
+class Configurable:
     """Object to which configuration actions apply.
 
     This object is normally tucked away as the ``dectate`` class
@@ -218,7 +218,7 @@ class Configurable(object):
         self.committed = True
 
 
-class ActionGroup(object):
+class ActionGroup:
     """A group of actions.
 
     Grouped actions are all performed together.
@@ -665,7 +665,7 @@ class Composite(metaclass=abc.ABCMeta):
         """
 
 
-class Directive(object):
+class Directive:
     """Decorator to use for configuration.
 
     Can also be used as a context manager for a Python ``with``
@@ -738,7 +738,7 @@ class Directive(object):
         """
         directive_name = self.directive_name
         logger = logging.getLogger(
-            "%s.%s" % (configurable.app_class.logger_name, directive_name)
+            "{}.{}".format(configurable.app_class.logger_name, directive_name)
         )
 
         if not logger.isEnabledFor(logging.DEBUG):
@@ -748,7 +748,7 @@ class Directive(object):
         is_same = self.app_class is configurable.app_class
 
         if inspect.isfunction(obj):
-            func_dotted_name = "%s.%s" % (obj.__module__, obj.__name__)
+            func_dotted_name = "{}.{}".format(obj.__module__, obj.__name__)
         else:
             func_dotted_name = repr(obj)
 
@@ -759,14 +759,14 @@ class Directive(object):
             if arguments:
                 arguments += ", "
             arguments += ", ".join(
-                ["%s=%r" % (key, value) for key, value in sorted(kw.items())]
+                [
+                    "{}={!r}".format(key, value)
+                    for key, value in sorted(kw.items())
+                ]
             )
 
-        message = "@%s.%s(%s) on %s" % (
-            target_dotted_name,
-            directive_name,
-            arguments,
-            func_dotted_name,
+        message = "@{}.{}({}) on {}".format(
+            target_dotted_name, directive_name, arguments, func_dotted_name,
         )
 
         if not is_same:
@@ -775,7 +775,7 @@ class Directive(object):
         logger.debug(message)
 
 
-class DirectiveAbbreviation(object):
+class DirectiveAbbreviation:
     """An abbreviated directive to be used with the ``with`` statement."""
 
     def __init__(self, directive):
@@ -903,8 +903,7 @@ def expand_actions(actions):
                     sub_actions.append((sub_action, sub_obj))
             except DirectiveError as e:
                 raise DirectiveReportError("{}".format(e), action.code_info)
-            for sub_action, sub_obj in expand_actions(sub_actions):
-                yield sub_action, sub_obj
+            yield from expand_actions(sub_actions)
         else:
             if not hasattr(action, "order"):
                 global order_count
@@ -913,7 +912,7 @@ def expand_actions(actions):
             yield action, obj
 
 
-class CodeInfo(object):
+class CodeInfo:
     """Information about where code was invoked.
 
     The ``path`` attribute gives the path to the Python module that the
@@ -931,7 +930,7 @@ class CodeInfo(object):
         self.sourceline = sourceline
 
     def filelineno(self):
-        return 'File "%s", line %s' % (self.path, self.lineno)
+        return 'File "{}", line {}'.format(self.path, self.lineno)
 
 
 def create_code_info(frame):
@@ -1014,4 +1013,4 @@ def dotted_name(cls):
     :param cls: the class to generate a dotted name for.
     :return: a dotted name to the class.
     """
-    return "%s.%s" % (cls.__module__, cls.__name__)
+    return "{}.{}".format(cls.__module__, cls.__name__)

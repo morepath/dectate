@@ -22,5 +22,5 @@ def other():
     pass
 
 
-class OtherClass(object):
+class OtherClass:
     pass

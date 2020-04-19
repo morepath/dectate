@@ -109,7 +109,7 @@ def test_with_statement_error():
     class MyApp(App):
         foo = directive(FooDirective)
 
-    class Dummy(object):
+    class Dummy:
         pass
 
     with MyApp.foo(model=Dummy) as foo:

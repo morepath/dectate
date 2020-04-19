@@ -134,7 +134,7 @@ def test_conflict_same_directive():
 
 
 def test_app_inherit():
-    class Registry(object):
+    class Registry:
         pass
 
     class MyDirective(Action):
@@ -169,7 +169,7 @@ def test_app_inherit():
 
 
 def test_app_override():
-    class Registry(object):
+    class Registry:
         pass
 
     class MyDirective(Action):
@@ -679,7 +679,7 @@ def test_with_statement_kw():
         def perform(self, obj, my):
             my.append((self.model, self.name, obj))
 
-    class Dummy(object):
+    class Dummy:
         pass
 
     class MyApp(App):
@@ -720,7 +720,7 @@ def test_with_statement_args():
     class MyApp(App):
         foo = directive(FooDirective)
 
-    class Dummy(object):
+    class Dummy:
         pass
 
     with MyApp.foo(Dummy) as foo:
@@ -742,7 +742,7 @@ def test_with_statement_args():
 
 
 def test_before():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.before = False
@@ -783,7 +783,7 @@ def test_before():
 
 
 def test_before_without_use():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.before = False
@@ -818,7 +818,7 @@ def test_before_without_use():
 
 
 def test_before_group():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.before = False
@@ -921,7 +921,7 @@ def test_config_group():
 
 
 def test_before_group_without_use():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.before = False
@@ -969,7 +969,7 @@ def test_before_group_without_use():
 
 
 def test_after():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.after = False
@@ -1010,7 +1010,7 @@ def test_after():
 
 
 def test_after_without_use():
-    class Registry(object):
+    class Registry:
         def __init__(self):
             self.li = []
             self.after = False
@@ -1243,7 +1243,7 @@ def test_order_subclass():
 
 
 def test_registry_single_factory_argument():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         def __init__(self, my):
@@ -1274,7 +1274,7 @@ def test_registry_single_factory_argument():
 
 
 def test_registry_factory_argument_introduces_new_registry():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         def __init__(self, my):
@@ -1306,10 +1306,10 @@ def test_registry_factory_argument_introduces_new_registry():
 
 
 def test_registry_factory_argument_introduces_new_registry_subclass():
-    class IsUsedElsewhere(object):
+    class IsUsedElsewhere:
         poked = False
 
-    class Other(object):
+    class Other:
         factory_arguments = {"my": IsUsedElsewhere}
 
         def __init__(self, my):
@@ -1347,7 +1347,7 @@ def test_registry_factory_argument_introduces_new_registry_subclass():
 
 
 def test_registry_multiple_factory_arguments():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list, "my2": list}
 
         def __init__(self, my, my2):
@@ -1381,7 +1381,7 @@ def test_registry_multiple_factory_arguments():
 
 
 def test_registry_factory_arguments_depends():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         def __init__(self, my):
@@ -1427,10 +1427,10 @@ def test_registry_factory_arguments_depends():
 
 
 def test_registry_factory_arguments_depends_complex():
-    class Registry(object):
+    class Registry:
         pass
 
-    class PredicateRegistry(object):
+    class PredicateRegistry:
         factory_arguments = {"registry": Registry}
 
         def __init__(self, registry):
@@ -1504,13 +1504,13 @@ def test_registry_config_inconsistent():
 
 
 def test_registry_factory_argument_inconsistent():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         def __init__(self, my):
             self.my = my
 
-    class YetAnother(object):
+    class YetAnother:
         factory_arguments = {"my": dict}
 
         def __init__(self, my):
@@ -1536,7 +1536,7 @@ def test_registry_factory_argument_inconsistent():
 
 
 def test_registry_factory_argument_and_config_inconsistent():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": dict}
 
         def __init__(self, my):
@@ -1634,7 +1634,7 @@ def test_app_class_passed_into_action():
 
 
 def test_app_class_passed_into_factory():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         app_class_arg = True
@@ -1675,7 +1675,7 @@ def test_app_class_passed_into_factory():
 
 
 def test_app_class_passed_into_factory_no_factory_arguments():
-    class Other(object):
+    class Other:
         app_class_arg = True
 
         def __init__(self, app_class):
@@ -1713,7 +1713,7 @@ def test_app_class_passed_into_factory_no_factory_arguments():
 
 
 def test_app_class_passed_into_factory_separation():
-    class Other(object):
+    class Other:
         factory_arguments = {"my": list}
 
         app_class_arg = True

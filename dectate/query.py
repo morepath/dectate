@@ -2,7 +2,7 @@ from .config import Composite
 from .error import QueryError
 
 
-class Callable(object):
+class Callable:
     def __call__(self, app_class):
         """Execute the query against an app class.
 
@@ -113,8 +113,7 @@ def query_action_classes(configurable, action_classes):
                 "%r is not an action of %r"
                 % (action_class, configurable.app_class)
             )
-        for action, obj in action_group.get_actions():
-            yield action, obj
+        yield from action_group.get_actions()
 
 
 def get_action_class(app_class, directive_name):
@@ -127,7 +126,7 @@ def get_action_class(app_class, directive_name):
     action_class = getattr(directive_method, "action_factory", None)
     if action_class is None:
         raise QueryError(
-            "%r on %r is not a directive" % (directive_name, app_class)
+            "{!r} on {!r} is not a directive".format(directive_name, app_class)
         )
     return action_class
 

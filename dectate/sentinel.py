@@ -1,4 +1,4 @@
-class Sentinel(object):
+class Sentinel:
     def __init__(self, name):
         self.name = name
 

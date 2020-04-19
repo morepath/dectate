@@ -5,7 +5,7 @@ from dectate.config import Action, commit
 
 class Handler(logging.Handler):
     def __init__(self, level=logging.NOTSET):
-        super(Handler, self).__init__(level)
+        super().__init__(level)
         self.records = []
 
     def emit(self, record):
