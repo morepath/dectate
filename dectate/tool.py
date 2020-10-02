@@ -180,8 +180,7 @@ def convert_filters(action_class, filters):
 
 
 def resolve_dotted_name(name, module=None):
-    """Adapted from zope.dottedname
-    """
+    """Adapted from zope.dottedname"""
     name = name.split(".")
     if not name[0]:
         if module is None:

@@ -2,8 +2,7 @@
 
 
 class ConfigError(Exception):
-    """Raised when configuration is bad.
-    """
+    """Raised when configuration is bad."""
 
 
 def conflict_keyfunc(action):

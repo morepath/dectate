@@ -35,13 +35,13 @@ class Configurable(object):
 
     def __init__(self, extends, config):
         """
-       :param extends:
-          the configurables that this configurable extends.
-        :type extends: list of configurables.
-        :param config:
-          the object that will contains the actual configuration.
-          Normally it's the ``config`` class attribute of the
-          :class:`dectate.App` subclass.
+        :param extends:
+           the configurables that this configurable extends.
+         :type extends: list of configurables.
+         :param config:
+           the object that will contains the actual configuration.
+           Normally it's the ``config`` class attribute of the
+           :class:`dectate.App` subclass.
         """
         self.extends = extends
         self.config = config
@@ -65,8 +65,7 @@ class Configurable(object):
         self._directives.append((directive, obj))
 
     def _fixup_directive_names(self):
-        """Set up correct name for directives.
-        """
+        """Set up correct name for directives."""
         app_class = self.app_class
         for name, method in app_class.get_directive_methods():
             func = method.__func__
@@ -172,8 +171,7 @@ class Configurable(object):
                     delattr(config, name)
 
     def group_actions(self):
-        """Groups actions for this configurable into action groups.
-        """
+        """Groups actions for this configurable into action groups."""
         # turn directives into actions
         actions = [
             (directive.action(), obj) for (directive, obj) in self._directives
@@ -211,8 +209,7 @@ class Configurable(object):
         ]
 
     def execute(self):
-        """Execute actions for configurable.
-        """
+        """Execute actions for configurable."""
         self.app_class.clean()
         self.setup()
         self.group_actions()
@@ -479,8 +476,7 @@ class Action(metaclass=abc.ABCMeta):
         return self.directive.code_info
 
     def _log(self, configurable, obj):
-        """Log this directive for configurable given configured obj.
-        """
+        """Log this directive for configurable given configured obj."""
         if self.directive is None:
             return
         self.directive.log(configurable, obj)
@@ -780,15 +776,13 @@ class Directive(object):
 
 
 class DirectiveAbbreviation(object):
-    """An abbreviated directive to be used with the ``with`` statement.
-    """
+    """An abbreviated directive to be used with the ``with`` statement."""
 
     def __init__(self, directive):
         self.directive = directive
 
     def __call__(self, *args, **kw):
-        """Combine the args and kw from the directive with supplied ones.
-        """
+        """Combine the args and kw from the directive with supplied ones."""
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
         directive = self.directive
