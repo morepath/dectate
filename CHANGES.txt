@@ -4,7 +4,11 @@ CHANGES
 0.15 (unreleased)
 =================
 
-- Nothing changed yet.
+- Fix Flake8 errors.
+
+- Apply Black code formatter.
+
+- Drop support for Python 3.4 and 3.5.
 
 
 0.14 (2020-01-29)
