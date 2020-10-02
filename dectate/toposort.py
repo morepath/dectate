@@ -1,7 +1,7 @@
 from .error import TopologicalSortError
 
 
-def topological_sort(l, get_depends):
+def topological_sort(l, get_depends):  # noqa: E741
     """`Topological sort`_
 
     .. _`Topological sort`: https://en.wikipedia.org/wiki/Topological_sorting
