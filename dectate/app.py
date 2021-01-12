@@ -2,7 +2,7 @@ import sys
 from .config import Configurable, Directive, commit, create_code_info
 
 
-class Config(object):
+class Config:
     """The object that contains the configurations.
 
     The configurations are specified by the :attr:`Action.config`
@@ -22,7 +22,7 @@ class AppMeta(type):
         extends = [base.dectate for base in bases if hasattr(base, "dectate")]
         d["config"] = config = Config()
         d["dectate"] = configurable = Configurable(extends, config)
-        result = super(AppMeta, cls).__new__(cls, name, bases, d)
+        result = super().__new__(cls, name, bases, d)
         configurable.app_class = result
         return result
 

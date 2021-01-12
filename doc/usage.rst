@@ -559,7 +559,7 @@ listing it in ``factory_arguments``:
 
 .. testcode::
 
-  class Bar(object):
+  class Bar:
       factory_arguments = {
           'foos': dict
       }

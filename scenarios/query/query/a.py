@@ -9,7 +9,7 @@ class Other(dectate.App):
     pass
 
 
-class R(object):
+class R:
     pass
 
 

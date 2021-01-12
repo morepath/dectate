@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 class ConfigError(Exception):
     """Raised when configuration is bad."""
 
@@ -29,7 +26,7 @@ class ConflictError(ConfigError):
             result.append("  %s" % code_info.filelineno())
             result.append("    %s" % code_info.sourceline)
         msg = "\n".join(result)
-        super(ConflictError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class DirectiveReportError(ConfigError):
@@ -44,7 +41,7 @@ class DirectiveReportError(ConfigError):
             result.append("  %s" % code_info.filelineno())
             result.append("    %s" % code_info.sourceline)
         msg = "\n".join(result)
-        super(DirectiveReportError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class DirectiveError(ConfigError):

@@ -173,10 +173,10 @@ def test_filter_multiple_fields():
     class MyApp(App):
         foo = directive(FooAction)
 
-    class Alpha(object):
+    class Alpha:
         pass
 
-    class Beta(object):
+    class Beta:
         pass
 
     @MyApp.foo(model=Alpha, name="a")
@@ -391,10 +391,10 @@ def test_filter_class():
     class MyApp(App):
         view = directive(ViewAction)
 
-    class Alpha(object):
+    class Alpha:
         pass
 
-    class Beta(object):
+    class Beta:
         pass
 
     class Gamma(Beta):

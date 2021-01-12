@@ -26,7 +26,7 @@ def setup(app):  # pragma: nocoverage
             )
 
         def import_object(self):
-            if not super(DirectiveDocumenter, self).import_object():
+            if not super().import_object():
                 return
             object = getattr(self.object, "action_factory", None)
             if object is None:

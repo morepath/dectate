@@ -15,6 +15,11 @@ CHANGES
 - Use GitHub Actions instead of Travis for CI.
 (Travis no longer gives free credits to open source projects.)
 
+- Cleanup old Python 2 code with pyupgrade_.
+
+  .. _pyupgrade: https://github.com/asottile/pyupgrade
+
+
 
 0.14 (2020-01-29)
 =================
