@@ -759,10 +759,7 @@ class Directive:
             if arguments:
                 arguments += ", "
             arguments += ", ".join(
-                [
-                    f"{key}={value!r}"
-                    for key, value in sorted(kw.items())
-                ]
+                [f"{key}={value!r}" for key, value in sorted(kw.items())]
             )
 
         message = "@{}.{}({}) on {}".format(
