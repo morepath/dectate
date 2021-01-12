@@ -766,7 +766,10 @@ class Directive:
             )
 
         message = "@{}.{}({}) on {}".format(
-            target_dotted_name, directive_name, arguments, func_dotted_name,
+            target_dotted_name,
+            directive_name,
+            arguments,
+            func_dotted_name,
         )
 
         if not is_same:
