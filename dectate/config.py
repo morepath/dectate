@@ -317,7 +317,7 @@ class ActionGroup:
                 action._log(configurable, obj)
                 action.perform(obj, **kw)
             except DirectiveError as e:
-                raise DirectiveReportError("{}".format(e), action.code_info)
+                raise DirectiveReportError(f"{e}", action.code_info)
 
         # run the group class after operation
         self.action_class.after(**kw)
@@ -706,7 +706,7 @@ class Directive:
         try:
             result = self.action_factory(*self.args, **self.kw)
         except TypeError as e:
-            raise DirectiveReportError("{}".format(e), self.code_info)
+            raise DirectiveReportError(f"{e}", self.code_info)
 
         # store the directive used on the action, useful for error reporting
         result.directive = self
@@ -738,7 +738,7 @@ class Directive:
         """
         directive_name = self.directive_name
         logger = logging.getLogger(
-            "{}.{}".format(configurable.app_class.logger_name, directive_name)
+            f"{configurable.app_class.logger_name}.{directive_name}"
         )
 
         if not logger.isEnabledFor(logging.DEBUG):
@@ -748,7 +748,7 @@ class Directive:
         is_same = self.app_class is configurable.app_class
 
         if inspect.isfunction(obj):
-            func_dotted_name = "{}.{}".format(obj.__module__, obj.__name__)
+            func_dotted_name = f"{obj.__module__}.{obj.__name__}"
         else:
             func_dotted_name = repr(obj)
 
@@ -760,7 +760,7 @@ class Directive:
                 arguments += ", "
             arguments += ", ".join(
                 [
-                    "{}={!r}".format(key, value)
+                    f"{key}={value!r}"
                     for key, value in sorted(kw.items())
                 ]
             )
@@ -905,7 +905,7 @@ def expand_actions(actions):
                     sub_action.directive = action.directive
                     sub_actions.append((sub_action, sub_obj))
             except DirectiveError as e:
-                raise DirectiveReportError("{}".format(e), action.code_info)
+                raise DirectiveReportError(f"{e}", action.code_info)
             yield from expand_actions(sub_actions)
         else:
             if not hasattr(action, "order"):
@@ -933,7 +933,7 @@ class CodeInfo:
         self.sourceline = sourceline
 
     def filelineno(self):
-        return 'File "{}", line {}'.format(self.path, self.lineno)
+        return f'File "{self.path}", line {self.lineno}'
 
 
 def create_code_info(frame):
@@ -1016,4 +1016,4 @@ def dotted_name(cls):
     :param cls: the class to generate a dotted name for.
     :return: a dotted name to the class.
     """
-    return "{}.{}".format(cls.__module__, cls.__name__)
+    return f"{cls.__module__}.{cls.__name__}"

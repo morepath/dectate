@@ -126,7 +126,7 @@ def get_action_class(app_class, directive_name):
     action_class = getattr(directive_method, "action_factory", None)
     if action_class is None:
         raise QueryError(
-            "{!r} on {!r} is not a directive".format(directive_name, app_class)
+            f"{directive_name!r} on {app_class!r} is not a directive"
         )
     return action_class
 
