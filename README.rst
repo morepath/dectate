@@ -1,6 +1,5 @@
-
-.. image:: https://travis-ci.com/morepath/workflows/CI/badge.svg?branch=master
-   :target: https://travis-ci.com/morepath/actions?workflow=CI
+.. image:: https://github.com/morepath/dectate/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/morepath/dectate/actions?workflow=CI
    :alt: CI Status
 
 .. image:: https://coveralls.io/repos/github/morepath/dectate/badge.svg?branch=master
