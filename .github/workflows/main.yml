@@ -38,6 +38,8 @@ jobs:
 
       - name: "Report to coveralls"
         # coverage is only created in the py39 environment
+        # --service=github is a workaround for bug
+        # https://github.com/coveralls-clients/coveralls-python/issues/251
         if: "matrix.python-version == '3.9'"
         run: |
           pip install coveralls

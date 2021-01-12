@@ -12,6 +12,9 @@ CHANGES
 
 - Add support for Python 3.9.
 
+- Use GitHub Actions instead of Travis for CI.
+(Travis no longer gives free credits to open source projects.)
+
 
 0.14 (2020-01-29)
 =================
