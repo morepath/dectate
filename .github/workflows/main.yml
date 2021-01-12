@@ -44,4 +44,3 @@ jobs:
           coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          repo_token: 90YBKtMmJtt83jqOxlQUey7BeZWYtZdEu
