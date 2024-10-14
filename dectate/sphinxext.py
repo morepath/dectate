@@ -4,6 +4,7 @@ This is tricky as directives are added as methods to the ``App``
 object using the directive decorator, and the signature needs to be
 obtained from the action class's ``__init__`` manually.
 """
+
 import inspect
 
 
