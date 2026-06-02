@@ -8,9 +8,9 @@ CHANGES
 
 - Apply Black code formatter.
 
-- Drop support for Python 3.4 and 3.5.
+- Add support for Python 3.10, 3.11, 3.12, 3.13 and 3.14
 
-- Add support for Python 3.9.
+- Drop support for Python 3.9 and below
 
 - Use GitHub Actions instead of Travis for CI.
 (Travis no longer gives free credits to open source projects.)

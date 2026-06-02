@@ -1,7 +1,7 @@
 # development
--e '.[test,coverage,pep8,docs]'
+-e '.[test,coverage,lint,docs]'
 pre-commit
-tox >= 2.4.1
+tox >= 4
 radon
 
 # releaser
