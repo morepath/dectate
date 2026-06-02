@@ -13,7 +13,7 @@
 
 
 Dectate: a configuration engine for Python frameworks
-=======================================================
+*****************************************************
 
 Dectate is a powerful configuration engine for Python frameworks.
 

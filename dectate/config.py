@@ -11,7 +11,6 @@ from .error import (
 from .toposort import topological_sort
 from .sentinel import NOT_FOUND
 
-
 order_count = 0
 
 
