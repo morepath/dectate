@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import abc
 import logging
 import sys
 import inspect
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 from .error import (
     ConflictError,
     ConfigError,
@@ -10,6 +13,15 @@ from .error import (
 )
 from .toposort import topological_sort
 from .sentinel import NOT_FOUND
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator
+    from types import FrameType, TracebackType
+    from .app import App, Config
+    from .sentinel import Sentinel
+
+_T = TypeVar("_T")
+_F = TypeVar("_F", bound="Callable[..., Any]")
 
 order_count = 0
 
@@ -30,9 +42,9 @@ class Configurable:
     and then executes each action group, which performs them.
     """
 
-    app_class = None
+    app_class: type[App] | None = None
 
-    def __init__(self, extends, config):
+    def __init__(self, extends: list[Configurable], config: Config) -> None:
         """
         :param extends:
            the configurables that this configurable extends.
@@ -45,13 +57,13 @@ class Configurable:
         self.extends = extends
         self.config = config
         # all action classes known
-        self._action_classes = {}
+        self._action_classes: dict[type[Action | Composite], str] = {}
         # directives used with configurable
-        self._directives = []
+        self._directives: list[tuple[Directive, Any]] = []
         # have we ever been committed
         self.committed = False
 
-    def register_directive(self, directive, obj):
+    def register_directive(self, directive: Directive, obj: Any) -> None:
         """Register a directive with this configurable.
 
         Called during import time when directives are used.
@@ -63,9 +75,10 @@ class Configurable:
         """
         self._directives.append((directive, obj))
 
-    def _fixup_directive_names(self):
+    def _fixup_directive_names(self) -> None:
         """Set up correct name for directives."""
         app_class = self.app_class
+        assert app_class is not None
         for name, method in app_class.get_directive_methods():
             func = method.__func__
             func.__name__ = name
@@ -75,7 +88,7 @@ class Configurable:
             if hasattr(func, "__qualname__"):
                 func.__qualname__ = type(app_class).__name__ + "." + name
 
-    def get_action_classes(self):
+    def get_action_classes(self) -> dict[type[Action | Composite], str]:
         """Get all action classes registered for this app.
 
         This includes action classes registered for its base class.
@@ -84,6 +97,7 @@ class Configurable:
         """
         result = {}
         app_class = self.app_class
+        assert app_class is not None
         for name, method in app_class.get_directive_methods():
             result[method.__func__.action_factory] = name
 
@@ -94,7 +108,7 @@ class Configurable:
                     result[action_class] = name
         return result
 
-    def setup(self):
+    def setup(self) -> None:
         """Set up config object and action groups.
 
         This happens during the start of the commit phase.
@@ -113,21 +127,23 @@ class Configurable:
             self.delete_config(action_class)
 
         # now we create ActionGroup objects for each action class group
+        self._action_groups: dict[type[Action], ActionGroup]
         self._action_groups = d = {}
         # and we track what config factories we've seen for consistency
         # checking
-        self._factories_seen = {}
+        self._factories_seen: dict[str, Callable[..., Any]] = {}
         for action_class in grouped_action_classes:
             self.setup_config(action_class)
             d[action_class] = ActionGroup(
                 action_class, self.action_extends(action_class)
             )
 
-    def setup_config(self, action_class):
+    def setup_config(self, action_class: type[Action]) -> None:
         """Set up the config objects on the ``config`` attribute.
 
         :param action_class: the action subclass to setup config for.
         """
+        assert self.app_class is not None
         # sort the items in order of creation
         items = topological_sort(action_class.config.items(), factory_key)
         # this introduces all dependencies, including those only
@@ -153,7 +169,7 @@ class Configurable:
             )
             setattr(config, name, factory(**kw))
 
-    def delete_config(self, action_class):
+    def delete_config(self, action_class: type[Action]) -> None:
         """Delete config objects on the ``config`` attribute.
 
         :param action_class: the action class subclass to delete config for.
@@ -169,7 +185,7 @@ class Configurable:
                 if hasattr(config, name):
                     delattr(config, name)
 
-    def group_actions(self):
+    def group_actions(self) -> None:
         """Groups actions for this configurable into action groups."""
         # turn directives into actions
         actions = [
@@ -185,7 +201,9 @@ class Configurable:
                 action_class = action.__class__
             d[action_class].add(action, obj)
 
-    def get_action_group(self, action_class):
+    def get_action_group(
+        self, action_class: type[Action]
+    ) -> ActionGroup | None:
         """Return ActionGroup for ``action_class`` or ``None`` if not found.
 
         :param action_class: the action class to find the action group of.
@@ -193,7 +211,7 @@ class Configurable:
         """
         return self._action_groups.get(action_class, None)
 
-    def action_extends(self, action_class):
+    def action_extends(self, action_class: type[Action]) -> list[ActionGroup]:
         """Get ActionGroup for action class in ``extends``.
 
         :param action_class: the action class
@@ -207,8 +225,9 @@ class Configurable:
             for configurable in self.extends
         ]
 
-    def execute(self):
+    def execute(self) -> None:
         """Execute actions for configurable."""
+        assert self.app_class is not None
         self.app_class.clean()
         self.setup()
         self.group_actions()
@@ -226,7 +245,9 @@ class ActionGroup:
     indicate another action class to group with using ``group_class``.
     """
 
-    def __init__(self, action_class, extends):
+    def __init__(
+        self, action_class: type[Action], extends: list[ActionGroup]
+    ) -> None:
         """
         :param action_class:
           the action_class that identifies this action group.
@@ -234,11 +255,11 @@ class ActionGroup:
           list of action groups extended by this action group.
         """
         self.action_class = action_class
-        self._actions = []
-        self._action_map = {}
+        self._actions: list[tuple[Action, Any]] = []
+        self._action_map: dict[Any, tuple[Action, Any]] = {}
         self.extends = extends
 
-    def add(self, action, obj):
+    def add(self, action: Action, obj: Any) -> None:
         """Add an action and the object this action is to be performed on.
 
         :param action: an :class:`Action` instance.
@@ -246,7 +267,7 @@ class ActionGroup:
         """
         self._actions.append((action, obj))
 
-    def prepare(self, configurable):
+    def prepare(self, configurable: Configurable) -> None:
         """Prepare the action group for a configurable.
 
         Detect any conflicts between actions.
@@ -255,7 +276,7 @@ class ActionGroup:
         :param configurable: The :class:`Configurable` option to prepare for.
         """
         # check for conflicts and fill action map
-        discriminators = {}
+        discriminators: dict[Any, Action] = {}
         self._action_map = action_map = {}
 
         for action, obj in self._actions:
@@ -273,7 +294,7 @@ class ActionGroup:
         for extend in self.extends:
             self.combine(extend)
 
-    def get_actions(self):
+    def get_actions(self) -> list[tuple[Action, Any]]:
         """Get all actions registered for this action group.
 
         :return: list of action instances in registration order.
@@ -282,7 +303,7 @@ class ActionGroup:
         result.sort(key=lambda value: value[0].order or 0)
         return result
 
-    def combine(self, actions):
+    def combine(self, actions: ActionGroup) -> None:
         """Combine another prepared actions with this one.
 
         Those configuration actions that would conflict are taken to
@@ -297,7 +318,7 @@ class ActionGroup:
         to_combine.update(self._action_map)
         self._action_map = to_combine
 
-    def execute(self, configurable):
+    def execute(self, configurable: Configurable) -> None:
         """Perform actions for configurable.
 
         :param configurable: the :class:`Configurable` instance to execute
@@ -337,7 +358,7 @@ class Action(metaclass=abc.ABCMeta):
     same action class or actions with the same ``action_group``.
     """
 
-    config = {}
+    config: ClassVar[dict[str, Callable[..., Any]]] = {}
     """Describe configuration.
 
     A dict mapping configuration names to factory functions. The
@@ -360,7 +381,7 @@ class Action(metaclass=abc.ABCMeta):
     :meth:`Action.after`.
     """
 
-    depends = []
+    depends: list[type[Action]] = []
 
     """List of other action classes to be executed before this one.
 
@@ -372,7 +393,7 @@ class Action(metaclass=abc.ABCMeta):
     Omit if you don't care about the order.
     """
 
-    group_class = None
+    group_class: type[Action] | None = None
     """Action class to group with.
 
     This class attribute can be supplied with the class of another
@@ -384,7 +405,7 @@ class Action(metaclass=abc.ABCMeta):
     By default an action only groups with others of its same class.
     """
 
-    filter_name = {}
+    filter_name: dict[str, str] = {}
     """Map of names used in query filter to attribute names.
 
     If for instance you want to be able to filter the attribute
@@ -399,7 +420,7 @@ class Action(metaclass=abc.ABCMeta):
     same as the attribute name.
     """
 
-    def filter_get_value(self, name):
+    def filter_get_value(self, name: str) -> Any | Sentinel:
         """A function to get the filter value.
 
         Takes two arguments, action and name. Should return the
@@ -422,7 +443,7 @@ class Action(metaclass=abc.ABCMeta):
         """
         return NOT_FOUND
 
-    filter_compare = {}
+    filter_compare: dict[str, Callable[[Any, Any], bool]] = {}
     """Map of names used in query filter to comparison functions.
 
     If for instance you want to be able check whether the value of
@@ -436,7 +457,7 @@ class Action(metaclass=abc.ABCMeta):
     The default filter compare is an equality comparison.
     """
 
-    filter_convert = {}
+    filter_convert: dict[str, Callable[[str], Any]] = {}
     """Map of names to convert functions.
 
     The query tool that can be generated for a Dectate-based
@@ -454,15 +475,18 @@ class Action(metaclass=abc.ABCMeta):
     """
 
     # the directive that was used gets stored on the instance
-    directive = None
+    directive: Directive | None = None
+
+    # the order gets stored on the instance
+    order: int
 
     # this is here to make update_wrapper work even when an __init__
     # is not provided by the subclass
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @property
-    def code_info(self):
+    def code_info(self) -> CodeInfo | None:
         """Info about where in the source code the action was invoked.
 
         Is an instance of :class:`CodeInfo`.
@@ -474,13 +498,13 @@ class Action(metaclass=abc.ABCMeta):
             return None
         return self.directive.code_info
 
-    def _log(self, configurable, obj):
+    def _log(self, configurable: Configurable, obj: Any) -> None:
         """Log this directive for configurable given configured obj."""
         if self.directive is None:
             return
         self.directive.log(configurable, obj)
 
-    def get_value_for_filter(self, name):
+    def get_value_for_filter(self, name: str) -> Any | Sentinel:
         """Get value. Takes into account ``filter_name``, ``filter_get_value``
 
         Used by the query system. You can override it if your action
@@ -494,11 +518,11 @@ class Action(metaclass=abc.ABCMeta):
         if value is not NOT_FOUND:
             return value
         if self.filter_get_value is None:
-            return value
+            return value  # type: ignore[unreachable]
         return self.filter_get_value(name)
 
     @classmethod
-    def _get_config_kw(cls, configurable):
+    def _get_config_kw(cls, configurable: Configurable) -> dict[str, Any]:
         """Get the config objects set up for this configurable into a dict.
 
         This dict can then be passed as keyword parameters (using ``**``)
@@ -521,78 +545,97 @@ class Action(metaclass=abc.ABCMeta):
             result[name] = getattr(config, name)
         return result
 
-    @abc.abstractmethod
-    def identifier(self, **kw):
-        """Returns an immutable that uniquely identifies this config.
+    # NOTE: This is not ideal, since it reduces the information type
+    #       checkers have about these methods on the base class, but
+    #       if we don't do this, we will need to either deal with
+    #       incompatible method override errors on the subclasses, when
+    #       sticking to the intended way to define these methods in
+    #       subclasses or change the signature of all implementations
+    #       in order to get rid of the error. Neither is very ergonomic,
+    #       so we can't ask the average Joe to do that. Ideally we
+    #       could express the constraint on **kw through unpacking a
+    #       TypeVar, that is bound to a TypedDict, however that is not
+    #       supported, see https://github.com/python/typing/issues/1399
+    if TYPE_CHECKING:
+        identifier: Any
+        discriminators: Any
+        perform: Any
+        before: Any
+        after: Any
+    else:
 
-        Needs to be implemented by the :class:`Action` subclass.
+        @abc.abstractmethod
+        def identifier(self, **kw: Any) -> Any:
+            """Returns an immutable that uniquely identifies this config.
 
-        Used for overrides and conflict detection.
+            Needs to be implemented by the :class:`Action` subclass.
 
-        If two actions in the same group have the same identifier in
-        the same configurable, those two actions are in conflict and a
-        :class:`ConflictError` is raised during :func:`commit`.
+            Used for overrides and conflict detection.
 
-        If an action in an extending configurable has the same
-        identifier as the configurable being extended, that action
-        overrides the original one in the extending configurable.
+            If two actions in the same group have the same identifier in
+            the same configurable, those two actions are in conflict and a
+            :class:`ConflictError` is raised during :func:`commit`.
 
-        :param ``**kw``: a dictionary of configuration objects as specified
-          by the ``config`` class attribute.
-        :return: an immutable value uniquely identifying this action.
-        """
+            If an action in an extending configurable has the same
+            identifier as the configurable being extended, that action
+            overrides the original one in the extending configurable.
 
-    def discriminators(self, **kw):
-        """Returns an iterable of immutables to detect conflicts.
+            :param ``**kw``: a dictionary of configuration objects as specified
+              by the ``config`` class attribute.
+            :return: an immutable value uniquely identifying this action.
+            """
 
-        Can be implemented by the :class:`Action` subclass.
+        def discriminators(self, **kw: Any) -> Iterable[Any]:
+            """Returns an iterable of immutables to detect conflicts.
 
-        Used for additional configuration conflict detection.
+            Can be implemented by the :class:`Action` subclass.
 
-        :param ``**kw``: a dictionary of configuration objects as specified
-          by the ``config`` class attribute.
-        :return: an iterable of immutable values.
-        """
-        return []
+            Used for additional configuration conflict detection.
 
-    @abc.abstractmethod
-    def perform(self, obj, **kw):
-        """Do whatever configuration is needed for ``obj``.
+            :param ``**kw``: a dictionary of configuration objects as specified
+              by the ``config`` class attribute.
+            :return: an iterable of immutable values.
+            """
+            return []
 
-        Needs to be implemented by the :class:`Action` subclass.
+        @abc.abstractmethod
+        def perform(self, obj: Any, **kw: Any) -> None:
+            """Do whatever configuration is needed for ``obj``.
 
-        Raise a :exc:`DirectiveError` to indicate that the action
-        cannot be performed due to incorrect configuration.
+            Needs to be implemented by the :class:`Action` subclass.
 
-        :param obj: the object that the action should be performed
-          for. Typically a function or a class object.
-        :param ``**kw``: a dictionary of configuration objects as specified
-          by the ``config`` class attribute.
-        """
+            Raise a :exc:`DirectiveError` to indicate that the action
+            cannot be performed due to incorrect configuration.
 
-    @staticmethod
-    def before(**kw):
-        """Do setup just before actions in a group are performed.
+            :param obj: the object that the action should be performed
+              for. Typically a function or a class object.
+            :param ``**kw``: a dictionary of configuration objects as specified
+              by the ``config`` class attribute.
+            """
 
-        Can be implemented as a static method by the :class:`Action`
-        subclass.
+        @staticmethod
+        def before(**kw: Any) -> None:
+            """Do setup just before actions in a group are performed.
 
-        :param ``**kw``: a dictionary of configuration objects as specified
-          by the ``config`` class attribute.
-        """
-        pass
+            Can be implemented as a static method by the :class:`Action`
+            subclass.
 
-    @staticmethod
-    def after(**kw):
-        """Do setup just after actions in a group are performed.
+            :param ``**kw``: a dictionary of configuration objects as specified
+              by the ``config`` class attribute.
+            """
+            pass
 
-        Can be implemented as a static method by the :class:`Action`
-        subclass.
+        @staticmethod
+        def after(**kw: Any) -> None:
+            """Do setup just after actions in a group are performed.
 
-        :param ``**kw``: a dictionary of configuration objects as specified
-          by the ``config`` class attribute.
-        """
-        pass
+            Can be implemented as a static method by the :class:`Action`
+            subclass.
+
+            :param ``**kw``: a dictionary of configuration objects as specified
+              by the ``config`` class attribute.
+            """
+            pass
 
 
 class Composite(metaclass=abc.ABCMeta):
@@ -604,7 +647,7 @@ class Composite(metaclass=abc.ABCMeta):
     method and return a iterable of actions in there.
     """
 
-    query_classes = []
+    query_classes: list[type[Action | Composite]] = []
     """A list of actual action classes that this composite can generate.
 
     This is to allow the querying of composites. If the list if empty
@@ -613,7 +656,7 @@ class Composite(metaclass=abc.ABCMeta):
     be generated in another way they are in the same query result.
     """
 
-    filter_convert = {}
+    filter_convert: dict[str, Callable[[str], Any]] = {}
     """Map of names to convert functions.
 
     The query tool that can be generated for a Dectate-based
@@ -630,13 +673,16 @@ class Composite(metaclass=abc.ABCMeta):
     :func:`convert_dotted_name`.
     """
 
+    # the directive that was used gets stored on the instance
+    directive: Directive | None = None
+
     # this is here to make update_wrapper work even when an __init__
     # is not provided by the subclass
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @property
-    def code_info(self):
+    def code_info(self) -> CodeInfo | None:
         """Info about where in the source code the action was invoked.
 
         Is an instance of :class:`CodeInfo`.
@@ -649,7 +695,7 @@ class Composite(metaclass=abc.ABCMeta):
         return self.directive.code_info
 
     @abc.abstractmethod
-    def actions(self, obj):
+    def actions(self, obj: Any) -> Iterable[tuple[Action | Composite, Any]]:
         """Specify a iterable of actions to perform for ``obj``.
 
         The iteratable should yield ``action, obj`` tuples,
@@ -675,7 +721,14 @@ class Directive:
     the directive was used for the purposes of error reporting.
     """
 
-    def __init__(self, action_factory, code_info, app_class, args, kw):
+    def __init__(
+        self,
+        action_factory: type[Action | Composite],
+        code_info: CodeInfo,
+        app_class: type[App],
+        args: tuple[Any, ...],
+        kw: dict[str, Any],
+    ) -> None:
         """
         :param action_factory: function that constructs an action instance.
         :code_info: a :class:`CodeInfo` instance describing where this
@@ -694,10 +747,10 @@ class Directive:
         self.argument_info = (args, kw)
 
     @property
-    def directive_name(self):
+    def directive_name(self) -> str:
         return self.configurable._action_classes[self.action_factory]
 
-    def action(self):
+    def action(self) -> Action | Composite:
         """Get the :class:`Action` instance represented by this directive.
 
         :return: :class:`dectate.Action` instance.
@@ -711,13 +764,18 @@ class Directive:
         result.directive = self
         return result
 
-    def __enter__(self):
+    def __enter__(self) -> DirectiveAbbreviation:
         return DirectiveAbbreviation(self)
 
-    def __exit__(self, type, value, tb):
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         pass
 
-    def __call__(self, wrapped):
+    def __call__(self, wrapped: _T) -> _T:
         """Call with function or class to decorate.
 
         The decorated object is returned unchanged.
@@ -728,13 +786,14 @@ class Directive:
         self.configurable.register_directive(self, wrapped)
         return wrapped
 
-    def log(self, configurable, obj):
+    def log(self, configurable: Configurable, obj: Any) -> None:
         """Log this directive.
 
         :configurable: the configurable that this directive is logged for.
         :obj: the function or class object to that this directive is used
           on.
         """
+        assert configurable.app_class is not None
         directive_name = self.directive_name
         logger = logging.getLogger(
             f"{configurable.app_class.logger_name}.{directive_name}"
@@ -777,10 +836,10 @@ class Directive:
 class DirectiveAbbreviation:
     """An abbreviated directive to be used with the ``with`` statement."""
 
-    def __init__(self, directive):
+    def __init__(self, directive: Directive) -> None:
         self.directive = directive
 
-    def __call__(self, *args, **kw):
+    def __call__(self, *args: Any, **kw: Any) -> Directive:
         """Combine the args and kw from the directive with supplied ones."""
         frame = sys._getframe(1)
         code_info = create_code_info(frame)
@@ -797,8 +856,19 @@ class DirectiveAbbreviation:
             kw=combined_kw,
         )
 
+    def __enter__(self) -> DirectiveAbbreviation:
+        return self
 
-def commit(*apps):
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        pass
+
+
+def commit(*apps: type[App] | Configurable) -> None:
     """Commit one or more app classes
 
     A commit causes the configuration actions to be performed. The
@@ -823,7 +893,9 @@ def commit(*apps):
         configurable.execute()
 
 
-def sort_configurables(configurables):
+def sort_configurables(
+    configurables: Iterable[Configurable],
+) -> list[Configurable]:
     """Sort configurables topologically by ``extends``.
 
     :param configurables: an iterable of configurables to sort.
@@ -832,7 +904,9 @@ def sort_configurables(configurables):
     return topological_sort(configurables, lambda c: c.extends)
 
 
-def sort_action_classes(action_classes):
+def sort_action_classes(
+    action_classes: Iterable[type[Action]],
+) -> list[type[Action]]:
     """Sort action classes topologically by depends.
 
     :param action_classes: iterable of :class:`Action` subclasses
@@ -842,7 +916,9 @@ def sort_action_classes(action_classes):
     return topological_sort(action_classes, lambda c: c.depends)
 
 
-def group_action_classes(action_classes):
+def group_action_classes(
+    action_classes: Iterable[type[Action | Composite]],
+) -> set[type[Action]]:
     """Group action classes by ``group_class``.
 
     :param action_classes: iterable of action classes
@@ -881,7 +957,9 @@ def group_action_classes(action_classes):
     return result
 
 
-def expand_actions(actions):
+def expand_actions(
+    actions: Iterable[tuple[Action | Composite, Any]],
+) -> Iterator[tuple[Action, Any]]:
     """Expand any :class:`Composite` instances into :class:`Action` instances.
 
     Expansion is recursive; composites that return composites are expanded
@@ -923,34 +1001,33 @@ class CodeInfo:
     did the invocation.
     """
 
-    def __init__(self, path, lineno, sourceline):
+    def __init__(self, path: str, lineno: int, sourceline: str | None) -> None:
         self.path = path
         self.lineno = lineno
         self.sourceline = sourceline
 
-    def filelineno(self):
+    def filelineno(self) -> str:
         return f'File "{self.path}", line {self.lineno}'
 
 
-def create_code_info(frame):
+def create_code_info(frame: FrameType) -> CodeInfo:
     """Return code information about a frame.
 
     Returns a :class:`CodeInfo` instance.
     """
     frameinfo = inspect.getframeinfo(frame)
-
-    try:
-        sourceline = frameinfo.code_context[0].strip()
-    except Exception:
+    if frameinfo.code_context:
+        sourceline: str | None = frameinfo.code_context[0].strip()
+    else:
         # if no source file exists, e.g., due to eval
-        sourceline = frameinfo.code_context
+        sourceline = None
 
     return CodeInfo(
         path=frameinfo.filename, lineno=frameinfo.lineno, sourceline=sourceline
     )
 
 
-def factory_key(item):
+def factory_key(item: tuple[str, _F]) -> Iterable[tuple[str, _F]]:
     """Helper for topological sort of factories.
 
     :param item: a ``name, factory`` tuple to generate the key for.
@@ -961,10 +1038,15 @@ def factory_key(item):
     arguments = getattr(factory, "factory_arguments", None)
     if arguments is None:
         return []
-    return arguments.items()
+    return arguments.items()  # type: ignore[no-any-return]
 
 
-def get_factory_arguments(action_class, config, factory, app_class):
+def get_factory_arguments(
+    action_class: type[Action],
+    config: Config,
+    factory: Callable[..., Any],
+    app_class: type[App],
+) -> dict[str, Any]:
     """Get arguments needed to construct factory.
 
     Factories can define a ``factory_arguments`` attribute to control
@@ -983,7 +1065,7 @@ def get_factory_arguments(action_class, config, factory, app_class):
     arguments = getattr(factory, "factory_arguments", None)
     app_class_arg = getattr(factory, "app_class_arg", False)
 
-    result = {}
+    result: dict[str, Any] = {}
     if app_class_arg:
         result["app_class"] = app_class
 
@@ -1004,7 +1086,7 @@ def get_factory_arguments(action_class, config, factory, app_class):
     return result
 
 
-def dotted_name(cls):
+def dotted_name(cls: type) -> str:
     """Dotted name for a class.
 
     Example: ``my.module.MyClass``.

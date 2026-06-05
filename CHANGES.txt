@@ -4,6 +4,10 @@ CHANGES
 0.15 (unreleased)
 =================
 
+- Add type hints
+
+- Add partial attribute to directive methods for better typing support
+
 - Fix Flake8 errors.
 
 - Apply Black code formatter.

@@ -969,7 +969,7 @@ You can instead write:
   class SuccinctWithApp(WithApp):
       pass
 
-  with SuccinctWithApp.foo('a') as foo:
+  with SuccinctWithApp.foo.partial('a') as foo:
       @foo('x')
       def f():
           pass

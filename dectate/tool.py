@@ -1,15 +1,23 @@
+from __future__ import annotations
+
 import argparse
 import inspect
+from typing import TYPE_CHECKING, Any
 from .query import Query, get_action_class
 from .error import QueryError
 from .app import App
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from .config import Action, Composite
+    from .query import Filter
 
 
 class ToolError(Exception):
     pass
 
 
-def query_tool(app_classes):
+def query_tool(app_classes: Iterable[type[App]]) -> None:
     """Command-line query tool for dectate.
 
     Uses command-line arguments to do the query and prints the results.
@@ -39,12 +47,12 @@ def query_tool(app_classes):
     )
     parser.add_argument("directive", help="Name of the directive.")
 
-    args, filters = parser.parse_known_args()
+    args, raw_filters = parser.parse_known_args()
 
     if args.app:
         app_classes = args.app
 
-    filters = parse_filters(filters)
+    filters = parse_filters(raw_filters)
 
     try:
         lines = list(query_tool_output(app_classes, args.directive, filters))
@@ -55,7 +63,9 @@ def query_tool(app_classes):
         print(line)
 
 
-def query_tool_output(app_classes, directive, filters):
+def query_tool_output(
+    app_classes: Iterable[type[App]], directive: str, filters: dict[str, str]
+) -> Iterator[str]:
     for app_class in app_classes:
         if not app_class.is_committed():
             raise ToolError("App %r was not committed." % app_class)
@@ -75,7 +85,9 @@ def query_tool_output(app_classes, directive, filters):
             yield ""
 
 
-def query_app(app_class, directive, **filters):
+def query_app(
+    app_class: type[App], directive: str, **filters: Any
+) -> Iterable[tuple[Action, Any]]:
     """Query a single app with raw filters.
 
     This function is especially useful for writing unit tests that
@@ -89,20 +101,22 @@ def query_app(app_class, directive, **filters):
     action_class = parse_directive(app_class, directive)
     if action_class is not None:
         filter_kw = convert_filters(action_class, filters)
-        query = Query(action_class).filter(**filter_kw)
+        query: Query | Filter = Query(action_class).filter(**filter_kw)
     else:
         query = Query()  # empty query
     return query(app_class)
 
 
-def parse_directive(app_class, directive_name):
+def parse_directive(
+    app_class: type[App], directive_name: str
+) -> type[Action | Composite] | None:
     try:
         return get_action_class(app_class, directive_name)
     except QueryError:
         return None
 
 
-def parse_app_class(s):
+def parse_app_class(s: str) -> type[App]:
     try:
         app_class = resolve_dotted_name(s)
     except ImportError:
@@ -116,11 +130,11 @@ def parse_app_class(s):
     return app_class
 
 
-def convert_default(s):
+def convert_default(s: str) -> str:
     return s
 
 
-def convert_dotted_name(s):
+def convert_dotted_name(s: str) -> Any:
     """Convert input string to an object in a module.
 
     Takes a dotted name: ``pkg.module.attr`` gets ``attr``
@@ -139,7 +153,7 @@ def convert_dotted_name(s):
         raise ToolError("Cannot resolve dotted name: %s" % s)
 
 
-def convert_bool(s):
+def convert_bool(s: str) -> bool:
     """Convert input string to boolean.
 
     Input string must either be ``True`` or ``False``.
@@ -152,7 +166,7 @@ def convert_bool(s):
         raise ValueError("Cannot convert bool: %r" % s)
 
 
-def parse_filters(entries):
+def parse_filters(entries: Iterable[str]) -> dict[str, str]:
     result = {}
     for entry in entries:
         try:
@@ -164,7 +178,9 @@ def parse_filters(entries):
     return result
 
 
-def convert_filters(action_class, filters):
+def convert_filters(
+    action_class: type[Action | Composite], filters: dict[str, str]
+) -> dict[str, Any]:
     filter_convert = action_class.filter_convert
 
     result = {}
@@ -179,22 +195,25 @@ def convert_filters(action_class, filters):
     return result
 
 
-def resolve_dotted_name(name, module=None):
+def resolve_dotted_name(name: str, module: str | None = None) -> Any:
     """Adapted from zope.dottedname"""
-    name = name.split(".")
-    if not name[0]:
+    name_parts = name.split(".")
+    if not name_parts[0]:
         if module is None:
             raise ValueError("relative name without base module")
-        module = module.split(".")
-        name.pop(0)
-        while not name[0]:
-            module.pop()
-            name.pop(0)
-        name = module + name
+        module_parts = module.split(".")
+        name_parts.pop(0)
+        if TYPE_CHECKING:
+            # NOTE: Undo mypy narrowing to Literal[""] for name_parts[0]
+            name_parts = name_parts
+        while not name_parts[0]:
+            module_parts.pop()
+            name_parts.pop(0)
+        name_parts = module_parts + name_parts
 
-    used = name.pop(0)
+    used = name_parts.pop(0)
     found = __import__(used)
-    for n in name:
+    for n in name_parts:
         used += "." + n
         try:
             found = getattr(found, n)

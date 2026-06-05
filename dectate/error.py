@@ -1,11 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dectate.config import Action, CodeInfo
+
+
 class ConfigError(Exception):
     """Raised when configuration is bad."""
 
 
-def conflict_keyfunc(action):
+def conflict_keyfunc(action: Action) -> tuple[str, int]:
     code_info = action.code_info
     if code_info is None:
-        return 0
+        return ("", 0)
     return (code_info.path, code_info.lineno)
 
 
@@ -15,7 +23,7 @@ class ConflictError(ConfigError):
     Describes where in the code directives are in conflict.
     """
 
-    def __init__(self, actions):
+    def __init__(self, actions: list[Action]) -> None:
         actions.sort(key=conflict_keyfunc)
         self.actions = actions
         result = ["Conflict between:"]
@@ -35,7 +43,7 @@ class DirectiveReportError(ConfigError):
     Describes where in the code the problem occurred.
     """
 
-    def __init__(self, message, code_info):
+    def __init__(self, message: str, code_info: CodeInfo | None) -> None:
         result = [message]
         if code_info is not None:
             result.append("  %s" % code_info.filelineno())
@@ -55,8 +63,6 @@ class DirectiveError(ConfigError):
     This is automatically converted by Dectate to a
     :exc:`DirectiveReportError`.
     """
-
-    pass
 
 
 class TopologicalSortError(ValueError):

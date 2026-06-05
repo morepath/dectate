@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+import pytest
+
+from typing import Any, NoReturn
+
 from dectate.app import App, directive
 from dectate.config import commit, Action, Composite
-
 from dectate.error import (
     ConflictError,
     ConfigError,
@@ -8,25 +13,23 @@ from dectate.error import (
     DirectiveReportError,
 )
 
-import pytest
 
-
-def test_directive_error_in_action():
+def test_directive_error_in_action() -> None:
     class FooDirective(Action):
-        def __init__(self, name):
+        def __init__(self, name: str) -> None:
             self.name = name
 
-        def identifier(self):
+        def identifier(self) -> str:
             return self.name
 
-        def perform(self, obj):
+        def perform(self, obj: Any) -> NoReturn:
             raise DirectiveError("A real problem")
 
     class MyApp(App):
         foo = directive(FooDirective)
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     with pytest.raises(DirectiveReportError) as e:
@@ -38,19 +41,19 @@ def test_directive_error_in_action():
     assert "/test_error.py" in value
 
 
-def test_directive_error_in_composite():
+def test_directive_error_in_composite() -> None:
     class FooDirective(Composite):
-        def __init__(self, name):
+        def __init__(self, name: str) -> None:
             self.name = name
 
-        def actions(self, obj):
+        def actions(self, obj: Any) -> NoReturn:
             raise DirectiveError("Something went wrong")
 
     class MyApp(App):
         foo = directive(FooDirective)
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     with pytest.raises(DirectiveReportError) as e:
@@ -62,26 +65,26 @@ def test_directive_error_in_composite():
     assert "/test_error.py" in value
 
 
-def test_conflict_error():
+def test_conflict_error() -> None:
     class FooDirective(Action):
-        def __init__(self, name):
+        def __init__(self, name: str) -> None:
             self.name = name
 
-        def identifier(self):
+        def identifier(self) -> str:
             return self.name
 
-        def perform(self, obj):
+        def perform(self, obj: Any) -> NoReturn:
             raise DirectiveError("A real problem")
 
     class MyApp(App):
         foo = directive(FooDirective)
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     @MyApp.foo("hello")
-    def g():
+    def g() -> None:
         pass
 
     with pytest.raises(ConflictError) as e:
@@ -94,16 +97,16 @@ def test_conflict_error():
     assert "/test_error.py" in value
 
 
-def test_with_statement_error():
+def test_with_statement_error() -> None:
     class FooDirective(Action):
-        def __init__(self, model, name):
+        def __init__(self, model: type[Any], name: str) -> None:
             self.model = model
             self.name = name
 
-        def identifier(self):
+        def identifier(self) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(self, obj):
+        def perform(self, obj: Any) -> NoReturn:
             raise DirectiveError("A real problem")
 
     class MyApp(App):
@@ -112,14 +115,14 @@ def test_with_statement_error():
     class Dummy:
         pass
 
-    with MyApp.foo(model=Dummy) as foo:
+    with MyApp.foo(model=Dummy) as foo:  # type: ignore[call-arg]
 
         @foo(name="a")
-        def f():
+        def f() -> None:
             pass
 
         @foo(name="b")
-        def g():
+        def g() -> None:
             pass
 
     with pytest.raises(DirectiveReportError) as e:
@@ -132,24 +135,24 @@ def test_with_statement_error():
     assert "/test_error.py" in value
 
 
-def test_composite_codeinfo_propagation():
+def test_composite_codeinfo_propagation() -> None:
     class SubDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class CompositeDirective(Composite):
-        def __init__(self, messages):
+        def __init__(self, messages: list[str]) -> None:
             self.messages = messages
 
-        def actions(self, obj):
+        def actions(self, obj: Any) -> list[tuple[SubDirective, Any]]:
             return [(SubDirective(message), obj) for message in self.messages]
 
     class MyApp(App):
@@ -157,11 +160,11 @@ def test_composite_codeinfo_propagation():
         composite = directive(CompositeDirective)
 
     @MyApp.composite(["a"])
-    def f():
+    def f() -> None:
         pass
 
     @MyApp.composite(["a"])
-    def g():
+    def g() -> None:
         pass
 
     with pytest.raises(ConflictError) as e:
@@ -173,25 +176,25 @@ def test_composite_codeinfo_propagation():
     assert "/test_error.py" in value
 
 
-def test_type_error_not_enough_arguments():
+def test_type_error_not_enough_arguments() -> None:
     class MyDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
         foo = directive(MyDirective)
 
     # not enough arguments
-    @MyApp.foo()
-    def f():
+    @MyApp.foo()  # type: ignore[call-arg]
+    def f() -> None:
         pass
 
     with pytest.raises(DirectiveReportError) as e:
@@ -201,25 +204,25 @@ def test_type_error_not_enough_arguments():
     assert "@MyApp.foo()" in value
 
 
-def test_type_error_too_many_arguments():
+def test_type_error_too_many_arguments() -> None:
     class MyDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
         foo = directive(MyDirective)
 
     # too many arguments
-    @MyApp.foo("a", "b")
-    def f():
+    @MyApp.foo("a", "b")  # type: ignore[call-arg]
+    def f() -> None:
         pass
 
     with pytest.raises(DirectiveReportError) as e:
@@ -229,29 +232,29 @@ def test_type_error_too_many_arguments():
     assert 'MyApp.foo("a", "b")' in value
 
 
-def test_cannot_group_class_group_class():
+def test_cannot_group_class_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
         group_class = FooDirective
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             pass
 
     class QuxDirective(Action):
         group_class = BarDirective  # should go to FooDirective instead
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             pass
 
     class MyApp(App):
@@ -263,17 +266,17 @@ def test_cannot_group_class_group_class():
         commit(MyApp)
 
 
-def test_cannot_use_config_with_group_class():
+def test_cannot_use_config_with_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
@@ -281,7 +284,7 @@ def test_cannot_use_config_with_group_class():
 
         group_class = FooDirective
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             pass
 
     class MyApp(App):
@@ -292,23 +295,23 @@ def test_cannot_use_config_with_group_class():
         commit(MyApp)
 
 
-def test_cann_inherit_config_with_group_class():
+def test_cann_inherit_config_with_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(FooDirective):
         group_class = FooDirective
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             pass
 
     class MyApp(App):
@@ -318,24 +321,24 @@ def test_cann_inherit_config_with_group_class():
     commit(MyApp)
 
 
-def test_cannot_use_before_with_group_class():
+def test_cannot_use_before_with_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
         group_class = FooDirective
 
         @staticmethod
-        def before():
+        def before() -> None:
             pass
 
     class MyApp(App):
@@ -346,21 +349,21 @@ def test_cannot_use_before_with_group_class():
         commit(MyApp)
 
 
-def test_can_inherit_before_with_group_class():
+def test_can_inherit_before_with_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
         @staticmethod
-        def before(foo):
+        def before(foo: list[tuple[str, Any]]) -> None:
             pass
 
     class BarDirective(FooDirective):
@@ -373,24 +376,24 @@ def test_can_inherit_before_with_group_class():
     commit(MyApp)
 
 
-def test_cannot_use_after_with_group_class():
+def test_cannot_use_after_with_group_class() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
         group_class = FooDirective
 
         @staticmethod
-        def after():
+        def after() -> None:
             pass
 
     class MyApp(App):
@@ -401,21 +404,21 @@ def test_cannot_use_after_with_group_class():
         commit(MyApp)
 
 
-def test_action_without_init():
+def test_action_without_init() -> None:
     class FooDirective(Action):
         config = {"foo": list}
 
-        def identifier(self, foo):
+        def identifier(self, foo: list[Any]) -> tuple[()]:
             return ()
 
-        def perform(self, obj, foo):
+        def perform(self, obj: Any, foo: list[Any]) -> None:
             foo.append(obj)
 
     class MyApp(App):
         foo = directive(FooDirective)
 
     @MyApp.foo()
-    def f():
+    def f() -> None:
         pass
 
     commit(MyApp)
@@ -423,21 +426,21 @@ def test_action_without_init():
     assert MyApp.config.foo == [f]
 
 
-def test_composite_without_init():
+def test_composite_without_init() -> None:
     class SubDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class CompositeDirective(Composite):
-        def actions(self, obj):
+        def actions(self, obj: Any) -> list[tuple[SubDirective, Any]]:
             return [(SubDirective(message), obj) for message in ["a", "b"]]
 
     class MyApp(App):
@@ -447,7 +450,7 @@ def test_composite_without_init():
     commit(MyApp)
 
     @MyApp.composite()
-    def f():
+    def f() -> None:
         pass
 
     commit(MyApp)
