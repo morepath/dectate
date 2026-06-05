@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 import logging
+from typing import Any
 from dectate.app import App, directive
 from dectate.config import Action, commit
 
 
 class Handler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
+    def __init__(self, level: int | str = logging.NOTSET):
         super().__init__(level)
-        self.records = []
+        self.records: list[logging.LogRecord] = []
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         self.records.append(record)
 
 
-def test_intercept_logging():
+def test_intercept_logging() -> None:
     log = logging.getLogger("my_logger")
 
     test_handler = Handler()
@@ -27,7 +30,7 @@ def test_intercept_logging():
     assert test_handler.records[0].getMessage() == "This is a log message"
 
 
-def test_simple_config_logging():
+def test_simple_config_logging() -> None:
     log = logging.getLogger("dectate.directive.foo")
 
     test_handler = Handler()
@@ -38,20 +41,20 @@ def test_simple_config_logging():
     class MyDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
         foo = directive(MyDirective)
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     commit(MyApp)
@@ -66,7 +69,7 @@ def test_simple_config_logging():
     assert messages[0] == expected
 
 
-def test_subclass_config_logging():
+def test_subclass_config_logging() -> None:
     log = logging.getLogger("dectate.directive.foo")
 
     test_handler = Handler()
@@ -77,13 +80,13 @@ def test_subclass_config_logging():
     class MyDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
@@ -93,7 +96,7 @@ def test_subclass_config_logging():
         pass
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     commit(MyApp, SubApp)
@@ -116,7 +119,7 @@ def test_subclass_config_logging():
     assert messages[1] == expected
 
 
-def test_override_logger_name():
+def test_override_logger_name() -> None:
     log = logging.getLogger("morepath.directive.foo")
 
     test_handler = Handler()
@@ -127,13 +130,13 @@ def test_override_logger_name():
     class MyDirective(Action):
         config = {"my": list}
 
-        def __init__(self, message):
+        def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(self, my):
+        def identifier(self, my: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(self, obj, my):
+        def perform(self, obj: Any, my: list[tuple[str, Any]]) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
@@ -142,7 +145,7 @@ def test_override_logger_name():
         foo = directive(MyDirective)
 
     @MyApp.foo("hello")
-    def f():
+    def f() -> None:
         pass
 
     commit(MyApp)

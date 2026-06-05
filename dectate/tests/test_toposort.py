@@ -3,7 +3,7 @@ from dectate import topological_sort, TopologicalSortError
 import pytest
 
 
-def test_topological_sort_on_dcg():
+def test_topological_sort_on_dcg() -> None:
     adjacency = {
         "A": ["B", "C"],
         "B": ["C", "D"],
@@ -16,7 +16,7 @@ def test_topological_sort_on_dcg():
         topological_sort(adjacency.keys(), adjacency.__getitem__)
 
 
-def test_topological_sort_on_dag():
+def test_topological_sort_on_dag() -> None:
     adjacency = {
         "A": ["B", "C"],
         "B": ["C", "D"],

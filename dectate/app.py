@@ -1,5 +1,28 @@
+from __future__ import annotations
+
 import sys
+from functools import update_wrapper
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Generic,
+    ParamSpec,
+    TypeVar,
+    cast,
+)
 from .config import Configurable, Directive, commit, create_code_info
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Collection, Iterator
+    from typing_extensions import Self
+    from .config import Action, Composite, DirectiveAbbreviation
+    from .types import DirectiveCallable
+
+_T = TypeVar("_T")
+_ActionT = TypeVar("_ActionT", bound="Action | Composite")
+_AppT = TypeVar("_AppT", bound="App")
+_P = ParamSpec("_P")
 
 
 class Config:
@@ -9,7 +32,11 @@ class Config:
     class attribute of :class:`Action`.
     """
 
-    pass
+    if TYPE_CHECKING:
+        # NOTE: Since Config attributes are completely dynamic
+        #       this is the best we can do.
+        def __getattr__(self, name: str) -> Any:
+            pass
 
 
 class AppMeta(type):
@@ -18,11 +45,15 @@ class AppMeta(type):
     Sets up ``config`` and ``dectate`` class attributes.
     """
 
-    def __new__(cls, name, bases, d):
+    def __new__(
+        cls, name: str, bases: tuple[type[Any], ...], d: dict[str, Any]
+    ) -> type[App]:
         extends = [base.dectate for base in bases if hasattr(base, "dectate")]
         d["config"] = config = Config()
         d["dectate"] = configurable = Configurable(extends, config)
         result = super().__new__(cls, name, bases, d)
+        if TYPE_CHECKING:
+            assert issubclass(result, App)
         configurable.app_class = result
         return result
 
@@ -40,7 +71,7 @@ class App(metaclass=AppMeta):
     logger_name = "dectate.directive"
     """The prefix to use for directive debug logging."""
 
-    dectate = None
+    dectate: Configurable
     """A dectate Configurable instance is installed here.
 
     This is installed when the class object is initialized, so during
@@ -51,7 +82,7 @@ class App(metaclass=AppMeta):
     as committed configurations.
     """
 
-    config = None
+    config: Config
     """Config object that contains the configuration after commit.
 
     This is installed when the class object is initialized, so during
@@ -65,7 +96,9 @@ class App(metaclass=AppMeta):
     """
 
     @classmethod
-    def get_directive_methods(cls):
+    def get_directive_methods(
+        cls,
+    ) -> Iterator[tuple[str, DirectiveMethod[Self, ...]]]:
         for name in dir(cls):
             attr = getattr(cls, name)
             im_func = getattr(attr, "__func__", None)
@@ -75,7 +108,7 @@ class App(metaclass=AppMeta):
                 yield name, attr
 
     @classmethod
-    def commit(cls):
+    def commit(cls) -> Collection[type[App]]:
         """Commit this class and any depending on it.
 
         This is intended to be overridden by subclasses if committing
@@ -90,7 +123,7 @@ class App(metaclass=AppMeta):
         return [cls]
 
     @classmethod
-    def is_committed(cls):
+    def is_committed(cls) -> bool:
         """True if this app class was ever committed.
 
         :return: bool that is ``True`` when the app was committed before.
@@ -98,7 +131,7 @@ class App(metaclass=AppMeta):
         return cls.dectate.committed
 
     @classmethod
-    def clean(cls):
+    def clean(cls) -> None:
         """A method that sets or restores the state of the class.
 
         Normally Dectate only sets up configuration into the ``config``
@@ -109,7 +142,55 @@ class App(metaclass=AppMeta):
         pass
 
 
-def directive(action_factory):
+class BoundDirectiveMethod(Generic[_AppT, _P]):
+    __name__: str
+    __qualname__: str
+
+    def __init__(
+        self,
+        cls: type[_AppT],
+        func: DirectiveCallable[Concatenate[type[_AppT], _P]],
+    ) -> None:
+        self.__objclass__ = cls
+        self.__func__ = func
+        self.action_factory = func.action_factory
+        update_wrapper(self, func)
+        # remove forwarded partial, since we need to modify the params
+        self.__dict__ = self.__dict__.copy()
+        del self.__dict__["partial"]
+
+    def partial(self, *args: Any, **kw: Any) -> DirectiveAbbreviation:
+        return self.__func__.partial(self.__objclass__, *args, **kw)
+
+    def __call__(self, *args: _P.args, **kw: _P.kwargs) -> Directive:
+        return self.__func__(self.__objclass__, *args, **kw)
+
+    def __repr__(self) -> str:
+        return f"<bound method {self.__qualname__} of {self.__objclass__!r}>"
+
+
+class DirectiveMethod(Generic[_AppT, _P]):
+    __name__: str
+    __qualname__: str
+
+    def __init__(self, func: DirectiveCallable[Concatenate[Any, _P]]):
+        self.__func__ = func
+        update_wrapper(self, func)  # type: ignore[arg-type]
+
+    def __get__(
+        self, instance: _AppT | None, owner: type[_AppT], /
+    ) -> DirectiveCallable[_P]:
+        return BoundDirectiveMethod(owner, self.__func__)
+
+
+def directive(
+    # NOTE: Ideally this would be type[_ActionT] & Callable[_P, _ActionT]
+    #       but until type intersections are a thing, this is the best
+    #       trade-off, since we want to see an error if we provide incorrect
+    #       arguments to a directive. Type checkers not catching that this
+    #       needs to be a type instance, is the lesser evil.
+    action_factory: Callable[_P, _ActionT],
+) -> DirectiveMethod[Any, _P]:
     """Create a classmethod to hook action to application class.
 
     You pass in a :class:`dectate.Action` or a
@@ -133,14 +214,28 @@ def directive(action_factory):
     :param action_factory: an action class to use as the directive.
     :return: a class method that represents the directive.
     """
+    if not isinstance(action_factory, type):
+        raise TypeError(
+            "action_factory needs to be `dectate.Action` or `dectate.Composite` subclass."
+        )
 
-    def method(cls, *args, **kw):
-        frame = sys._getframe(1)
+    def method(cls: Any, *args: _P.args, **kw: _P.kwargs) -> Directive:
+        frame = sys._getframe(2)
         code_info = create_code_info(frame)
         return Directive(action_factory, code_info, cls, args, kw)
 
+    def partial(cls: Any, *args: Any, **kw: Any) -> DirectiveAbbreviation:
+        frame = sys._getframe(2)
+        code_info = create_code_info(frame)
+        directive = Directive(action_factory, code_info, cls, args, kw)
+        with directive as abbreviation:
+            return abbreviation
+
     # sphinxext and App.get_action_classes need to recognize this
-    method.action_factory = action_factory
-    method.__doc__ = action_factory.__doc__
-    method.__module__ = action_factory.__module__
-    return classmethod(method)
+    _method = cast("DirectiveCallable[Concatenate[Any, _P]]", method)
+    _method.action_factory = action_factory
+    _method.partial = partial  # type: ignore[method-assign]
+    _method.__doc__ = action_factory.__doc__
+    _method.__module__ = action_factory.__module__
+
+    return DirectiveMethod(_method)

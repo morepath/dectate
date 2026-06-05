@@ -37,9 +37,14 @@ test = ["pytest >= 8", "pytest-env"]
 coverage = ["pytest-cov"]
 lint = ["black", "flake8", "flake8-pyproject"]
 docs = ["sphinx"]
+mypy = ["mypy", "pytest"]
+pyright = ["pyright", "pytest"]
 
 [tool.setuptools.packages]
 find = {}
+
+[tool.setuptools.package-data]
+dectate = ["py.typed"]
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.rst", "CHANGES.txt"]}
@@ -51,7 +56,7 @@ addopts = ["-vv"]
 env = ["RUN_ENV=test"]
 
 [tool.coverage.run]
-omit = ["dectate/tests/*"]
+omit = ["dectate/tests/*", "dectate/types.py"]
 source = ["dectate"]
 
 [tool.coverage.report]
@@ -59,8 +64,27 @@ show_missing = true
 
 [tool.flake8]
 show-source = true
-ignore = ["E203", "W503"]
+ignore = ["E203", "E301", "E501", "E704", "W503", "W504"]
 max-line-length = 80
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "dectate.sphinxext.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "dectate.tests.fixtures.*"
+ignore_errors = true
+
+[tool.pyright]
+exclude = [
+  "**/sphinxext.py",
+  "**/tests/fixtures/anapp.py",
+]
 
 [tool.black]
 line-length = 80
@@ -90,11 +114,13 @@ env_list = [
     "coverage",
     "pre-commit",
     "docs",
+    "mypy",
+    "pyright",
 ]
 skip_missing_interpreters = true
 
 [tool.tox.gh.python]
-"3.10" = ["py310"]
+"3.10" = ["py310", "mypy", "pyright"]
 "3.11" = ["py311"]
 "3.12" = ["py312"]
 "3.13" = ["py313"]
@@ -126,4 +152,26 @@ base_python = ["python3"]
 extras = ["docs"]
 commands = [
     ["sphinx-build", "-b", "doctest", "doc", "{env_tmp_dir}"],
+]
+
+[tool.tox.env.mypy]
+base_python = ["python3"]
+extras = ["mypy"]
+commands = [
+    ["mypy", "-p", "dectate", "--python-version", "3.10"],
+    ["mypy", "-p", "dectate", "--python-version", "3.11"],
+    ["mypy", "-p", "dectate", "--python-version", "3.12"],
+    ["mypy", "-p", "dectate", "--python-version", "3.13"],
+    ["mypy", "-p", "dectate", "--python-version", "3.14"],
+]
+
+[tool.tox.env.pyright]
+base_python = ["python3"]
+extras = ["pyright"]
+commands = [
+    ["pyright", "dectate", "--pythonversion", "3.10"],
+    ["pyright", "dectate", "--pythonversion", "3.11"],
+    ["pyright", "dectate", "--pythonversion", "3.12"],
+    ["pyright", "dectate", "--pythonversion", "3.13"],
+    ["pyright", "dectate", "--pythonversion", "3.14"],
 ]
