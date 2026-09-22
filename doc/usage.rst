@@ -1,6 +1,8 @@
 Using Dectate
 =============
 
+.. py:currentmodule:: dectate
+
 Introduction
 ------------
 
@@ -51,7 +53,7 @@ particular order.
 Dectate supports such advanced use cases. It was extracted from the
 Morepath_ web framework.
 
-.. _Morepath: http://morepath.readthedocs.io
+.. _Morepath: https://morepath.readthedocs.io
 
 Features
 --------
@@ -105,7 +107,7 @@ Actions
 
 In Dectate, the simple `plugins` example above looks like this:
 
-.. testcode::
+.. code-block:: python
 
   import dectate
 
@@ -132,14 +134,14 @@ Configuration in Dectate is associated with special *classes* which
 derive from :class:`dectate.App`. We also associate the action with
 it as a directive:
 
-.. testcode::
+.. code-block:: python
 
   class PluginApp(dectate.App):
       plugin = dectate.directive(PluginAction)
 
 Let's use it now:
 
-.. testcode::
+.. code-block:: python
 
   @PluginApp.plugin('a')
   def f():
@@ -154,14 +156,14 @@ argument is ``'a'``. We've registered ``g`` under ``'b'``.
 
 We can now commit the configuration for ``PluginApp``:
 
-.. testcode::
+.. code-block:: python
 
   dectate.commit(PluginApp)
 
 Once the commit has successfully completed, we can take a look at the
 configuration:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
@@ -180,18 +182,20 @@ Reuse
 
 You can reuse configuration by simply subclassing ``PluginApp``:
 
-.. testcode::
+.. code-block:: python
 
   class SubApp(PluginApp):
      pass
 
 We commit both classes:
 
-.. testcode::
+.. code-block:: python
 
   dectate.commit(PluginApp, SubApp)
 
 ``SubClass`` now contains all the configuration declared for ``PluginApp``:
+
+.. code-block:: pycon
 
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
@@ -204,7 +208,7 @@ Conflicts
 
 Consider this example:
 
-.. testcode::
+.. code-block:: python
 
    class ConflictingApp(PluginApp):
        pass
@@ -221,7 +225,7 @@ Which function should be registered for ``foo``, ``f`` or ``g``? We should
 refuse to guess and instead raise an error that the configuration is
 in conflict. This is exactly what Dectate does:
 
-.. doctest::
+.. code-block:: pycon
 
    >>> dectate.commit(ConflictingApp)
    Traceback (most recent call last):
@@ -251,7 +255,7 @@ Extension
 When you subclass configuration, you can also *extend* ``SubApp`` with
 additional configuration actions:
 
-.. testcode::
+.. code-block:: python
 
   @SubApp.plugin('c')
   def h():
@@ -261,14 +265,14 @@ additional configuration actions:
 
 ``SubApp`` now has the additional plugin ``c``:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
 
 But ``PluginApp`` is unaffected:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
@@ -279,7 +283,7 @@ Overrides
 What if you wanted to override a piece of configuration? You can do
 this in ``SubApp`` by simply reusing the same ``name``:
 
-.. testcode::
+.. code-block:: python
 
   @SubApp.plugin('a')
   def x():
@@ -292,12 +296,14 @@ register the function ``x`` instead of ``f``. If we had done this for
 ``MyApp`` this would have been a conflict, but doing so in a subclass
 lets you override configuration instead:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> sorted(SubApp.config.plugins.items())
   [('a', <function x at ...>), ('b', <function g at ...>), ('c', <function h at ...>)]
 
 But ``PluginApp`` still uses ``f``:
+
+.. code-block:: pycon
 
   >>> sorted(PluginApp.config.plugins.items())
   [('a', <function f at ...>), ('b', <function g at ...>)]
@@ -313,7 +319,7 @@ each other.
 We first set up a new base class with a directive, independently
 from everything before:
 
-.. testcode::
+.. code-block:: python
 
   class PluginAction2(dectate.Action):
       config = {
@@ -334,7 +340,7 @@ from everything before:
 We don't set up any configuration for ``BaseApp``; it's intended to be
 part of our framework. Now we create two subclasses:
 
-.. testcode::
+.. code-block:: python
 
   class OneApp(BaseApp):
       pass
@@ -347,7 +353,7 @@ each other; the only thing they share is a common ``BaseApp``.
 
 We register a plugin for ``OneApp``:
 
-.. testcode::
+.. code-block:: python
 
   @OneApp.plugin('a')
   def f():
@@ -355,11 +361,11 @@ We register a plugin for ``OneApp``:
 
 This won't affect ``TwoApp`` in any way:
 
-.. testcode::
+.. code-block:: python
 
   dectate.commit(OneApp, TwoApp)
 
-.. doctest::
+.. code-block:: pycon
 
   >>> sorted(OneApp.config.plugins.items())
   [('a', <function f at ...>)]
@@ -445,7 +451,7 @@ attribute.
 First we set up a ``FooAction`` that registers into a ``foos``
 dict:
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -463,7 +469,7 @@ dict:
 Now we create a ``BarAction`` directive that depends on ``FooAction``
 and uses information in the ``foos`` dict:
 
-.. testcode::
+.. code-block:: python
 
   class BarAction(dectate.Action):
       depends = [FooAction]
@@ -485,7 +491,7 @@ and uses information in the ``foos`` dict:
 In order to use them we need to hook up the actions as directives
 onto an app class:
 
-.. testcode::
+.. code-block:: python
 
   class DependsApp(dectate.App):
       foo = dectate.directive(FooAction)
@@ -496,7 +502,7 @@ Using ``depends`` we have ensured that ``BarAction`` actions are
 performed after ``FooAction`` action, no matter what order we use
 them:
 
-.. testcode::
+.. code-block:: python
 
    @DependsApp.bar('a')
    def f():
@@ -515,7 +521,7 @@ them:
 We expect ``in_foo`` to be ``True`` for ``a`` but to be ``False`` for
 ``b``:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> DependsApp.config.bars
   [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
@@ -539,7 +545,7 @@ in ``config`` of that earlier action.
 First we create a ``FooAction`` that sets up a ``foos`` config item as
 before:
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -557,7 +563,7 @@ before:
 Now we create a ``Bar`` class that also depends on the ``foos`` dict by
 listing it in ``factory_arguments``:
 
-.. testcode::
+.. code-block:: python
 
   class Bar:
       factory_arguments = {
@@ -575,7 +581,7 @@ listing it in ``factory_arguments``:
 We create a ``BarAction`` that depends on the ``FooAction`` (so that
 ``foos`` is created first) and that uses the ``Bar`` factory:
 
-.. testcode::
+.. code-block:: python
 
    class BarAction(dectate.Action):
       depends = [FooAction]
@@ -596,7 +602,7 @@ We create a ``BarAction`` that depends on the ``FooAction`` (so that
 
 And we set them up as directives:
 
-.. testcode::
+.. code-block:: python
 
   class ConfigDependsApp(dectate.App):
       foo = dectate.directive(FooAction)
@@ -604,7 +610,7 @@ And we set them up as directives:
 
 When we use our directives:
 
-.. testcode::
+.. code-block:: python
 
    @ConfigDependsApp.bar('a')
    def f():
@@ -622,7 +628,7 @@ When we use our directives:
 
 we get the same result as before:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> ConfigDependsApp.config.bar.l
   [('a', <function f at ...>, True), ('b', <function g at ...>, False)]
@@ -636,7 +642,7 @@ another way. You can get the app class passed in as an argument to
 :meth:`dectate.Action.perform`, :meth:`dectate.Action.identifier`, and
 so on by setting the special ``app_class_arg`` class attribute:
 
-.. testcode::
+.. code-block:: python
 
   class PluginAction(dectate.Action):
       config = {
@@ -659,7 +665,7 @@ so on by setting the special ``app_class_arg`` class attribute:
 
 When we now perform this directive:
 
-.. testcode::
+.. code-block:: python
 
   @MyApp.plugin_with_app_class('a')
   def f():
@@ -669,7 +675,7 @@ When we now perform this directive:
 
 We can see the app class was indeed affected:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> MyApp.touched
   True
@@ -685,7 +691,7 @@ of a certain type are performed, or just afterwards. You can do this
 using ``before`` (:meth:`dectate.Action.before`) and ``after``
 (:meth:`dectate.Action.after`) static methods on the Action class:
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -722,7 +728,7 @@ using ``before`` (:meth:`dectate.Action.before`) and ``after``
 This executes ``before`` just before ``a`` and ``b`` are configured,
 and then executes ``after``:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> dectate.commit(BeforeAfterApp)
   before: []
@@ -737,7 +743,7 @@ affect each other. You can do this with the ``group_class``
 (:attr:`dectate.Action.group_class`) class attribute. Grouped classes
 share their ``config`` and their ``before`` and ``after`` methods.
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -754,7 +760,7 @@ share their ``config`` and their ``before`` and ``after`` methods.
 
 We now create a ``BarAction`` that groups with ``FooAction``:
 
-.. testcode::
+.. code-block:: python
 
   class BarAction(dectate.Action):
       group_class = FooAction
@@ -775,7 +781,7 @@ We now create a ``BarAction`` that groups with ``FooAction``:
 It reuses the ``config`` from ``FooAction``. This means that ``foo``
 and ``bar`` can be in conflict:
 
-.. testcode::
+.. code-block:: python
 
   @GroupApp.foo('a')
   def f():
@@ -785,7 +791,7 @@ and ``bar`` can be in conflict:
   def g():
       pass
 
-.. doctest::
+.. code-block:: pycon
 
   >>> dectate.commit(GroupApp)
   Traceback (most recent call last):
@@ -803,7 +809,7 @@ In some cases an action should conflict with *multiple* other actions
 all at once. You can take care of this with the ``discriminators``
 (:meth:`dectate.Action.discriminators`) method on your action:
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -829,7 +835,7 @@ all at once. You can take care of this with the ``discriminators``
 An action now conflicts with an action of the same name *and* with
 any action that is in the ``extra`` list:
 
-.. testcode::
+.. code-block:: python
 
   # example
   @DiscriminatorsApp.foo('a', ['b', 'c'])
@@ -842,7 +848,7 @@ any action that is in the ``extra`` list:
 
 And then:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> dectate.commit(DiscriminatorsApp)
   Traceback (most recent call last):
@@ -862,7 +868,7 @@ can subclass :class:`dectate.Composite`.
 First we define a normal ``SubAction`` to use in the composite action
 later:
 
-.. testcode::
+.. code-block:: python
 
   class SubAction(dectate.Action):
       config = {
@@ -882,7 +888,7 @@ Now we can define a special :class:`dectate.Composite` subclass that
 uses ``SubAction`` in an ``actions``
 (:meth:`dectate.Composite.actions`) method:
 
-.. testcode::
+.. code-block:: python
 
   class CompositeAction(dectate.Composite):
       def __init__(self, names):
@@ -901,7 +907,7 @@ subclass, as Dectate does need to know it exists.
 
 We can now use it:
 
-.. testcode::
+.. code-block:: python
 
   @CompositeApp.composite(['a', 'b', 'c'])
   def f():
@@ -911,7 +917,7 @@ We can now use it:
 
 And ``SubAction`` is performed three times as a result:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> CompositeApp.config.my
   [('a', <function f at ...>), ('b', <function f at ...>), ('c', <function f at ...>)]
@@ -922,7 +928,7 @@ And ``SubAction`` is performed three times as a result:
 Sometimes you want to issue a lot of similar actions at once. You can
 use the ``with`` statement to do so with less repetition:
 
-.. testcode::
+.. code-block:: python
 
   class FooAction(dectate.Action):
       config = {
@@ -945,7 +951,7 @@ use the ``with`` statement to do so with less repetition:
 
 Instead of this:
 
-.. testcode::
+.. code-block:: python
 
   class VerboseWithApp(WithApp):
       pass
@@ -964,7 +970,7 @@ Instead of this:
 
 You can instead write:
 
-.. testcode::
+.. code-block:: python
 
   class SuccinctWithApp(WithApp):
       pass
@@ -984,7 +990,7 @@ You can instead write:
 
 And this has the same configuration effect:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> dectate.commit(VerboseWithApp, SuccinctWithApp)
   >>> VerboseWithApp.config.my
@@ -1035,14 +1041,13 @@ using :class:`dectate.Query`.
 
 Here is an example of a query for all the plugin actions on ``PluginApp``:
 
-.. testcode::
+.. code-block:: python
 
   q = dectate.Query('plugin')
 
 We can now run the query:
 
-.. doctest::
-  :options: +NORMALIZE_WHITESPACE
+.. code-block:: pycon
 
   >>> list(q(PluginApp))
   [(<PluginAction ...>, <function f ...>),
@@ -1050,7 +1055,7 @@ We can now run the query:
 
 We can also filter the query for attributes of the action:
 
-.. doctest::
+.. code-block:: pycon
 
   >>> list(q.filter(name='a')(PluginApp))
   [(<PluginAction object ...>, <function f ...>)]
@@ -1066,7 +1071,7 @@ own comparison function for an attribute using
 
 If you want to allow a query on a :class:`Composite` action you need
 to give it some help by defining
-xs:attr:`dectate.Composite.query_classes`.
+:attr:`dectate.Composite.query_classes`.
 
 .. _query_tool:
 
@@ -1161,7 +1166,7 @@ install a Sphinx extension so that directives are documented
 properly. In your Sphinx ``conf.py`` add ``'dectate.sphinxext'`` to
 the ``extensions`` list.
 
-.. _Sphinx: http://www.sphinx-doc.org
+.. _Sphinx: https://sphinx-doc.org
 
 ``__main__`` and conflicts
 --------------------------
@@ -1213,12 +1218,12 @@ imports a module *twice* (`more about this`_). Dectate refuses to
 operate in this case until you change your imports so that this
 doesn't happen anymore.
 
-.. _`more about this`: http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#executing-the-main-module-twice
+.. _`more about this`: https://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#executing-the-main-module-twice
 
 How to avoid this scenario? If you use setuptools `automatic script
 creation`_ this problem is avoided entirely.
 
-.. _`automatic script creation`: https://pythonhosted.org/setuptools/setuptools.html#automatic-script-creation
+.. _`automatic script creation`: https://setuptools.pypa.io/en/latest/userguide/entry_point.html
 
 .. sidebar:: Fooling Dectate after all
 

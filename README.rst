@@ -19,8 +19,8 @@ Dectate is a powerful configuration engine for Python frameworks.
 
 `Read the docs`_
 
-.. _`Read the docs`: http://dectate.readthedocs.org
+.. _`Read the docs`: https://dectate.readthedocs.io
 
 It is used by Morepath_.
 
-.. _Morepath: http://morepath.readthedocs.org
+.. _Morepath: https://morepath.readthedocs.io

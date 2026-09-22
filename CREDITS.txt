@@ -8,7 +8,7 @@ CREDITS
 
 * Denis Krienbühl (testing and feedback)
 
-* Henri Hulski (build environment)
+* Henri Hulski (build environment and maintainer)
 
 * Jan Stürtz
 
