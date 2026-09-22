@@ -84,17 +84,11 @@ warn_unreachable = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = "dectate.sphinxext.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
 module = "dectate.tests.fixtures.anapp"
 ignore_errors = true
 
 [tool.pyright]
 typeCheckingMode = "strict"
-venvPath = "."
-venv = ".venv"
 exclude = [
   "**/tests/fixtures/anapp.py",
   "__pycache__",
@@ -161,7 +155,7 @@ commands = [
 
 [tool.tox.env.mypy]
 base_python = ["python3"]
-extras = ["mypy"]
+extras = ["mypy", "docs"]
 commands = [
     ["mypy", "--python-version", "3.10"],
     ["mypy", "--python-version", "3.11"],
@@ -172,7 +166,7 @@ commands = [
 
 [tool.tox.env.pyright]
 base_python = ["python3"]
-extras = ["pyright"]
+extras = ["pyright", "docs"]
 commands = [
     ["pyright", "--pythonversion", "3.10"],
     ["pyright", "--pythonversion", "3.11"],
