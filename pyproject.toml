@@ -35,8 +35,13 @@ Changelog = "https://github.com/morepath/dectate/blob/master/CHANGES.txt"
 [project.optional-dependencies]
 test = ["pytest >= 8", "pytest-env"]
 coverage = ["pytest-cov"]
-lint = ["black", "flake8", "flake8-pyproject"]
-docs = ["sphinx"]
+lint = [
+    "black",
+    "flake8",
+    "flake8-pyproject",
+    "flake8-type-checking",
+    "isort",
+]
 mypy = ["mypy", "pytest"]
 pyright = ["pyright", "pytest"]
 
