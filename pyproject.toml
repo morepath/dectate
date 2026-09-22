@@ -79,7 +79,7 @@ max-line-length = 88
 [tool.mypy]
 python_version = "3.10"
 strict = true
-files = ["dectate"]
+files = ["."]
 warn_unreachable = true
 warn_unused_ignores = true
 
@@ -95,12 +95,10 @@ ignore_errors = true
 typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
-include = ["dectate"]
 exclude = [
   "**/tests/fixtures/anapp.py",
-  "**/__pycache__/**",
-  "**/.venv/**",
-  "**/.tox/**",
+  "__pycache__",
+  ".venv",
   "**/.*",
   "**/node_modules",
 ]
@@ -165,22 +163,22 @@ commands = [
 base_python = ["python3"]
 extras = ["mypy"]
 commands = [
-    ["mypy", "-p", "dectate", "--python-version", "3.10"],
-    ["mypy", "-p", "dectate", "--python-version", "3.11"],
-    ["mypy", "-p", "dectate", "--python-version", "3.12"],
-    ["mypy", "-p", "dectate", "--python-version", "3.13"],
-    ["mypy", "-p", "dectate", "--python-version", "3.14"],
+    ["mypy", "--python-version", "3.10"],
+    ["mypy", "--python-version", "3.11"],
+    ["mypy", "--python-version", "3.12"],
+    ["mypy", "--python-version", "3.13"],
+    ["mypy", "--python-version", "3.14"],
 ]
 
 [tool.tox.env.pyright]
 base_python = ["python3"]
 extras = ["pyright"]
 commands = [
-    ["pyright", "dectate", "--pythonversion", "3.10"],
-    ["pyright", "dectate", "--pythonversion", "3.11"],
-    ["pyright", "dectate", "--pythonversion", "3.12"],
-    ["pyright", "dectate", "--pythonversion", "3.13"],
-    ["pyright", "dectate", "--pythonversion", "3.14"],
+    ["pyright", "--pythonversion", "3.10"],
+    ["pyright", "--pythonversion", "3.11"],
+    ["pyright", "--pythonversion", "3.12"],
+    ["pyright", "--pythonversion", "3.13"],
+    ["pyright", "--pythonversion", "3.14"],
 ]
 
 [tool.black]
