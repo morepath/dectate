@@ -12,7 +12,7 @@ def current_code_info() -> CodeInfo:
 def test_create_code_info() -> None:
     x = current_code_info()
     assert x.path == __file__
-    assert x.lineno == 12
+    assert x.lineno == 13
     assert x.sourceline == "x = current_code_info()"
 
     x = eval("current_code_info()")

@@ -458,3 +458,25 @@ def test_composite_without_init() -> None:
         pass
 
     commit(MyApp)
+
+
+def test_conflict_error_with_none_code_info() -> None:
+    # ConflictError must handle actions whose code_info is None
+    # (actions created manually, not via a decorator)
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    action1 = MyAction()
+    action2 = MyAction()
+
+    error = ConflictError([action1, action2])
+    assert "Conflict between:" in str(error)

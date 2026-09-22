@@ -1946,3 +1946,256 @@ def test_app_class_cleanup() -> None:
     commit(MyApp)
 
     assert MyApp.touched == [None]
+
+
+def test_directive_non_class_raises_typeerror() -> None:
+    with pytest.raises(TypeError, match="action_factory needs to be"):
+        directive(lambda: None)  # type: ignore[type-var]
+
+
+def test_action_without_directive_code_info() -> None:
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    action = MyAction()
+    assert action.code_info is None
+
+
+def test_composite_without_directive_code_info() -> None:
+    class MyComposite(Composite):
+        query_classes: list[type[Action | Composite]] = []
+
+        def __init__(self) -> None:
+            pass
+
+        def actions(self, obj: Any) -> list[tuple[Action, Any]]:
+            return []
+
+    composite = MyComposite()
+    assert composite.code_info is None
+
+
+def test_action_log_when_directive_is_none() -> None:
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    # Action created directly (not via decorator) has directive=None
+    action = MyAction()
+    # _log is a no-op when directive is None
+    action._log(None, None)  # type: ignore[arg-type]
+
+
+def test_commit_with_configurable_directly() -> None:
+    class MyAction(Action):
+        config = {"items": list}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self, items: list[str]) -> str:
+            return "test"
+
+        def perform(self, obj: Any, items: list[str]) -> None:
+            items.append("performed")
+
+    class MyApp(App):
+        foo = directive(MyAction)
+
+    @MyApp.foo()
+    def f() -> None:
+        pass
+
+    # commit() can accept either an App subclass or a Configurable directly
+    commit(MyApp.dectate)
+
+    assert MyApp.config.items == ["performed"]
+
+
+def test_directive_with_method_object() -> None:
+    class MyAction(Action):
+        config = {"items": list}
+
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def identifier(self, items: list[str]) -> str:
+            return self.name
+
+        def perform(self, obj: Any, items: list[str]) -> None:
+            items.append(obj.__name__)
+
+    class MyApp(App):
+        foo = directive(MyAction)
+
+    class MyClass:
+        @MyApp.foo("method1")
+        def method1(self) -> None:
+            pass
+
+        @MyApp.foo("method2")
+        def method2(self) -> None:
+            pass
+
+    commit(MyApp)
+
+    assert len(MyApp.config.items) == 2
+
+
+def test_directive_log_with_kw_only() -> None:
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self, **kw: Any) -> None:
+            self.kw = kw
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        foo = directive(MyAction)
+
+    @MyApp.foo(a=1, b=2)
+    def f() -> None:
+        pass
+
+    commit(MyApp)
+
+
+def test_log_with_class_as_decorated_object() -> None:
+    # Decorating a class (not a function) exercises the repr(obj) path in Directive.log
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def identifier(self) -> str:
+            return self.name
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        foo = directive(MyAction)
+
+    @MyApp.foo("cls")
+    class MyClass:
+        pass
+
+    log = logging.getLogger("dectate.directive.foo")
+    log.setLevel(logging.DEBUG)
+    try:
+        commit(MyApp)
+    finally:
+        log.setLevel(logging.NOTSET)
+
+
+def test_log_with_positional_and_keyword_args() -> None:
+    # Using both positional and keyword args exercises the `arguments += ", "` path
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self, message: str, **extra: Any) -> None:
+            self.message = message
+            self.extra = extra
+
+        def identifier(self) -> str:
+            return self.message
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        foo = directive(MyAction)
+
+    @MyApp.foo("hello", tag="world")
+    def f() -> None:
+        pass
+
+    log = logging.getLogger("dectate.directive.foo")
+    log.setLevel(logging.DEBUG)
+    try:
+        commit(MyApp)
+    finally:
+        log.setLevel(logging.NOTSET)
+
+
+def test_get_action_classes_from_extends_without_python_inheritance() -> None:
+    # Configurable.extends can be set independently of Python class inheritance.
+    # When the parent has action classes the child doesn't inherit via Python,
+    # get_action_classes() picks them up from extends._action_classes (line 110).
+    class FooAction(Action):
+        config = {}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "foo"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class ParentApp(App):
+        foo = directive(FooAction)
+
+    class ChildApp(App):  # Does NOT Python-inherit from ParentApp
+        pass
+
+    ChildApp.dectate.extends = [ParentApp.dectate]
+
+    commit(ParentApp)  # Populates ParentApp.dectate._action_classes
+    commit(ChildApp)  # FooAction comes from extends loop, not dir(ChildApp)
+
+    assert FooAction in ChildApp.dectate.get_action_classes()
+
+
+def test_factory_argument_with_null_dependency() -> None:
+    # A factory whose dependency returns None triggers the ConfigError at line 1070
+    def null_factory() -> None:
+        return None
+
+    class DependentFactory:
+        factory_arguments = {"null": null_factory}
+
+        def __init__(self, null: Any) -> None:
+            self.null = null
+
+    class MyAction(Action):
+        config = {"items": DependentFactory}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any, items: Any) -> None:
+            pass
+
+    class MyApp(App):
+        my = directive(MyAction)
+
+    with pytest.raises(ConfigError):
+        commit(MyApp)

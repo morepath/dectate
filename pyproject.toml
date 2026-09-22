@@ -136,7 +136,7 @@ commands = [["pytest", "{posargs:dectate}"]]
 base_python = ["python3"]
 extras = ["test", "coverage"]
 commands = [
-    ["pytest", "--cov", "--cov-fail-under=94", "{posargs:dectate}"],
+    ["pytest", "--cov", "--cov-fail-under=100", "{posargs:dectate}"],
 ]
 
 [tool.tox.env.pre-commit]
