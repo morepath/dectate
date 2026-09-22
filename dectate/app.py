@@ -100,6 +100,12 @@ class App(metaclass=AppMeta):
         cls,
     ) -> Iterator[tuple[str, DirectiveMethod[Self, ...]]]:
         for name in dir(cls):
+            # NOTE: On Python 3.14+ this can invoke `__annotate__` with format
+            #       `VALUE` which can raise a `NameError`, so it can both cause
+            #       exceptions and also involve unnecessary work, so we explicitly
+            #       avoid touching this attribute
+            if name == "__annotations__":
+                continue
             attr = getattr(cls, name)
             im_func = getattr(attr, "__func__", None)
             if im_func is None:
