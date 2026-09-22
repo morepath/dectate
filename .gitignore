@@ -9,7 +9,7 @@ __pycache__/
 pip-wheel-metadata
 
 # Virtualenv
-/.venv/
+.venv/
 /env/
 /src/
 

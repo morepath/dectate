@@ -1,7 +1,7 @@
 import pprint
 
 import app2  # pyright: ignore[reportUnusedImport] # noqa: F401
-from config import App
+from config import App as App
 
 import dectate
 
@@ -12,5 +12,5 @@ def f() -> None:
 
 
 if __name__ == "__main__":
-    dectate.commit([App])
+    dectate.commit(App)
     pprint.pprint(App.config.my)
