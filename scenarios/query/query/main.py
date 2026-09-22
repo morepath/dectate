@@ -1,6 +1,6 @@
 import dectate
 
-from . import a, b, c  # noqa: F401
+from . import a, b, c  # pyright: ignore[reportUnusedImport] # noqa: F401
 
 
 def query_tool() -> None:
