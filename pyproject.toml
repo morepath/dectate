@@ -42,6 +42,7 @@ lint = [
     "flake8-type-checking",
     "isort",
 ]
+docs = ["sphinx < 9.1"]
 mypy = ["mypy", "pytest"]
 pyright = ["pyright", "pytest"]
 
