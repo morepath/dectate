@@ -1,21 +1,26 @@
 from __future__ import annotations
 
-import pytest
+import sys
 from argparse import ArgumentTypeError
 from typing import Any
+from unittest.mock import patch
 
-from dectate.config import Action, commit
+import pytest
+
 from dectate.app import App, directive
+from dectate.config import Action, commit
 from dectate.tool import (
+    ToolError,
+    convert_bool,
+    convert_dotted_name,
+    convert_filters,
     parse_app_class,
     parse_directive,
     parse_filters,
-    convert_filters,
-    convert_dotted_name,
-    convert_bool,
-    query_tool_output,
     query_app,
-    ToolError,
+    query_tool,
+    query_tool_output,
+    resolve_dotted_name,
 )
 
 
@@ -101,9 +106,7 @@ def test_convert_filters_error() -> None:
         filter_convert = {"model": convert_dotted_name}
 
     with pytest.raises(ToolError):
-        convert_filters(
-            MyAction, {"model": "dectate.tests.fixtures.anapp.DoesntExist"}
-        )
+        convert_filters(MyAction, {"model": "dectate.tests.fixtures.anapp.DoesntExist"})
 
 
 def test_convert_filters_value_error() -> None:

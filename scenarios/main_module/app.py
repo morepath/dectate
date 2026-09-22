@@ -1,11 +1,13 @@
-from config import App
 import pprint
+
+import app2  # pyright: ignore[reportUnusedImport] # noqa: F401
+from config import App
+
 import dectate
-import app2  # noqa
 
 
 @App.foo(name="a")
-def f():
+def f() -> None:
     pass
 
 

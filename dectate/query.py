@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
 from .config import Composite
 from .error import QueryError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
+
     from .app import App
     from .config import Action, Configurable
 
@@ -89,12 +91,10 @@ class Query(Base):
     def __init__(self, *action_classes: type[Action | Composite] | str) -> None:
         self.action_classes = action_classes
 
-    def execute(
-        self, configurable: Configurable
-    ) -> Iterator[tuple[Action, Any]]:
+    def execute(self, configurable: Configurable) -> Iterator[tuple[Action, Any]]:
         app_class = configurable.app_class
         assert app_class is not None
-        action_classes = []
+        action_classes: list[type[Action | Composite]] = []
         for action_class in self.action_classes:
             if isinstance(action_class, str):
                 action_class = get_action_class(app_class, action_class)
@@ -105,15 +105,16 @@ class Query(Base):
 def expand_action_classes(
     action_classes: Iterable[type[Action | Composite]],
 ) -> set[type[Action]]:
-    result = set()
+    result: set[type[Action]] = set()
     for action_class in action_classes:
         if issubclass(action_class, Composite):
             query_classes = action_class.query_classes
             if not query_classes:
-                raise QueryError(
-                    "Query of composite action %r but no "
-                    "query_classes defined." % action_class
+                msg = (
+                    f"Query of composite action {action_class!r} but no "
+                    "query_classes defined."
                 )
+                raise QueryError(msg)
             for query_class in expand_action_classes(query_classes):
                 result.add(query_class)
         else:
@@ -132,10 +133,8 @@ def query_action_classes(
     for action_class in expand_action_classes(action_classes):
         action_group = configurable.get_action_group(action_class)
         if action_group is None:
-            raise QueryError(
-                "%r is not an action of %r"
-                % (action_class, configurable.app_class)
-            )
+            msg = f"{action_class!r} is not an action of {configurable.app_class!r}"
+            raise QueryError(msg)
         yield from action_group.get_actions()
 
 
@@ -144,15 +143,12 @@ def get_action_class(
 ) -> type[Action | Composite]:
     directive_method = getattr(app_class, directive_name, None)
     if directive_method is None:
-        raise QueryError(
-            "No directive exists on %r with name: %s"
-            % (app_class, directive_name)
-        )
+        msg = f"No directive exists on {app_class!r} with name: {directive_name}"
+        raise QueryError(msg)
     action_class = getattr(directive_method, "action_factory", None)
     if action_class is None:
-        raise QueryError(
-            f"{directive_name!r} on {app_class!r} is not a directive"
-        )
+        msg = f"{directive_name!r} on {app_class!r} is not a directive"
+        raise QueryError(msg)
     return action_class  # type: ignore[no-any-return]
 
 
@@ -165,9 +161,7 @@ class Filter(Base):
         self.query = query
         self.kw = kw
 
-    def execute(
-        self, configurable: Configurable
-    ) -> Iterator[tuple[Action, Any]]:
+    def execute(self, configurable: Configurable) -> Iterator[tuple[Action, Any]]:
         for action, obj in self.query.execute(configurable):
             for name, value in sorted(self.kw.items()):
                 compared = action.get_value_for_filter(name)
@@ -184,7 +178,7 @@ class Attrs(Callable[dict[str, Any]]):
         self.names = names
 
     def execute(self, configurable: Configurable) -> Iterator[dict[str, Any]]:
-        for action, obj in self.query.execute(configurable):
+        for action, _obj in self.query.execute(configurable):
             attrs = {}
             for name in self.names:
                 attrs[name] = action.get_value_for_filter(name)
@@ -196,5 +190,5 @@ class Obj(Callable[Any]):
         self.query = query
 
     def execute(self, configurable: Configurable) -> Iterator[Any]:
-        for action, obj in self.query.execute(configurable):
+        for _action, obj in self.query.execute(configurable):
             yield obj

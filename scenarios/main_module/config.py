@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import dectate
 
 
@@ -7,13 +9,13 @@ class App(dectate.App):
 
 @App.directive("foo")
 class FooAction(dectate.Action):
-    config = {"my": list}
+    config: ClassVar[dict[str, type]] = {"my": list}
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
 
     def identifier(self, my):
         return self.name
 
-    def perform(self, obj, my):
+    def perform(self, obj, my) -> None:
         my.append((self.name, obj))

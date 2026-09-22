@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+
 from dectate.app import App, directive
 from dectate.config import Action, commit
 
 
 class Handler(logging.Handler):
-    def __init__(self, level: int | str = logging.NOTSET):
+    def __init__(self, level: int | str = logging.NOTSET) -> None:
         super().__init__(level)
         self.records: list[logging.LogRecord] = []
 
@@ -62,8 +63,7 @@ def test_simple_config_logging() -> None:
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 1
     expected = (
-        "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f"
+        "@dectate.tests.test_logging.MyApp.foo('hello') on dectate.tests.test_logging.f"
     )
 
     assert messages[0] == expected
@@ -104,8 +104,7 @@ def test_subclass_config_logging() -> None:
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 2
     expected = (
-        "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f"
+        "@dectate.tests.test_logging.MyApp.foo('hello') on dectate.tests.test_logging.f"
     )
 
     assert messages[0] == expected
@@ -153,8 +152,7 @@ def test_override_logger_name() -> None:
     messages = [r.getMessage() for r in test_handler.records]
     assert len(messages) == 1
     expected = (
-        "@dectate.tests.test_logging.MyApp.foo('hello') "
-        "on dectate.tests.test_logging.f"
+        "@dectate.tests.test_logging.MyApp.foo('hello') on dectate.tests.test_logging.f"
     )
 
     assert messages[0] == expected
