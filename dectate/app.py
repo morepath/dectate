@@ -11,15 +11,16 @@ from typing import (
     TypeVar,
     cast,
 )
+
 from .config import Configurable, Directive, commit, create_code_info
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterator
     from typing_extensions import Self
+
     from .config import Action, Composite, DirectiveAbbreviation
     from .types import DirectiveCallable
 
-_T = TypeVar("_T")
 _ActionT = TypeVar("_ActionT", bound="Action | Composite")
 _AppT = TypeVar("_AppT", bound="App")
 _P = ParamSpec("_P")
@@ -179,7 +180,7 @@ class DirectiveMethod(Generic[_AppT, _P]):
     __name__: str
     __qualname__: str
 
-    def __init__(self, func: DirectiveCallable[Concatenate[Any, _P]]):
+    def __init__(self, func: DirectiveCallable[Concatenate[Any, _P]]) -> None:
         self.__func__ = func
         update_wrapper(self, func)  # type: ignore[arg-type]
 
@@ -203,8 +204,8 @@ def directive(
     :class:`dectate.Composite` subclass and can attach the result as a
     class method to an :class:`dectate.App` subclass::
 
-      class FooAction(dectate.Action):
-          ...
+      class FooAction(dectate.Action): ...
+
 
       class MyApp(dectate.App):
           my_directive = dectate.directive(MyAction)
@@ -214,16 +215,14 @@ def directive(
 
       class MyApp(dectate.App):
           @directive
-          class my_directive(dectate.Action):
-              ...
+          class my_directive(dectate.Action): ...
 
     :param action_factory: an action class to use as the directive.
     :return: a class method that represents the directive.
     """
     if not isinstance(action_factory, type):
-        raise TypeError(
-            "action_factory needs to be `dectate.Action` or `dectate.Composite` subclass."
-        )
+        msg = "action_factory needs to be `dectate.Action` or `dectate.Composite` subclass."
+        raise TypeError(msg)
 
     def method(cls: Any, *args: _P.args, **kw: _P.kwargs) -> Directive:
         frame = sys._getframe(2)

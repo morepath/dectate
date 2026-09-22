@@ -6,7 +6,7 @@ class Sentinel:
         self.name = name
 
     def __repr__(self) -> str:
-        return "<%s>" % self.name
+        return f"<{self.name}>"
 
 
 NOT_FOUND = Sentinel("NOT_FOUND")

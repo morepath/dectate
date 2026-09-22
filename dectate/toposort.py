@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
+
 from .error import TopologicalSortError
 
 if TYPE_CHECKING:
@@ -10,9 +11,10 @@ _T = TypeVar("_T")
 
 
 def topological_sort(
-    l: Iterable[_T], get_depends: Callable[[_T], Iterable[_T]]  # noqa: E741
+    l: Iterable[_T],
+    get_depends: Callable[[_T], Iterable[_T]],
 ) -> list[_T]:
-    """`Topological sort`_
+    """`Topological sort`_.
 
     .. _`Topological sort`: https://en.wikipedia.org/wiki/Topological_sorting
 
@@ -29,15 +31,16 @@ def topological_sort(
     :return: a list of the given items sorted topologically.
 
     """
-    result = []
-    marked = set()
-    temporary_marked = set()
+    result: list[_T] = []
+    marked: set[_T] = set()
+    temporary_marked: set[_T] = set()
 
     def visit(n: _T) -> None:
         if n in marked:
             return
         if n in temporary_marked:
-            raise TopologicalSortError("Not a DAG")
+            msg = "Not a DAG"
+            raise TopologicalSortError(msg)
         temporary_marked.add(n)
         for m in get_depends(n):
             visit(m)

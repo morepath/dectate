@@ -5,13 +5,19 @@ object using the directive decorator, and the signature needs to be
 obtained from the action class's ``__init__`` manually.
 """
 
+from __future__ import annotations
+
 import inspect
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
 
 
-def setup(app):  # pragma: nocoverage
+def setup(app: Sphinx) -> None:  # pragma: nocoverage
     # all inline to avoid dependency on sphinx.ext.autodoc which
     # would trip up scanning
-    from sphinx.ext.autodoc import ModuleDocumenter, MethodDocumenter
+    from sphinx.ext.autodoc import MethodDocumenter, ModuleDocumenter
 
     class DirectiveDocumenter(MethodDocumenter):
         objtype = "morepath_directive"
@@ -19,16 +25,22 @@ def setup(app):  # pragma: nocoverage
         member_order = 49
 
         @classmethod
-        def can_document_member(cls, member, membername, isattr, parent):
+        def can_document_member(
+            cls: type[MethodDocumenter],
+            member: Any,
+            membername: str,
+            isattr: bool,
+            parent: Any,
+        ) -> bool:
             return (
                 inspect.isroutine(member)
                 and not isinstance(parent, ModuleDocumenter)
                 and hasattr(member, "action_factory")
             )
 
-        def import_object(self):
-            if not super().import_object():
-                return
+        def import_object(self, raiseerror: bool = False) -> bool:
+            if not super().import_object(raiseerror):
+                return False
             object = getattr(self.object, "action_factory", None)
             if object is None:
                 return False
@@ -36,7 +48,9 @@ def setup(app):  # pragma: nocoverage
             self.directivetype = "classmethod"
             return True
 
-    def decide_to_skip(app, what, name, obj, skip, options):
+    def decide_to_skip(
+        app: Sphinx, what: str, name: str, obj: object, skip: bool, options: object
+    ) -> bool:
         if what != "class":
             return skip
         directive = getattr(obj, "action_factory", None)

@@ -3,12 +3,14 @@ from __future__ import annotations
 import argparse
 import inspect
 from typing import TYPE_CHECKING, Any
-from .query import Query, get_action_class
-from .error import QueryError
+
 from .app import App
+from .error import QueryError
+from .query import Query, get_action_class
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
     from .config import Action, Composite
     from .query import Filter
 
@@ -68,20 +70,21 @@ def query_tool_output(
 ) -> Iterator[str]:
     for app_class in app_classes:
         if not app_class.is_committed():
-            raise ToolError("App %r was not committed." % app_class)
+            msg = f"App {app_class!r} was not committed."
+            raise ToolError(msg)
 
         actions = list(query_app(app_class, directive, **filters))
 
         if not actions:
             continue
 
-        yield "App: %r" % app_class
+        yield f"App: {app_class!r}"
 
-        for action, obj in actions:
+        for action, _obj in actions:
             if action.directive is None:
-                continue  # XXX handle this case
-            yield "  %s" % action.directive.code_info.filelineno()
-            yield "  %s" % action.directive.code_info.sourceline
+                continue  # pragma: no cover  # XXX handle this case
+            yield f"  {action.directive.code_info.filelineno()}"
+            yield f"  {action.directive.code_info.sourceline}"
             yield ""
 
 
@@ -120,13 +123,14 @@ def parse_app_class(s: str) -> type[App]:
     try:
         app_class = resolve_dotted_name(s)
     except ImportError:
-        raise argparse.ArgumentTypeError("Cannot resolve dotted name: %r" % s)
+        msg = f"Cannot resolve dotted name: {s!r}"
+        raise argparse.ArgumentTypeError(msg)
     if not inspect.isclass(app_class):
-        raise argparse.ArgumentTypeError("%r is not a class" % s)
+        msg = f"{s!r} is not a class"
+        raise argparse.ArgumentTypeError(msg)
     if not issubclass(app_class, App):
-        raise argparse.ArgumentTypeError(
-            "%r is not a subclass of dectate.App" % s
-        )
+        msg = f"{s!r} is not a subclass of dectate.App"
+        raise argparse.ArgumentTypeError(msg)
     return app_class
 
 
@@ -150,7 +154,8 @@ def convert_dotted_name(s: str) -> Any:
     try:
         return resolve_dotted_name(s)
     except ImportError:
-        raise ToolError("Cannot resolve dotted name: %s" % s)
+        msg = f"Cannot resolve dotted name: {s}"
+        raise ToolError(msg)
 
 
 def convert_bool(s: str) -> bool:
@@ -160,19 +165,20 @@ def convert_bool(s: str) -> bool:
     """
     if s == "True":
         return True
-    elif s == "False":
+    if s == "False":
         return False
-    else:
-        raise ValueError("Cannot convert bool: %r" % s)
+    msg = f"Cannot convert bool: {s!r}"
+    raise ValueError(msg)
 
 
 def parse_filters(entries: Iterable[str]) -> dict[str, str]:
-    result = {}
+    result: dict[str, str] = {}
     for entry in entries:
         try:
             name, value = entry.split("=")
         except ValueError:
-            raise ToolError("Cannot parse query filter, no =.")
+            msg = "Cannot parse query filter, no =."
+            raise ToolError(msg)
         name = name.strip()
         result[name] = value.strip()
     return result
@@ -183,7 +189,7 @@ def convert_filters(
 ) -> dict[str, Any]:
     filter_convert = action_class.filter_convert
 
-    result = {}
+    result: dict[str, Any] = {}
 
     for key, value in filters.items():
         parse = filter_convert.get(key, convert_default)
@@ -196,11 +202,12 @@ def convert_filters(
 
 
 def resolve_dotted_name(name: str, module: str | None = None) -> Any:
-    """Adapted from zope.dottedname"""
+    """Adapted from zope.dottedname."""
     name_parts = name.split(".")
     if not name_parts[0]:
         if module is None:
-            raise ValueError("relative name without base module")
+            msg = "relative name without base module"
+            raise ValueError(msg)
         module_parts = module.split(".")
         name_parts.pop(0)
         if TYPE_CHECKING:

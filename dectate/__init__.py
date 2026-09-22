@@ -1,16 +1,16 @@
 from .app import App, directive
-from .sentinel import Sentinel, NOT_FOUND
-from .config import commit, Action, Composite, CodeInfo
+from .config import Action, CodeInfo, Composite, commit
 from .error import (
     ConfigError,
-    DirectiveError,
-    TopologicalSortError,
-    DirectiveReportError,
     ConflictError,
+    DirectiveError,
+    DirectiveReportError,
     QueryError,
+    TopologicalSortError,
 )
 from .query import Query
-from .tool import query_tool, convert_dotted_name, convert_bool, query_app
+from .sentinel import NOT_FOUND, Sentinel
+from .tool import convert_bool, convert_dotted_name, query_app, query_tool
 from .toposort import topological_sort
 
 __all__ = (

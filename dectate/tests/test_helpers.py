@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+
 from ..config import CodeInfo, create_code_info
 
 

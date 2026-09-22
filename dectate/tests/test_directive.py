@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import pytest
-
+import logging
 from typing import TYPE_CHECKING, Any
 
+import pytest
+
 from dectate.app import App, directive
-from dectate.config import commit, Action, Composite
-from dectate.error import ConflictError, ConfigError
+from dectate.config import Action, Composite, commit
+from dectate.error import ConfigError, ConflictError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -230,9 +231,7 @@ def test_different_group_no_conflict() -> None:
         def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(
-            self, obj: Callable[..., Any], foo: list[tuple[str, Any]]
-        ) -> None:
+        def perform(self, obj: Callable[..., Any], foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
@@ -244,9 +243,7 @@ def test_different_group_no_conflict() -> None:
         def identifier(self, bar: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(
-            self, obj: Callable[..., Any], bar: list[tuple[str, Any]]
-        ) -> None:
+        def perform(self, obj: Callable[..., Any], bar: list[tuple[str, Any]]) -> None:
             bar.append((self.message, obj))
 
     class MyApp(App):
@@ -277,9 +274,7 @@ def test_same_group_conflict() -> None:
         def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(
-            self, obj: Callable[..., Any], foo: list[tuple[str, Any]]
-        ) -> None:
+        def perform(self, obj: Callable[..., Any], foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class BarDirective(Action):
@@ -292,9 +287,7 @@ def test_same_group_conflict() -> None:
         def identifier(self, foo: list[tuple[str, Any]]) -> str:
             return self.message
 
-        def perform(
-            self, obj: Callable[..., Any], foo: list[tuple[str, Any]]
-        ) -> None:
+        def perform(self, obj: Callable[..., Any], foo: list[tuple[str, Any]]) -> None:
             foo.append((self.message, obj))
 
     class MyApp(App):
@@ -659,10 +652,7 @@ def test_nested_composite() -> None:
             self.messages = messages
 
         def actions(self, obj: Any) -> list[tuple[SubCompositeDirective, Any]]:
-            return [
-                (SubCompositeDirective(message), obj)
-                for message in self.messages
-            ]
+            return [(SubCompositeDirective(message), obj) for message in self.messages]
 
     class MyApp(App):
         sub = directive(SubDirective)
@@ -699,9 +689,7 @@ def test_with_statement_kw() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, my: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[type[Any], str, Any]]) -> None:
             my.append((self.model, self.name, obj))
 
     class Dummy:
@@ -748,9 +736,7 @@ def test_with_statement_args() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, my: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[type[Any], str, Any]]) -> None:
             my.append((self.model, self.name, obj))
 
     class MyApp(App):
@@ -790,9 +776,7 @@ def test_partial_with_statement_kw() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, my: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[type[Any], str, Any]]) -> None:
             my.append((self.model, self.name, obj))
 
     class Dummy:
@@ -832,9 +816,7 @@ def test_partial_with_statement_args() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, my: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[type[Any], str, Any]]) -> None:
             my.append((self.model, self.name, obj))
 
     class MyApp(App):
@@ -1180,7 +1162,7 @@ def test_action_loop_should_conflict() -> None:
     class MyApp(App):
         foo = directive(MyDirective)
 
-    for i in range(2):
+    for _ in range(2):
 
         @MyApp.foo("hello")
         def f() -> None:
@@ -1191,7 +1173,7 @@ def test_action_loop_should_conflict() -> None:
 
 
 def test_action_init_only_during_commit() -> None:
-    init_called = []
+    init_called: list[str] = []
 
     class MyDirective(Action):
         config = {"my": list}
@@ -1378,9 +1360,7 @@ def test_registry_single_factory_argument() -> None:
         def identifier(self, my: list[tuple[str, Any]], other: Other) -> str:
             return self.message
 
-        def perform(
-            self, obj: Any, my: list[tuple[str, Any]], other: Other
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[str, Any]], other: Other) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
@@ -1674,9 +1654,7 @@ def test_registry_factory_argument_inconsistent() -> None:
         def identifier(self, other: Other, yetanother: YetAnother) -> str:
             return self.message
 
-        def perform(
-            self, obj: Any, other: Other, yetanother: YetAnother
-        ) -> None:
+        def perform(self, obj: Any, other: Other, yetanother: YetAnother) -> None:
             pass
 
     class MyApp(App):
@@ -1702,9 +1680,7 @@ def test_registry_factory_argument_and_config_inconsistent() -> None:
         def identifier(self, my: list[tuple[str, Any]], other: Other) -> str:
             return self.message
 
-        def perform(
-            self, obj: Any, my: list[tuple[str, Any]], other: Other
-        ) -> None:
+        def perform(self, obj: Any, my: list[tuple[str, Any]], other: Other) -> None:
             my.append((self.message, obj))
 
     class MyApp(App):
@@ -1717,7 +1693,7 @@ def test_registry_factory_argument_and_config_inconsistent() -> None:
 # making this global to ensure the repr is the same
 # on Python 3.5 and earlier versions (see PEP 3155)
 class ReprDirective(Action):
-    """Doc"""
+    """Doc."""
 
     config = {"my": list}
 
@@ -1753,9 +1729,7 @@ def test_app_class_passed_into_action() -> None:
         def __init__(self, message: str) -> None:
             self.message = message
 
-        def identifier(
-            self, app_class: type[MyApp], my: list[tuple[str, Any]]
-        ) -> str:
+        def identifier(self, app_class: type[MyApp], my: list[tuple[str, Any]]) -> str:
             return self.message
 
         def perform(

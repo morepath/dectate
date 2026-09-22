@@ -1,22 +1,23 @@
 from __future__ import annotations
 
-import pytest
-
 from typing import TYPE_CHECKING, Any
 
+import pytest
+
 from dectate import (
-    Query,
-    App,
-    Action,
-    Composite,
-    directive,
-    commit,
-    QueryError,
     NOT_FOUND,
+    Action,
+    App,
+    Composite,
+    Query,
+    QueryError,
+    commit,
+    directive,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
     from dectate import Sentinel
 
 
@@ -177,9 +178,7 @@ def test_filter_multiple_fields() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, registry: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, registry: list[tuple[type[Any], str, Any]]) -> None:
             registry.append((self.model, self.name, obj))
 
     class MyApp(App):
@@ -394,14 +393,10 @@ def test_filter_class() -> None:
         def __init__(self, model: type[Any]) -> None:
             self.model = model
 
-        def identifier(
-            self, registry: list[tuple[type[Any], Any]]
-        ) -> type[Any]:
+        def identifier(self, registry: list[tuple[type[Any], Any]]) -> type[Any]:
             return self.model
 
-        def perform(
-            self, obj: Any, registry: list[tuple[type[Any], Any]]
-        ) -> None:
+        def perform(self, obj: Any, registry: list[tuple[type[Any], Any]]) -> None:
             registry.append((self.model, obj))
 
     class MyApp(App):
@@ -691,7 +686,7 @@ def test_nested_composite_action() -> None:
 
         def actions(self, obj: Any) -> Generator[tuple[SubAction, Any]]:
             for i in range(self.amount):
-                yield SubAction(["a%s" % i, "b%s" % i]), obj
+                yield SubAction([f"a{i}", f"b{i}"]), obj
 
     class MyApp(App):
         _subsub = directive(SubSubAction)
