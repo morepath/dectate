@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dectate"
-version = "0.15.dev0"
+version = "1.0.0.dev0"
 dynamic = ["readme"]
 description = "A configuration engine for Python frameworks"
 license = "BSD-3-Clause"
@@ -15,12 +15,14 @@ keywords = ["configuration"]
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Development Status :: 5 - Production/Stable",
 ]
@@ -71,42 +73,41 @@ show_missing = true
 [tool.flake8]
 show-source = true
 ignore = ["E203", "E301", "E501", "E704", "W503", "W504"]
-max-line-length = 80
+extend-select = ["TC", "TC1"]
+max-line-length = 88
 
 [tool.mypy]
 python_version = "3.10"
 strict = true
+files = ["dectate"]
 warn_unreachable = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = "dectate.sphinxext.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = "dectate.tests.fixtures.*"
+module = "dectate.tests.fixtures.anapp"
 ignore_errors = true
 
 [tool.pyright]
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+include = ["dectate"]
 exclude = [
-  "**/sphinxext.py",
   "**/tests/fixtures/anapp.py",
+  "**/__pycache__/**",
+  "**/.venv/**",
+  "**/.tox/**",
+  "**/.*",
+  "**/node_modules",
 ]
-
-[tool.black]
-line-length = 80
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
-include = '\.pyi?$'
-exclude = '''
-(
-  /(
-      \.git
-    | \.tox
-    | env
-    | build
-    | dist
-  )/
-)
-'''
+reportPrivateUsage = "none"
+reportUnusedClass = "none"
+reportUnusedFunction = "none"
+reportUntypedFunctionDecorator = "none"
 
 [tool.tox]
 requires = ["tox>=4"]
@@ -181,3 +182,28 @@ commands = [
     ["pyright", "dectate", "--pythonversion", "3.13"],
     ["pyright", "dectate", "--pythonversion", "3.14"],
 ]
+
+[tool.black]
+target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.git
+    | \.tox
+    | env
+    | venv
+    | .venv
+    | __pycache__
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = 'black'
+py_version = 310
+skip_gitignore = true
+extra_standard_library = ["typing_extensions"]
+known_first_party = ["dectate", "importscan", "reg"]
