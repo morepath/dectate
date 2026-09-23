@@ -23,6 +23,8 @@ CHANGES
 
 - Update docs.
 
+- Update scenarios to Dectate 0.12+ API and add type annotations.
+
   .. _pyupgrade: https://github.com/asottile/pyupgrade
 
 
