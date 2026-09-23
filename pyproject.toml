@@ -119,11 +119,11 @@ env_list = [
 skip_missing_interpreters = true
 
 [tool.tox.gh.python]
-"3.10" = ["py310", "mypy", "pyright"]
+"3.10" = ["py310"]
 "3.11" = ["py311"]
 "3.12" = ["py312"]
 "3.13" = ["py313"]
-"3.14" = ["py314", "pre-commit", "coverage"]
+"3.14" = ["py314", "pre-commit", "coverage", "mypy", "pyright"]
 "pypy-3.11" = ["pypy3"]
 
 [tool.tox.env_run_base]
