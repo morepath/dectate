@@ -854,7 +854,7 @@ And then:
   Traceback (most recent call last):
     ...
   ConflictError: Conflict between:
-    File "...", line 2:
+    File "...", line 2
       @DiscriminatorsApp.foo('a', ['b', 'c'])
     File "...", line 6
       @DiscriminatorsApp.foo('b', [])
