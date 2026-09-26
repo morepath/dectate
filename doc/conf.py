@@ -9,8 +9,11 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import collections.abc
 import os
 from importlib import metadata
+
+import dectate.app
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -28,6 +31,25 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+]
+
+# These are internal typing-only names (TypeVars, ParamSpecs, and type
+# aliases/protocols that only exist for static type checkers) that show up
+# in autodoc-rendered signatures but are never documented as objects of
+# their own, so they can never resolve to a cross-reference target.
+nitpick_ignore_regex = [
+    ("py:class", r"^(.*\.)?_(P|T|ActionT)(\.(args|kwargs))?$"),
+]
+# Some undocumented classes that should be ignored by nitpicky mode.
+# TODO: Possibly document these classes.
+nitpick_ignore = [
+    ("py:class", "dectate.app.Config"),
+    ("py:class", "dectate.app.DirectiveMethod"),
+    ("py:class", "dectate.config.Configurable"),
+    ("py:class", "dectate.sentinel.Sentinel"),
+    ("py:class", "dectate.query.Attrs"),
+    ("py:class", "dectate.query.Filter"),
+    ("py:class", "dectate.query.Obj"),
 ]
 
 autoclass_content = "both"
@@ -311,3 +333,15 @@ texinfo_documents = [
 # texinfo_show_urls = 'footnote'
 
 doctest_path = [os.path.abspath("..")]
+
+# Doc-build-only shim. `Callable`/`Collection`/`Iterator` are
+# TYPE_CHECKING-only in app.py to avoid runtime import cost. Sphinx
+# needs real objects to resolve annotations correctly, so we patch
+# them onto the already-imported module here. This never runs for
+# library users and has no effect outside this build process.
+
+dectate.app.Callable = collections.abc.Callable  # type: ignore[attr-defined]
+dectate.app.Collection = collections.abc.Collection  # type: ignore[attr-defined]
+dectate.app.Iterator = collections.abc.Iterator  # type: ignore[attr-defined]
+
+dectate.config.App = dectate.app.App  # type: ignore[attr-defined]
