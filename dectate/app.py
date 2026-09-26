@@ -62,8 +62,15 @@ class AppMeta(type):
 class App(metaclass=AppMeta):
     """A configurable application object.
 
-    Subclass this in your framework and add directives using
-    the :meth:`App.directive` decorator.
+    Subclass this in your framework and define the directives
+    define the directives directly on the app class that needs
+    them::
+
+        class FooAction(directive.Action)
+            ...
+
+        class MyApp(dectate.App):
+            foo = directive(FooAction)
 
     Set the ``logger_name`` class attribute to the logging prefix
     that Dectate should log to. By default it is ``"dectate.directive"``.
