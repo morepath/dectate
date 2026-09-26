@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dectate"
-version = "0.15.dev0"
+version = "1.0.0.dev0"
 dynamic = ["readme"]
 description = "A configuration engine for Python frameworks"
 license = "BSD-3-Clause"
@@ -15,12 +15,14 @@ keywords = ["configuration"]
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Development Status :: 5 - Production/Stable",
 ]
@@ -35,8 +37,14 @@ Changelog = "https://github.com/morepath/dectate/blob/master/CHANGES.txt"
 [project.optional-dependencies]
 test = ["pytest >= 8", "pytest-env"]
 coverage = ["pytest-cov"]
-lint = ["black", "flake8", "flake8-pyproject"]
-docs = ["sphinx"]
+lint = [
+    "black",
+    "flake8",
+    "flake8-pyproject",
+    "flake8-type-checking",
+    "isort",
+]
+docs = ["sphinx < 9.1"]
 mypy = ["mypy", "pytest"]
 pyright = ["pyright", "pytest"]
 
@@ -65,42 +73,33 @@ show_missing = true
 [tool.flake8]
 show-source = true
 ignore = ["E203", "E301", "E501", "E704", "W503", "W504"]
-max-line-length = 80
+extend-select = ["TC", "TC1"]
+max-line-length = 88
 
 [tool.mypy]
 python_version = "3.10"
 strict = true
+files = ["."]
 warn_unreachable = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = "dectate.sphinxext.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "dectate.tests.fixtures.*"
+module = "dectate.tests.fixtures.anapp"
 ignore_errors = true
 
 [tool.pyright]
+typeCheckingMode = "strict"
 exclude = [
-  "**/sphinxext.py",
   "**/tests/fixtures/anapp.py",
+  "__pycache__",
+  ".venv",
+  "**/.*",
+  "**/node_modules",
 ]
-
-[tool.black]
-line-length = 80
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
-include = '\.pyi?$'
-exclude = '''
-(
-  /(
-      \.git
-    | \.tox
-    | env
-    | build
-    | dist
-  )/
-)
-'''
+reportPrivateUsage = "none"
+reportUnusedClass = "none"
+reportUnusedFunction = "none"
+reportUntypedFunctionDecorator = "none"
 
 [tool.tox]
 requires = ["tox>=4"]
@@ -120,11 +119,11 @@ env_list = [
 skip_missing_interpreters = true
 
 [tool.tox.gh.python]
-"3.10" = ["py310", "mypy", "pyright"]
+"3.10" = ["py310"]
 "3.11" = ["py311"]
 "3.12" = ["py312"]
 "3.13" = ["py313"]
-"3.14" = ["py314", "pre-commit", "coverage"]
+"3.14" = ["py314", "pre-commit", "coverage", "mypy", "pyright"]
 "pypy-3.11" = ["pypy3"]
 
 [tool.tox.env_run_base]
@@ -136,7 +135,7 @@ commands = [["pytest", "{posargs:dectate}"]]
 base_python = ["python3"]
 extras = ["test", "coverage"]
 commands = [
-    ["pytest", "--cov", "--cov-fail-under=94", "{posargs:dectate}"],
+    ["pytest", "--cov", "--cov-fail-under=100", "{posargs:dectate}"],
 ]
 
 [tool.tox.env.pre-commit]
@@ -156,22 +155,47 @@ commands = [
 
 [tool.tox.env.mypy]
 base_python = ["python3"]
-extras = ["mypy"]
+extras = ["mypy", "docs"]
 commands = [
-    ["mypy", "-p", "dectate", "--python-version", "3.10"],
-    ["mypy", "-p", "dectate", "--python-version", "3.11"],
-    ["mypy", "-p", "dectate", "--python-version", "3.12"],
-    ["mypy", "-p", "dectate", "--python-version", "3.13"],
-    ["mypy", "-p", "dectate", "--python-version", "3.14"],
+    ["mypy", "--python-version", "3.10"],
+    ["mypy", "--python-version", "3.11"],
+    ["mypy", "--python-version", "3.12"],
+    ["mypy", "--python-version", "3.13"],
+    ["mypy", "--python-version", "3.14"],
 ]
 
 [tool.tox.env.pyright]
 base_python = ["python3"]
-extras = ["pyright"]
+extras = ["pyright", "docs"]
 commands = [
-    ["pyright", "dectate", "--pythonversion", "3.10"],
-    ["pyright", "dectate", "--pythonversion", "3.11"],
-    ["pyright", "dectate", "--pythonversion", "3.12"],
-    ["pyright", "dectate", "--pythonversion", "3.13"],
-    ["pyright", "dectate", "--pythonversion", "3.14"],
+    ["pyright", "--pythonversion", "3.10"],
+    ["pyright", "--pythonversion", "3.11"],
+    ["pyright", "--pythonversion", "3.12"],
+    ["pyright", "--pythonversion", "3.13"],
+    ["pyright", "--pythonversion", "3.14"],
 ]
+
+[tool.black]
+target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.git
+    | \.tox
+    | env
+    | venv
+    | .venv
+    | __pycache__
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = 'black'
+py_version = 310
+skip_gitignore = true
+extra_standard_library = ["typing_extensions"]
+known_first_party = ["dectate", "importscan", "reg"]

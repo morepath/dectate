@@ -1,24 +1,25 @@
 from __future__ import annotations
 
 import abc
+import inspect
 import logging
 import sys
-import inspect
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+
 from .error import (
-    ConflictError,
     ConfigError,
+    ConflictError,
     DirectiveError,
     DirectiveReportError,
 )
+from .sentinel import NOT_FOUND, Sentinel
 from .toposort import topological_sort
-from .sentinel import NOT_FOUND
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from types import FrameType, TracebackType
+
     from .app import App, Config
-    from .sentinel import Sentinel
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound="Callable[..., Any]")
@@ -45,14 +46,13 @@ class Configurable:
     app_class: type[App] | None = None
 
     def __init__(self, extends: list[Configurable], config: Config) -> None:
-        """
-        :param extends:
-           the configurables that this configurable extends.
-         :type extends: list of configurables.
-         :param config:
-           the object that will contains the actual configuration.
-           Normally it's the ``config`` class attribute of the
-           :class:`dectate.App` subclass.
+        """:param extends:
+          the configurables that this configurable extends.
+        :type extends: list of configurables.
+        :param config:
+          the object that will contains the actual configuration.
+          Normally it's the ``config`` class attribute of the
+          :class:`dectate.App` subclass.
         """
         self.extends = extends
         self.config = config
@@ -95,7 +95,7 @@ class Configurable:
 
         :return: a dict with action class keys and name values.
         """
-        result = {}
+        result: dict[type[Action | Composite], str] = {}
         app_class = self.app_class
         assert app_class is not None
         for name, method in app_class.get_directive_methods():
@@ -158,15 +158,11 @@ class Configurable:
             configured = getattr(config, name, None)
             if configured is not None:
                 if seen[name] is not factory:
-                    raise ConfigError(
-                        "Inconsistent factories for config %r (%r and %r)"
-                        % ((name, seen[name], factory))
-                    )
+                    msg = f"Inconsistent factories for config {name!r} ({seen[name]!r} and {factory!r})"
+                    raise ConfigError(msg)
                 continue
             seen[name] = factory
-            kw = get_factory_arguments(
-                action_class, config, factory, self.app_class
-            )
+            kw = get_factory_arguments(action_class, config, factory, self.app_class)
             setattr(config, name, factory(**kw))
 
     def delete_config(self, action_class: type[Action]) -> None:
@@ -181,16 +177,14 @@ class Configurable:
             factory_arguments = getattr(factory, "factory_arguments", None)
             if factory_arguments is None:
                 continue
-            for name in factory_arguments.keys():
+            for name in factory_arguments:
                 if hasattr(config, name):
                     delattr(config, name)
 
     def group_actions(self) -> None:
         """Groups actions for this configurable into action groups."""
         # turn directives into actions
-        actions = [
-            (directive.action(), obj) for (directive, obj) in self._directives
-        ]
+        actions = [(directive.action(), obj) for (directive, obj) in self._directives]
 
         # add the actions for this configurable to the action group
         d = self._action_groups
@@ -201,9 +195,7 @@ class Configurable:
                 action_class = action.__class__
             d[action_class].add(action, obj)
 
-    def get_action_group(
-        self, action_class: type[Action]
-    ) -> ActionGroup | None:
+    def get_action_group(self, action_class: type[Action]) -> ActionGroup | None:
         """Return ActionGroup for ``action_class`` or ``None`` if not found.
 
         :param action_class: the action class to find the action group of.
@@ -219,9 +211,7 @@ class Configurable:
           extends.
         """
         return [
-            configurable._action_groups.get(
-                action_class, ActionGroup(action_class, [])
-            )
+            configurable._action_groups.get(action_class, ActionGroup(action_class, []))
             for configurable in self.extends
         ]
 
@@ -245,11 +235,8 @@ class ActionGroup:
     indicate another action class to group with using ``group_class``.
     """
 
-    def __init__(
-        self, action_class: type[Action], extends: list[ActionGroup]
-    ) -> None:
-        """
-        :param action_class:
+    def __init__(self, action_class: type[Action], extends: list[ActionGroup]) -> None:
+        """:param action_class:
           the action_class that identifies this action group.
         :param extends:
           list of action groups extended by this action group.
@@ -337,7 +324,8 @@ class ActionGroup:
                 action._log(configurable, obj)
                 action.perform(obj, **kw)
             except DirectiveError as e:
-                raise DirectiveReportError(f"{e}", action.code_info)
+                msg = f"{e}"
+                raise DirectiveReportError(msg, action.code_info)
 
         # run the group class after operation
         self.action_class.after(**kw)
@@ -505,7 +493,7 @@ class Action(metaclass=abc.ABCMeta):
         self.directive.log(configurable, obj)
 
     def get_value_for_filter(self, name: str) -> Any | Sentinel:
-        """Get value. Takes into account ``filter_name``, ``filter_get_value``
+        """Get value. Takes into account ``filter_name``, ``filter_get_value``.
 
         Used by the query system. You can override it if your action
         has a different way storing values altogether.
@@ -517,8 +505,8 @@ class Action(metaclass=abc.ABCMeta):
         value = getattr(self, actual_name, NOT_FOUND)
         if value is not NOT_FOUND:
             return value
-        if self.filter_get_value is None:
-            return value  # type: ignore[unreachable]
+        if self.filter_get_value is None:  # pragma: no cover
+            return value  # type: ignore[unreachable]  # pragma: no cover
         return self.filter_get_value(name)
 
     @classmethod
@@ -532,7 +520,7 @@ class Action(metaclass=abc.ABCMeta):
           dict for.
         :return: a dict of config values.
         """
-        result = {}
+        result: dict[str, Any] = {}
         config = configurable.config
         group_class = cls.group_class
         if group_class is None:
@@ -541,7 +529,7 @@ class Action(metaclass=abc.ABCMeta):
         if group_class.app_class_arg:
             result["app_class"] = configurable.app_class
         # add the config items themselves
-        for name, factory in group_class.config.items():
+        for name, _factory in group_class.config.items():
             result[name] = getattr(config, name)
         return result
 
@@ -729,8 +717,7 @@ class Directive:
         args: tuple[Any, ...],
         kw: dict[str, Any],
     ) -> None:
-        """
-        :param action_factory: function that constructs an action instance.
+        """:param action_factory: function that constructs an action instance.
         :code_info: a :class:`CodeInfo` instance describing where this
           directive was invoked.
         :param app_class: the :class:`dectate.App` subclass that this
@@ -758,7 +745,8 @@ class Directive:
         try:
             result = self.action_factory(*self.args, **self.kw)
         except TypeError as e:
-            raise DirectiveReportError(f"{e}", self.code_info)
+            msg = f"{e}"
+            raise DirectiveReportError(msg, self.code_info)
 
         # store the directive used on the action, useful for error reporting
         result.directive = self
@@ -820,15 +808,12 @@ class Directive:
                 [f"{key}={value!r}" for key, value in sorted(kw.items())]
             )
 
-        message = "@{}.{}({}) on {}".format(
-            target_dotted_name,
-            directive_name,
-            arguments,
-            func_dotted_name,
+        message = (
+            f"@{target_dotted_name}.{directive_name}({arguments}) on {func_dotted_name}"
         )
 
         if not is_same:
-            message += " (from %s)" % dotted_name(self.app_class)
+            message += f" (from {dotted_name(self.app_class)})"
 
         logger.debug(message)
 
@@ -869,7 +854,7 @@ class DirectiveAbbreviation:
 
 
 def commit(*apps: type[App] | Configurable) -> None:
-    """Commit one or more app classes
+    """Commit one or more app classes.
 
     A commit causes the configuration actions to be performed. The
     resulting configuration information is stored under the
@@ -882,7 +867,7 @@ def commit(*apps: type[App] | Configurable) -> None:
     :param `*apps`: one or more :class:`App` subclasses to perform
       configuration actions on.
     """
-    configurables = []
+    configurables: list[Configurable] = []
     for c in apps:
         if isinstance(c, Configurable):
             configurables.append(c)
@@ -925,7 +910,7 @@ def group_action_classes(
     :return: set of action classes grouped together.
     """
     # we want to have use group_class for each true Action class
-    result = set()
+    result: set[type[Action]] = set()
     for action_class in action_classes:
         if not issubclass(action_class, Action):
             continue
@@ -934,25 +919,29 @@ def group_action_classes(
             group_class = action_class
         else:
             if group_class.group_class is not None:
-                raise ConfigError(
+                msg = (
                     "Cannot use group_class on another action class "
-                    "that uses group_class: %r" % action_class
+                    f"that uses group_class: {action_class!r}"
                 )
+                raise ConfigError(msg)
             if "config" in action_class.__dict__:
-                raise ConfigError(
+                msg = (
                     "Cannot use config class attribute when you use "
-                    "group_class: %r" % action_class
+                    f"group_class: {action_class!r}"
                 )
+                raise ConfigError(msg)
             if "before" in action_class.__dict__:
-                raise ConfigError(
+                msg = (
                     "Cannot define before method when you use "
-                    "group_class: %r" % action_class
+                    f"group_class: {action_class!r}"
                 )
+                raise ConfigError(msg)
             if "after" in action_class.__dict__:
-                raise ConfigError(
+                msg = (
                     "Cannot define after method when you use "
-                    "group_class: %r" % action_class
+                    f"group_class: {action_class!r}"
                 )
+                raise ConfigError(msg)
         result.add(group_class)
     return result
 
@@ -974,12 +963,13 @@ def expand_actions(
             # make sure all sub actions propagate originating directive
             # info
             try:
-                sub_actions = []
+                sub_actions: list[tuple[Action | Composite, Any]] = []
                 for sub_action, sub_obj in action.actions(obj):
                     sub_action.directive = action.directive
                     sub_actions.append((sub_action, sub_obj))
             except DirectiveError as e:
-                raise DirectiveReportError(f"{e}", action.code_info)
+                msg = f"{e}"
+                raise DirectiveReportError(msg, action.code_info)
             yield from expand_actions(sub_actions)
         else:
             if not hasattr(action, "order"):
@@ -1034,7 +1024,7 @@ def factory_key(item: tuple[str, _F]) -> Iterable[tuple[str, _F]]:
     :return: iterable of ``name, factory`` tuples that factory in item
       depends on for construction.
     """
-    name, factory = item
+    _name, factory = item
     arguments = getattr(factory, "factory_arguments", None)
     if arguments is None:
         return []
@@ -1072,16 +1062,14 @@ def get_factory_arguments(
     if arguments is None:
         return result
 
-    for name in arguments.keys():
+    for name in arguments:
         value = getattr(config, name, None)
         if value is None:
-            raise ConfigError(
-                (
-                    "Cannot find factory argument %r for "
-                    "factory %r in action class %r"
-                )
-                % (name, factory, action_class)
+            msg = (
+                f"Cannot find factory argument {name!r} for factory {factory!r} "
+                f"in action class {action_class!r}"
             )
+            raise ConfigError(msg)
         result[name] = getattr(config, name, None)
     return result
 

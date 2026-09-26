@@ -1,6 +1,6 @@
-from dectate import topological_sort, TopologicalSortError
-
 import pytest
+
+from dectate import TopologicalSortError, topological_sort
 
 
 def test_topological_sort_on_dcg() -> None:

@@ -1,22 +1,23 @@
 from __future__ import annotations
 
-import pytest
-
 from typing import TYPE_CHECKING, Any
 
+import pytest
+
 from dectate import (
-    Query,
-    App,
-    Action,
-    Composite,
-    directive,
-    commit,
-    QueryError,
     NOT_FOUND,
+    Action,
+    App,
+    Composite,
+    Query,
+    QueryError,
+    commit,
+    directive,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
     from dectate import Sentinel
 
 
@@ -123,7 +124,7 @@ def test_multi_action_query() -> None:
 
     q = Query(FooAction, BarAction).attrs("name")
 
-    assert sorted(list(q(MyApp)), key=lambda d: d["name"]) == [
+    assert sorted(q(MyApp), key=lambda d: d["name"]) == [
         {"name": "a"},
         {"name": "b"},
     ]
@@ -177,9 +178,7 @@ def test_filter_multiple_fields() -> None:
         ) -> tuple[type[Any], str]:
             return (self.model, self.name)
 
-        def perform(
-            self, obj: Any, registry: list[tuple[type[Any], str, Any]]
-        ) -> None:
+        def perform(self, obj: Any, registry: list[tuple[type[Any], str, Any]]) -> None:
             registry.append((self.model, self.name, obj))
 
     class MyApp(App):
@@ -394,14 +393,10 @@ def test_filter_class() -> None:
         def __init__(self, model: type[Any]) -> None:
             self.model = model
 
-        def identifier(
-            self, registry: list[tuple[type[Any], Any]]
-        ) -> type[Any]:
+        def identifier(self, registry: list[tuple[type[Any], Any]]) -> type[Any]:
             return self.model
 
-        def perform(
-            self, obj: Any, registry: list[tuple[type[Any], Any]]
-        ) -> None:
+        def perform(self, obj: Any, registry: list[tuple[type[Any], Any]]) -> None:
             registry.append((self.model, obj))
 
     class MyApp(App):
@@ -548,7 +543,7 @@ def test_multi_query_on_group_class_action() -> None:
 
     q = Query(FooAction, BarAction).attrs("name")
 
-    assert sorted(list(q(MyApp)), key=lambda d: d["name"]) == [
+    assert sorted(q(MyApp), key=lambda d: d["name"]) == [
         {"name": "a"},
         {"name": "b"},
     ]
@@ -691,7 +686,7 @@ def test_nested_composite_action() -> None:
 
         def actions(self, obj: Any) -> Generator[tuple[SubAction, Any]]:
             for i in range(self.amount):
-                yield SubAction(["a%s" % i, "b%s" % i]), obj
+                yield SubAction([f"a{i}", f"b{i}"]), obj
 
     class MyApp(App):
         _subsub = directive(SubSubAction)
@@ -706,7 +701,7 @@ def test_nested_composite_action() -> None:
 
     q = Query(CompositeAction).attrs("name")
 
-    assert sorted(list(q(MyApp)), key=lambda d: d["name"]) == [
+    assert sorted(q(MyApp), key=lambda d: d["name"]) == [
         {"name": "a0"},
         {"name": "a1"},
         {"name": "b0"},
@@ -759,3 +754,76 @@ def test_query_action_for_other_app() -> None:
 
     with pytest.raises(QueryError):
         list(q(MyApp))
+
+
+def test_filter_by_nonexistent_attribute() -> None:
+    # Filtering by an attribute the action doesn't have, with no filter_get_value,
+    # exercises the NOT_FOUND early-return branch in get_value_for_filter (line 513).
+    class FooAction(Action):
+        config = {"registry": list}
+
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def identifier(self, registry: list[Any]) -> str:
+            return self.name
+
+        def perform(self, obj: Any, registry: list[Any]) -> None:
+            registry.append(obj)
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    @MyApp.foo("a")
+    def f() -> None:
+        pass
+
+    commit(MyApp)
+
+    results = list(Query(FooAction).filter(nonexistent_attr="x")(MyApp))
+    assert results == []
+
+
+def test_filter_with_callable_fallback() -> None:
+    class CustomAction(Action):
+        config = {}
+        filter_name = {"short": "long_name"}
+
+        def filter_get_value(self, name: str) -> Any:
+            if name == "long_name":
+                return "custom_value"
+            return NOT_FOUND
+
+        def __init__(self, msg: str) -> None:
+            self.msg = msg
+            self.long_name = "custom_value"
+
+        def identifier(self) -> str:
+            return self.msg
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        custom = directive(CustomAction)
+
+    @MyApp.custom("test")
+    def f() -> None:
+        pass
+
+    commit(MyApp)
+
+    results = list(Query(CustomAction).filter(short="custom_value")(MyApp))
+    assert len(results) == 1
+
+
+def test_callable_execute_abstract() -> None:
+    # Callable.execute raises NotImplementedError to signal subclasses must override it.
+    from dectate.query import Callable as QueryCallable
+
+    class ConcreteCallable(QueryCallable[Any]):
+        pass
+
+    c = ConcreteCallable()
+    with pytest.raises(NotImplementedError):
+        c.execute(None)  # type: ignore[arg-type]

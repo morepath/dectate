@@ -2,13 +2,13 @@ import dectate
 
 
 class FooAction(dectate.Action):
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self.name = name
 
     def identifier(self):
         return self.name
 
-    def perform(self, obj):
+    def perform(self, obj) -> None:
         pass
 
 
@@ -18,7 +18,7 @@ class AnApp(dectate.App):
     foo = dectate.directive(FooAction)
 
 
-def other():
+def other() -> None:
     pass
 
 

@@ -1,25 +1,29 @@
 CHANGES
 *******
 
-0.15 (unreleased)
-=================
+1.0.0 (unreleased)
+==================
 
 - Add type hints
 
 - Add partial attribute to directive methods for better typing support
 
-- Fix Flake8 errors.
-
-- Apply Black code formatter.
+- Fix linting errors.
 
 - Add support for Python 3.10, 3.11, 3.12, 3.13 and 3.14
 
 - Drop support for Python 3.9 and below
 
 - Use GitHub Actions instead of Travis for CI.
-(Travis no longer gives free credits to open source projects.)
+  (Travis no longer gives free credits to open source projects.)
 
 - Cleanup old Python 2 code with pyupgrade_.
+
+- Add tests for 100% coverage.
+
+- Update docs.
+
+- Update scenarios to Dectate 0.12+ API and add type annotations.
 
   .. _pyupgrade: https://github.com/asottile/pyupgrade
 

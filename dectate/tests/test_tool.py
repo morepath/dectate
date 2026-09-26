@@ -1,21 +1,26 @@
 from __future__ import annotations
 
-import pytest
+import sys
 from argparse import ArgumentTypeError
 from typing import Any
+from unittest.mock import patch
 
-from dectate.config import Action, commit
+import pytest
+
 from dectate.app import App, directive
+from dectate.config import Action, commit
 from dectate.tool import (
+    ToolError,
+    convert_bool,
+    convert_dotted_name,
+    convert_filters,
     parse_app_class,
     parse_directive,
     parse_filters,
-    convert_filters,
-    convert_dotted_name,
-    convert_bool,
-    query_tool_output,
     query_app,
-    ToolError,
+    query_tool,
+    query_tool_output,
+    resolve_dotted_name,
 )
 
 
@@ -101,9 +106,7 @@ def test_convert_filters_error() -> None:
         filter_convert = {"model": convert_dotted_name}
 
     with pytest.raises(ToolError):
-        convert_filters(
-            MyAction, {"model": "dectate.tests.fixtures.anapp.DoesntExist"}
-        )
+        convert_filters(MyAction, {"model": "dectate.tests.fixtures.anapp.DoesntExist"})
 
 
 def test_convert_filters_value_error() -> None:
@@ -298,3 +301,74 @@ def test_inheritance() -> None:
     li = list(query_app(SubApp, "foo"))
 
     assert len(li) == 2
+
+
+def test_resolve_dotted_name_relative_without_module() -> None:
+    with pytest.raises(ValueError, match="relative name without base module"):
+        resolve_dotted_name(".foo")
+
+
+def test_resolve_dotted_name_relative_with_module() -> None:
+    # Single leading dot: resolve relative to the given module
+    import dectate.tests as dt
+
+    result = resolve_dotted_name(".tests", "dectate")
+    assert result is dt
+
+
+def test_resolve_dotted_name_relative_multilevel() -> None:
+    # Double leading dot: go up one package level before resolving
+    import dectate.tests as dt
+
+    result = resolve_dotted_name("..tests", "dectate.something")
+    assert result is dt
+
+
+def test_resolve_dotted_name_submodule_not_auto_imported() -> None:
+    # sphinxext is not imported by dectate.__init__, so getattr(dectate, "sphinxext")
+    # fails and __import__("dectate.sphinxext") is called (line 222 in tool.py).
+    # That import also covers the only executable line in sphinxext.py.
+    import dectate
+
+    result = resolve_dotted_name("dectate.sphinxext")
+    assert result is dectate.sphinxext  # type: ignore[attr-defined]
+
+
+def test_query_tool_main(capsys: pytest.CaptureFixture[str]) -> None:
+    class FooAction(Action):
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def identifier(self) -> str:
+            return self.name
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    @MyApp.foo("a")
+    def f() -> None:
+        pass
+
+    commit(MyApp)
+
+    with patch.object(sys, "argv", ["decq", "foo"]):
+        query_tool([MyApp])
+
+    assert capsys.readouterr().out
+
+
+def test_query_tool_with_app_arg() -> None:
+    # Passing --app exercises the `app_classes = args.app` branch.
+    # AnApp is not committed so ToolError is raised -> parser.error -> SystemExit.
+    with (
+        patch.object(
+            sys,
+            "argv",
+            ["decq", "--app", "dectate.tests.fixtures.anapp.AnApp", "foo"],
+        ),
+        pytest.raises(SystemExit),
+    ):
+        query_tool([])

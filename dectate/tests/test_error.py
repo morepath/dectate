@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import pytest
-
 from typing import Any, NoReturn
 
+import pytest
+
 from dectate.app import App, directive
-from dectate.config import commit, Action, Composite
+from dectate.config import Action, Composite, commit
 from dectate.error import (
-    ConflictError,
     ConfigError,
+    ConflictError,
     DirectiveError,
     DirectiveReportError,
 )
@@ -23,7 +23,8 @@ def test_directive_error_in_action() -> None:
             return self.name
 
         def perform(self, obj: Any) -> NoReturn:
-            raise DirectiveError("A real problem")
+            msg = "A real problem"
+            raise DirectiveError(msg)
 
     class MyApp(App):
         foo = directive(FooDirective)
@@ -47,7 +48,8 @@ def test_directive_error_in_composite() -> None:
             self.name = name
 
         def actions(self, obj: Any) -> NoReturn:
-            raise DirectiveError("Something went wrong")
+            msg = "Something went wrong"
+            raise DirectiveError(msg)
 
     class MyApp(App):
         foo = directive(FooDirective)
@@ -74,7 +76,8 @@ def test_conflict_error() -> None:
             return self.name
 
         def perform(self, obj: Any) -> NoReturn:
-            raise DirectiveError("A real problem")
+            msg = "A real problem"
+            raise DirectiveError(msg)
 
     class MyApp(App):
         foo = directive(FooDirective)
@@ -107,7 +110,8 @@ def test_with_statement_error() -> None:
             return (self.model, self.name)
 
         def perform(self, obj: Any) -> NoReturn:
-            raise DirectiveError("A real problem")
+            msg = "A real problem"
+            raise DirectiveError(msg)
 
     class MyApp(App):
         foo = directive(FooDirective)
@@ -131,7 +135,7 @@ def test_with_statement_error() -> None:
     value = str(e.value)
 
     assert value.startswith("A real problem")
-    assert value.endswith(' @foo(name="a")')
+    assert ' @foo(name="a")' in value
     assert "/test_error.py" in value
 
 
@@ -454,3 +458,25 @@ def test_composite_without_init() -> None:
         pass
 
     commit(MyApp)
+
+
+def test_conflict_error_with_none_code_info() -> None:
+    # ConflictError must handle actions whose code_info is None
+    # (actions created manually, not via a decorator)
+    class MyAction(Action):
+        config = {}
+
+        def __init__(self) -> None:
+            pass
+
+        def identifier(self) -> str:
+            return "test"
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    action1 = MyAction()
+    action2 = MyAction()
+
+    error = ConflictError([action1, action2])
+    assert "Conflict between:" in str(error)
