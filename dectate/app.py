@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable, Collection, Iterator  # noqa: TC003
 from functools import update_wrapper
 from typing import (
     TYPE_CHECKING,
@@ -15,7 +16,6 @@ from typing import (
 from .config import Configurable, Directive, commit, create_code_info
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Collection, Iterator
     from typing_extensions import Self
 
     from .config import Action, Composite, DirectiveAbbreviation

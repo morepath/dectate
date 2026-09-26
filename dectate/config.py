@@ -12,7 +12,7 @@ from .error import (
     DirectiveError,
     DirectiveReportError,
 )
-from .sentinel import NOT_FOUND
+from .sentinel import NOT_FOUND, Sentinel
 from .toposort import topological_sort
 
 if TYPE_CHECKING:
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from types import FrameType, TracebackType
 
     from .app import App, Config
-    from .sentinel import Sentinel
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound="Callable[..., Any]")

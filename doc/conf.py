@@ -30,6 +30,30 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
+# These are internal typing-only names (TypeVars, ParamSpecs, and type
+# aliases/protocols that only exist for static type checkers) that show up
+# in autodoc-rendered signatures but are never documented as objects of
+# their own, so they can never resolve to a cross-reference target.
+nitpick_ignore_regex = [
+    ("py:class", r"^(.*\.)?_(P|T|ActionT)(\.(args|kwargs))?$"),
+]
+# Some undocumented classes that should be ignored by nitpicky mode.
+nitpick_ignore = [
+    ("py:class", "dectate.app.Config"),
+    ("py:class", "dectate.app.DirectiveMethod"),
+    ("py:class", "dectate.config.Configurable"),
+    ("py:class", "dectate.sentinel.Sentinel"),
+    ("py:class", "dectate.query.Attrs"),
+    ("py:class", "dectate.query.Filter"),
+    ("py:class", "dectate.query.Obj"),
+    # commit()'s `type[App] | Configurable` can't resolve App at
+    # doc-build time — App must stay TYPE_CHECKING-only in config.py
+    # to avoid a real circular import with app.py. This poisons
+    # resolution for the whole annotation, so Configurable falls
+    # back to unlinked text here too.
+    ("py:class", "Configurable"),
+]
+
 autoclass_content = "both"
 
 autodoc_member_order = "groupwise"
@@ -248,7 +272,7 @@ latex_documents = [
         master_doc,
         "dectate.tex",
         "Dectate Documentation",
-        "Martijn Faassen",
+        author,
         "manual",
     ),
 ]
