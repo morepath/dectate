@@ -248,7 +248,7 @@ latex_documents = [
         master_doc,
         "dectate.tex",
         "Dectate Documentation",
-        "Martijn Faassen",
+        author,
         "manual",
     ),
 ]
