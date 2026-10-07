@@ -16,17 +16,17 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Development Status :: 5 - Production/Stable",
 ]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 
 [project.urls]
 Documentation = "https://dectate.readthedocs.io"
@@ -77,7 +77,7 @@ extend-select = ["TC", "TC1"]
 max-line-length = 88
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 files = ["."]
 warn_unreachable = true
@@ -104,11 +104,11 @@ reportUntypedFunctionDecorator = "none"
 [tool.tox]
 requires = ["tox>=4"]
 env_list = [
-    "py310",
     "py311",
     "py312",
     "py313",
     "py314",
+    "py315",
     "pypy3",
     "coverage",
     "pre-commit",
@@ -119,12 +119,12 @@ env_list = [
 skip_missing_interpreters = true
 
 [tool.tox.gh.python]
-"3.10" = ["py310"]
 "3.11" = ["py311"]
 "3.12" = ["py312"]
 "3.13" = ["py313"]
 "3.14" = ["py314", "pre-commit", "coverage", "mypy", "pyright"]
-"pypy-3.11" = ["pypy3"]
+"3.15" = ["py315"]
+"pypy-3.12" = ["pypy3"]
 
 [tool.tox.env_run_base]
 package = "editable"
@@ -132,14 +132,14 @@ extras = ["test"]
 commands = [["pytest", "{posargs:dectate}"]]
 
 [tool.tox.env.coverage]
-base_python = ["python3"]
+base_python = ["python3.14"]
 extras = ["test", "coverage"]
 commands = [
     ["pytest", "--cov", "--cov-fail-under=100", "{posargs:dectate}"],
 ]
 
 [tool.tox.env.pre-commit]
-base_python = ["python3"]
+base_python = ["python3.14"]
 package = "skip"
 deps = ["pre-commit"]
 commands = [
@@ -147,36 +147,36 @@ commands = [
 ]
 
 [tool.tox.env.docs]
-base_python = ["python3"]
+base_python = ["python3.14"]
 extras = ["docs"]
 commands = [
     ["sphinx-build", "-b", "doctest", "doc", "{env_tmp_dir}"],
 ]
 
 [tool.tox.env.mypy]
-base_python = ["python3"]
+base_python = ["python3.14"]
 extras = ["mypy", "docs"]
 commands = [
-    ["mypy", "--python-version", "3.10"],
     ["mypy", "--python-version", "3.11"],
     ["mypy", "--python-version", "3.12"],
     ["mypy", "--python-version", "3.13"],
     ["mypy", "--python-version", "3.14"],
+    ["mypy", "--python-version", "3.15"],
 ]
 
 [tool.tox.env.pyright]
-base_python = ["python3"]
+base_python = ["python3.14"]
 extras = ["pyright", "docs"]
 commands = [
-    ["pyright", "--pythonversion", "3.10"],
     ["pyright", "--pythonversion", "3.11"],
     ["pyright", "--pythonversion", "3.12"],
     ["pyright", "--pythonversion", "3.13"],
     ["pyright", "--pythonversion", "3.14"],
+    ["pyright", "--pythonversion", "3.15"],
 ]
 
 [tool.black]
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
+target-version = ['py311', 'py312', 'py313', 'py314', 'py315']
 include = '\.pyi?$'
 exclude = '''
 (
@@ -195,7 +195,7 @@ exclude = '''
 
 [tool.isort]
 profile = 'black'
-py_version = 310
+py_version = 311
 skip_gitignore = true
 extra_standard_library = ["typing_extensions"]
 known_first_party = ["dectate", "importscan", "reg"]
