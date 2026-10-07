@@ -8,6 +8,7 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
 )
@@ -16,7 +17,6 @@ from .config import Configurable, Directive, commit, create_code_info
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterator
-    from typing_extensions import Self
 
     from .config import Action, Composite, DirectiveAbbreviation
     from .types import DirectiveCallable
