@@ -2,9 +2,6 @@
    :target: https://github.com/morepath/dectate/actions?workflow=CI
    :alt: CI Status
 
-.. image:: https://coveralls.io/repos/github/morepath/dectate/badge.svg?branch=master
-    :target: https://coveralls.io/github/morepath/dectate?branch=master
-
 .. image:: https://img.shields.io/pypi/v/dectate.svg
   :target: https://pypi.org/project/dectate/
 
