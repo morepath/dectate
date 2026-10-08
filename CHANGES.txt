@@ -4,29 +4,56 @@ CHANGES
 1.0.0 (unreleased)
 ==================
 
-- Add type hints
+- Add type annotations and integrate ``mypy`` and ``pyright``.
 
-- Add partial attribute to directive methods for better typing support
+- Switch to ``pyproject.toml`` based project setup.
+
+- Add partial attribute to directive methods for better typing support.
+
+- Update scenarios to Dectate 0.12+ API and add type annotations.
 
 - Fix linting errors.
 
-- Add support for Python 3.10, 3.11, 3.12, 3.13 and 3.14
+- Add support for Python 3.11, 3.12, 3.13, 3.14 and 3.15
 
-- Drop support for Python 3.9 and below
+- Drop support for Python 3.10 and below
+
+- Support Pypy 3.12.
 
 - Use GitHub Actions instead of Travis for CI.
   (Travis no longer gives free credits to open source projects.)
 
 - Cleanup old Python 2 code with pyupgrade_.
 
-- Add tests for 100% coverage.
-
-- Update docs.
-
-- Update scenarios to Dectate 0.12+ API and add type annotations.
-
   .. _pyupgrade: https://github.com/asottile/pyupgrade
 
+- Add tests for 100% coverage.
+
+- Update docs and fix sphinx config.
+
+- Make an overall cleanup.
+
+- Fix readthedocs integration.
+
+- Replace flake8, black, isort, pyupgrade and pre-commit with Ruff_.
+
+  .. _Ruff: https://docs.astral.sh/ruff
+
+- Remove coveralls integration.
+
+- Adjust the deployment strategy:
+  
+  * Move the Pypi upload from ``zest.release`` to ``gh-actions``.
+
+  * Use ``v`` + version as release tags like ``v1.0.0``.
+
+  * So we still use ``zest.release`` but without publishing to Pypi.
+    The Pypi upload is triggered by pushing the new release tag to GitHub.
+    This happens in the Release workflow in ``.github/workflows/release.yml``.
+    With this workflow we get Trusted Publishing with short-lived OIDC tokens
+    that PyPI issues to one specific repository, workflow file and environment (``pypi``).
+    We also get PEP 740 provenance and can set required reviewers for the environment
+    and a ruleset who can create release tags and trigger releases.
 
 
 0.14 (2020-01-29)
