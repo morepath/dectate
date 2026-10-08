@@ -11,7 +11,7 @@ _T = TypeVar("_T")
 
 
 def topological_sort(
-    l: Iterable[_T],
+    items: Iterable[_T],
     get_depends: Callable[[_T], Iterable[_T]],
 ) -> list[_T]:
     """`Topological sort`_.
@@ -24,7 +24,7 @@ def topological_sort(
 
     .. _DAG: https://en.wikipedia.org/wiki/Directed_acyclic_graph
 
-    :param l: an iterable of items to sort
+    :param items: an iterable of items to sort
     :param get_depends: a function that given an item
       gives other items that this item depends on. This item
       will be sorted after the items it depends on.
@@ -47,6 +47,6 @@ def topological_sort(
         marked.add(n)
         result.append(n)
 
-    for n in l:
+    for n in items:
         visit(n)
     return result
