@@ -112,9 +112,7 @@ def test_directive_name() -> None:
 
     MyApp.commit()
 
-    MyApp.config.my[
-        0
-    ].directive.directive_name == "foo"  # pyright: ignore[reportUnusedExpression]
+    MyApp.config.my[0].directive.directive_name == "foo"  # pyright: ignore[reportUnusedExpression]
 
 
 def test_conflict_same_directive() -> None:
