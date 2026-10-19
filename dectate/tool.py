@@ -39,6 +39,9 @@ def query_tool(app_classes: Iterable[type[App]]) -> None:
       $ decq --app=myproject.App foo
 
     :param app_classes: a list of :class:`App` subclasses to query by default.
+
+    Filters use ``name=value`` syntax. Only the first equals sign separates
+    the name and value; additional equals signs are part of the value.
     """
     parser = argparse.ArgumentParser(description="Query Dectate actions")
     parser.add_argument(
@@ -175,7 +178,7 @@ def parse_filters(entries: Iterable[str]) -> dict[str, str]:
     result: dict[str, str] = {}
     for entry in entries:
         try:
-            name, value = entry.split("=")
+            name, value = entry.split("=", 1)
         except ValueError:
             msg = "Cannot parse query filter, no =."
             raise ToolError(msg)

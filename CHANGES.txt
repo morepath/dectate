@@ -4,7 +4,8 @@ CHANGES
 1.0.1 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Allow equals signs in command-line query filter values, such as URLs
+  containing query parameters.
 
 
 1.0.0 (2026-10-10)

@@ -74,6 +74,22 @@ def test_parse_filters_main() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "a=b",
+        "=leading",
+        "trailing=",
+        "a=b=c",
+        "https://example.test/search?q=python&lang=en",
+        "dGVzdA==",
+        " a = b ",
+    ],
+)
+def test_parse_filters_equals_in_value(value: str) -> None:
+    assert parse_filters([f"name={value}"]) == {"name": value.strip()}
+
+
 def test_parse_filters_error() -> None:
     with pytest.raises(ToolError):
         parse_filters(["a"])
@@ -358,6 +374,42 @@ def test_query_tool_main(capsys: pytest.CaptureFixture[str]) -> None:
         query_tool([MyApp])
 
     assert capsys.readouterr().out
+
+
+def test_query_tool_equals_in_filter_value(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class FooAction(Action):
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def identifier(self) -> str:
+            return self.name
+
+        def perform(self, obj: Any) -> None:
+            pass
+
+    class MyApp(App):
+        foo = directive(FooAction)
+
+    @MyApp.foo("https://example.test/?q=python")
+    def f() -> None:
+        pass
+
+    @MyApp.foo("https://example.test/?q=rust")
+    def g() -> None:
+        pass
+
+    commit(MyApp)
+    filters = {"name": "https://example.test/?q=python"}
+    assert [obj for _action, obj in query_app(MyApp, "foo", **filters)] == [f]
+
+    with patch.object(sys, "argv", ["decq", "foo", f"name={filters['name']}"]):
+        query_tool([MyApp])
+
+    output = capsys.readouterr().out
+    assert "https://example.test/?q=python" in output
+    assert "https://example.test/?q=rust" not in output
 
 
 def test_query_tool_with_app_arg() -> None:
